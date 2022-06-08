@@ -1,0 +1,12 @@
+- git:
+    local-name: choreonoid
+    #uri: https://github.com/choreonoid/choreonoid.git
+    uri: https://github.com/YoheiKakiuchi/choreonoid.git
+    version: add_console_local
+- git:
+    local-name: ik_solvers
+    uri: https://github.com/YoheiKakiuchi/ik_solvers.git
+    version: add_python
+- git:
+    local-name: irsl_choreonoid
+    uri: https://github.com/IRSL-tut/irsl_choreonoid.git

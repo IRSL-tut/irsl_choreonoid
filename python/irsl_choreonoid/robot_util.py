@@ -1,0 +1,219 @@
+from cnoid.Base import *
+from cnoid.BodyPlugin import *
+#from cnoid.PythonSimScriptPlugin import *
+import cnoid.Body
+#import cnoid.Util
+
+import cnoid.IRSLUtil as iu
+
+from cnoid import FullbodyIK
+
+import numpy as np
+
+def getItemTreeView():
+    if callable(ItemTreeView.instance):
+        return ItemTreeView.instance()
+    else:
+        return ItemTreeView.instance
+
+def getRootItem():
+    if callable(RootItem.instance):
+        return RootItem.instance()
+    else:
+        return RootItem.instance
+
+def getWorld():
+    rI = getRootItem()
+    ret = rI.findItem("World")
+    if ret == None:
+        ret = WorldItem()
+        rI.addChildItem(ret)
+        getItemTreeView().checkItem(ret)
+    return ret
+
+def cnoidPosition(rotation = None, translation = None):
+  ret = np.identity(4)
+  if not (rotation is None):
+    ret[:3, :3] = rotation
+  if not (translation is None):
+    ret[:3, 3] = translation
+  return ret
+
+def cnoidRotation(cPosition):
+  return cPosition[:3, :3]
+
+def cnoidTranslation(cPosition):
+  return cPosition[:3, 3]
+
+def loadRobot(fname, name = None):
+    # print('loadRobot: %s'%(fname))
+    bI = BodyItem()
+    bI.load(fname)
+    if name:
+        bI.setName(name)
+    if callable(bI.body):
+        rr = bI.body()
+    else:
+        rr = bI.body
+    rr.calcForwardKinematics()
+    bI.storeInitialState()
+    wd = getWorld()
+    if callable(wd.childItem):
+        wd.insertChildItem(bI, wd.childItem())
+    else:
+        wd.insertChildItem(bI, wd.childItem)
+    getItemTreeView().checkItem(bI)
+    return rr
+
+def findItem(name):
+    return getRootItem().findItem(name)
+
+def findRobot(name):
+    ret = findItem(name)
+    ## add class check...
+    if callable(ret.body):
+        return ret.body()
+    else:
+        return ret.body
+
+def flushRobotView(name):
+    findItem(name).notifyKinematicStateChange()
+    #MessageView.getInstance().flush()
+    MessageView.instance.flush()
+
+class RobotModel(object):
+    def __init__(self, robot):
+        self.item = None
+        if isinstance(robot, BodyItem):
+            self.robot = robot.body
+            self.item = robot
+        elif isinstance(robot, cnoid.Base.Body):
+            self.robot = robot
+        else:
+            raise TypeError('')
+
+        self.rleg_tip_link = None
+        self.rleg_tip_to_eef = None
+        self.lleg_tip_link = None
+        self.lleg_tip_to_eef = None
+
+        self.rarm_tip_link = None
+        self.rarm_tip_to_eef = None
+        self.larm_tip_link = None
+        self.larm_tip_to_eef = None
+
+    #def robot(self):
+    #    return robot
+
+    def links(self):
+        num = self.robot.numLinks
+        return [ self.robot.link(n) for n in range(num) ]
+
+    def joint_list(self):
+        num = self.robot.numJoints
+        return [ self.robot.joint(n) for n in range(num) ]
+
+    def flush(self):
+        if not (self.item is None):
+            self.robot.calcForwardKinematics()
+            self.item.notifyKinematicStateChange()
+            MessageView.instance.flush()
+
+    def angle_vector(self, angles = None):
+        num = self.robot.numJoints
+        if not (angles is None):
+            if num != len(angles):
+                raise TypeError('length of angles does not equal with robot.numJoints')
+            for idx in range(num):
+                self.robot.joint(idx).q = angles[idx]
+            return None
+        else:
+            return np.array([ self.robot.joint(n).q for n in range(num) ])
+
+    def default_pose__(self):
+        pass
+
+    def init_pose__(self):
+        pass
+
+    def set_pose(self, name):
+        av = eval('self.%s_pose__()'%(name))
+        self.angle_vector(av)
+        return self.angle_vector()
+
+    def end_effector(self, limb):
+        return eval('self.%s_end_effector()'%(limb))
+
+    def rleg_end_effector(self):
+        return self.rleg_tip_link.getPosition().dot(self.rleg_tip_to_eef)
+
+    def lleg_end_effector(self):
+        return self.lleg_tip_link.getPosition().dot(self.lleg_tip_to_eef)
+
+    def foot_mid_coords(self, p = 0.5):
+        return iu.mid_coords(p, self.rleg_end_effector(), self.lleg_end_effector())
+
+    def fix_leg_to_coords(self, coords, p = 0.5):
+        mc = self.foot_mid_coords(p)
+        rL = self.robot.rootLink
+        rL.setPosition(
+            (iu.PositionInverse(mc).dot(coords)).dot(rL.getPosition())
+            )
+        self.robot.calcForwardKinematics()
+
+    def move_centroid_on_foot(self, p = 0.5, debug = False):
+        mid_pos = self.foot_mid_coords(p)
+        mid_trans = iu.Position_translation(mid_pos)
+
+        constraints = FullbodyIK.Constraints()
+
+        rl_constraint = FullbodyIK.PositionConstraint()
+        rl_constraint.A_link = self.rleg_tip_link
+        rl_constraint.A_localpos = self.rleg_tip_to_eef
+        #constraint->B_link() = nullptr;
+        rl_constraint.B_localpos = self.rleg_end_effector()
+        constraints.push_back(rl_constraint)
+
+        ll_constraint = FullbodyIK.PositionConstraint()
+        ll_constraint.A_link = self.lleg_tip_link
+        ll_constraint.A_localpos = self.lleg_tip_to_eef
+        #constraint->B_link() = nullptr;
+        ll_constraint.B_localpos = self.lleg_end_effector()
+        constraints.push_back(ll_constraint)
+
+        com_constraint = FullbodyIK.COMConstraint()
+        com_constraint.A_robot = self.robot
+        com_constraint.B_localp = mid_trans
+
+        w = com_constraint.weight
+        w[2] = 0.0
+        com_constraint.weight = w
+        constraints.push_back(com_constraint)
+
+        jlim_avoid_weight_old = np.zeros(6 + self.robot.getNumJoints())
+        ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
+        dq_weight_all = np.array( (1,1,1,0,0,0) + self.leg_mask() )
+
+        d_level = 0
+        if debug:
+            d_level = 1
+
+        loop = FullbodyIK.solveFullbodyIKLoopFast(self.robot,
+                                                  constraints,
+                                                  jlim_avoid_weight_old,
+                                                  dq_weight_all,
+                                                  20,
+                                                  1e-6,
+                                                  d_level)
+        if debug:
+            for cntr, const in enumerate(constraints):
+                const.debuglevel = 1
+                if const.checkConvergence():
+                    print('constraint %d (%s) : converged'%(cntr, const))
+                else:
+                    print('constraint %d (%s) : NOT converged'%(cntr, const))
+
+        return loop
+
+    def fullbody_inverse_kinematics(self):
+        pass
