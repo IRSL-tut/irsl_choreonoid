@@ -5,6 +5,7 @@ import cnoid.Body
 #import cnoid.Util
 
 import cnoid.IRSLUtil as iu
+import cnoid.DrawInterface as di
 
 from cnoid import FullbodyIK
 
@@ -81,6 +82,42 @@ def flushRobotView(name):
     #MessageView.getInstance().flush()
     MessageView.instance.flush()
 
+RLine = di.DrawInterface(np.array([1, 0, 0]))
+GLine = di.DrawInterface(np.array([0, 1, 0]))
+BLine = di.DrawInterface(np.array([0, 0, 1]))
+
+def hideLines():
+    RLine.hide()
+    GLine.hide()
+    BLine.hide()
+
+def showLines():
+    RLine.show()
+    GLine.show()
+    BLine.show()
+
+def drawCoords(coords, length = 0.1, axis_size = 0.02):
+    RLine.hide()
+    GLine.hide()
+    BLine.hide()
+    MessageView.instance.flush()
+
+    rot = iu.Position_rotation(coords)
+    ax_x = length * rot[:3, 0]
+    ax_y = length * rot[:3, 1]
+    ax_z = length * rot[:3, 2]
+    ax_vec = length * iu.normalizeVector(rot.dot(np.array([1, 1, 1])))
+    pp = iu.Position_translation(coords)
+
+    RLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
+    GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
+    BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
+
+    RLine.show()
+    GLine.show()
+    BLine.show()
+    MessageView.instance.flush()
+
 class RobotModel(object):
     def __init__(self, robot):
         self.item = None
@@ -101,6 +138,11 @@ class RobotModel(object):
         self.rarm_tip_to_eef = None
         self.larm_tip_link = None
         self.larm_tip_to_eef = None
+
+        self.head_tip_link = None
+        self.head_tip_to_eef = None
+        self.torso_tip_link = None
+        self.torso_tip_to_eef = None
 
     #def robot(self):
     #    return robot
@@ -149,6 +191,18 @@ class RobotModel(object):
 
     def lleg_end_effector(self):
         return self.lleg_tip_link.getPosition().dot(self.lleg_tip_to_eef)
+
+    def rarm_end_effector(self):
+        return self.rarm_tip_link.getPosition().dot(self.rarm_tip_to_eef)
+
+    def larm_end_effector(self):
+        return self.larm_tip_link.getPosition().dot(self.larm_tip_to_eef)
+
+    def head_end_effector(self):
+        return self.head_tip_link.getPosition().dot(self.head_tip_to_eef)
+
+    def torso_end_effector(self):
+        return self.torso_tip_link.getPosition().dot(self.torso_tip_to_eef)
 
     def foot_mid_coords(self, p = 0.5):
         return iu.mid_coords(p, self.rleg_end_effector(), self.lleg_end_effector())

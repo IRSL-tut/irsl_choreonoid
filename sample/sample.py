@@ -1,6 +1,7 @@
 
 # DISPLAY=:0 choreonoid
 import irsl_choreonoid.sample_robot as sr
+import irsl_choreonoid.robot_util as ru
 import numpy as np
 import cnoid.IRSLUtil as iu
 import math

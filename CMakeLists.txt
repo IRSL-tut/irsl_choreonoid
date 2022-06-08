@@ -14,8 +14,8 @@ find_package(choreonoid REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES irsl_choreonoid
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS CHOREONOID
+  #CATKIN_DEPENDS choreonoid
+  DEPENDS CHOREONOID
 )
 
 # set path for installing jsk_choreonoid libraries in choreonoid
@@ -33,6 +33,7 @@ message("CHOREONOID_LIBRARY_DIRS: ${CHOREONOID_LIBRARY_DIRS}")
 message("CHOREONOID_LIBRARIES: ${CHOREONOID_LIBRARIES}")
 message("CHOREONOID_PLUGIN_DIR: ${CHOREONOID_PLUGIN_DIR}")
 message("CHOREONOID_ADDITIONAL_LIBRARIES: ${CHOREONOID_ADDITIONAL_LIBRARIES}")
+message("CHOREONOID_COMPILE_DEFINITIONS: ${CHOREONOID_COMPILE_DEFINITIONS}")
 
 # apply choreonoid cmake settings
 add_definitions(${CHOREONOID_DEFINITIONS})
@@ -67,7 +68,7 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${CHOREONOID_BODY_LIBRARIES_ABS}
+  ${CHOREONOID_BODY_LIBRARIES}
   )
 
 #############

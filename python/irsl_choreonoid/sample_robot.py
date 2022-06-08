@@ -3,6 +3,8 @@ import cnoid.IRSLUtil as iu
 import cnoid.Util
 import numpy as np
 
+import math
+
 def init_sample_robot():
     fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
     ru.loadRobot(fname, 'SampleRobot')
@@ -21,16 +23,16 @@ class SampleRobot(ru.RobotModel):
         self.rleg_tip_link = self.robot.link('RLEG_ANKLE_R')
         self.lleg_tip_link = self.robot.link('LLEG_ANKLE_R')
 
-        self.rleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.07]))
-        self.lleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.07]))
+        self.rleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.055]))
+        self.lleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.055]))
 
         self.rarm_tip_link = self.robot.link('RARM_WRIST_R')
         self.larm_tip_link = self.robot.link('LARM_WRIST_R')
 
         self.rarm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
-                                                np.array([0.0, 0.0, -0.12]))
+                                                np.array([0.0, 0.0, -0.14]))
         self.larm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
-                                                np.array([0.0, 0.0, -0.12]))
+                                                np.array([0.0, 0.0, -0.14]))
 
     def default_pose__(self):
         return np.array([ 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## rleg
