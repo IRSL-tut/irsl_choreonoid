@@ -18,6 +18,7 @@ PYBIND11_MODULE(DrawInterface, m)
 
     py::class_< DrawInterface, DrawInterfacePtr, Referenced >(m, "DrawInterface")
         .def(py::init<Eigen::Vector3f>())
+        .def(py::init<>())
         .def("setLineWidth", &DrawInterface::setLineWidth)
         .def("setColor", &DrawInterface::setColor)
         .def("show", &DrawInterface::show)
@@ -28,5 +29,9 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawArcArrow", &DrawInterface::drawArcArrow)
         .def("drawLineArcArrow", &DrawInterface::drawLineArcArrow)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
+        //
+        .def("draw", &DrawInterface::draw)
+        .def("add_object", &DrawInterface::add_object)
+        .def("remove_object", &DrawInterface::remove_object)
         ;
 }

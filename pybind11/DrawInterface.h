@@ -10,6 +10,8 @@
 #include <cnoid/SceneView>
 #include <cnoid/SceneDrawables>
 
+#include <QCoreApplication>
+
 namespace cnoid {
 
     class DrawInterface : public Referenced
@@ -23,6 +25,25 @@ namespace cnoid {
         SgColorArrayPtr colors;
 
     public:
+        DrawInterface() {
+            sv = SceneView::instance();
+            sw = sv->sceneWidget();
+            //lineSet.reset();
+            //vetices.reset();
+            //colors.reset();
+        }
+        void add_object(SgNodePtr &obj) {
+            sw->sceneRoot()->addChildOnce(obj, true);
+        }
+        void remove_object(SgNodePtr &obj) {
+            sw->sceneRoot()->removeChild(obj, true);
+        }
+        void draw() {
+            //update view??
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+        }
+
+        // original settings
         DrawInterface(Vector3f colorVec){
             sv = SceneView::instance();
             sw = sv->sceneWidget();
