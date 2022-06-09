@@ -10,5 +10,5 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>choreonoid</depend>
-  <depend>fullbody_inverse_kinematics_solver</depend>
+  <depend>ik_solvers_python</depend>
 </package>

@@ -4,9 +4,17 @@
     uri: https://github.com/YoheiKakiuchi/choreonoid.git
     version: add_console_local
 - git:
-    local-name: ik_solvers
-    uri: https://github.com/YoheiKakiuchi/ik_solvers.git
-    version: add_python
-- git:
     local-name: irsl_choreonoid
     uri: https://github.com/IRSL-tut/irsl_choreonoid.git
+### IK solver    
+- git:
+    local-name: ik_solvers
+    uri: https://github.com/YoheiKakiuchi/ik_solvers.git
+    #version: add_python
+    version: add_python_with_prioritized
+- git:
+    local-name: prioritized_qp
+    uri: https://github.com/Naoki-Hiraoka/prioritized_qp.git
+- git:
+    local-name: qp_solvers
+    uri: https://github.com/Naoki-Hiraoka/qp_solvers.git

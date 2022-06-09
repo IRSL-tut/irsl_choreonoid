@@ -7,7 +7,7 @@ import cnoid.Body
 import cnoid.IRSLUtil as iu
 import cnoid.DrawInterface as di
 
-from cnoid import FullbodyIK
+import cnoid.IKSolvers as IK
 
 import numpy as np
 
@@ -82,41 +82,39 @@ def flushRobotView(name):
     #MessageView.getInstance().flush()
     MessageView.instance.flush()
 
-RLine = di.DrawInterface(np.array([1, 0, 0]))
-GLine = di.DrawInterface(np.array([0, 1, 0]))
-BLine = di.DrawInterface(np.array([0, 0, 1]))
+class DrawCoords(object):
+    def __init__(self):
+        self.RLine = di.DrawInterface(np.array([1, 0, 0]))
+        self.GLine = di.DrawInterface(np.array([0, 1, 0]))
+        self.BLine = di.DrawInterface(np.array([0, 0, 1]))
 
-def hideLines():
-    RLine.hide()
-    GLine.hide()
-    BLine.hide()
+    def hide(self):
+        self.RLine.hide()
+        self.GLine.hide()
+        self.BLine.hide()
 
-def showLines():
-    RLine.show()
-    GLine.show()
-    BLine.show()
+    def show(self):
+        self.RLine.show()
+        self.GLine.show()
+        self.BLine.show()
 
-def drawCoords(coords, length = 0.1, axis_size = 0.02):
-    RLine.hide()
-    GLine.hide()
-    BLine.hide()
-    MessageView.instance.flush()
+    def draw(self, coords, length = 0.1, axis_size = 0.02):
+        self.hide()
+        MessageView.instance.flush()
 
-    rot = iu.Position_rotation(coords)
-    ax_x = length * rot[:3, 0]
-    ax_y = length * rot[:3, 1]
-    ax_z = length * rot[:3, 2]
-    ax_vec = length * iu.normalizeVector(rot.dot(np.array([1, 1, 1])))
-    pp = iu.Position_translation(coords)
+        rot = iu.Position_rotation(coords)
+        ax_x = length * rot[:3, 0]
+        ax_y = length * rot[:3, 1]
+        ax_z = length * rot[:3, 2]
+        ax_vec = length * iu.normalizeVector(rot.dot(np.array([1, 1, 1])))
+        pp = iu.Position_translation(coords)
 
-    RLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
-    GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
-    BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
+        self.RLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
+        self.GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
+        self.BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
 
-    RLine.show()
-    GLine.show()
-    BLine.show()
-    MessageView.instance.flush()
+        self.show()
+        MessageView.instance.flush()
 
 class RobotModel(object):
     def __init__(self, robot):
@@ -219,23 +217,23 @@ class RobotModel(object):
         mid_pos = self.foot_mid_coords(p)
         mid_trans = iu.Position_translation(mid_pos)
 
-        constraints = FullbodyIK.Constraints()
+        constraints = IK.Constraints()
 
-        rl_constraint = FullbodyIK.PositionConstraint()
+        rl_constraint = IK.PositionConstraint()
         rl_constraint.A_link = self.rleg_tip_link
         rl_constraint.A_localpos = self.rleg_tip_to_eef
         #constraint->B_link() = nullptr;
         rl_constraint.B_localpos = self.rleg_end_effector()
         constraints.push_back(rl_constraint)
 
-        ll_constraint = FullbodyIK.PositionConstraint()
+        ll_constraint = IK.PositionConstraint()
         ll_constraint.A_link = self.lleg_tip_link
         ll_constraint.A_localpos = self.lleg_tip_to_eef
         #constraint->B_link() = nullptr;
         ll_constraint.B_localpos = self.lleg_end_effector()
         constraints.push_back(ll_constraint)
 
-        com_constraint = FullbodyIK.COMConstraint()
+        com_constraint = IK.COMConstraint()
         com_constraint.A_robot = self.robot
         com_constraint.B_localp = mid_trans
 
@@ -252,13 +250,13 @@ class RobotModel(object):
         if debug:
             d_level = 1
 
-        loop = FullbodyIK.solveFullbodyIKLoopFast(self.robot,
-                                                  constraints,
-                                                  jlim_avoid_weight_old,
-                                                  dq_weight_all,
-                                                  20,
-                                                  1e-6,
-                                                  d_level)
+        loop = IK.solveFullbodyIKLoopFast(self.robot,
+                                          constraints,
+                                          jlim_avoid_weight_old,
+                                          dq_weight_all,
+                                          20,
+                                          1e-6,
+                                          d_level)
         if debug:
             for cntr, const in enumerate(constraints):
                 const.debuglevel = 1
