@@ -15,6 +15,7 @@ PYBIND11_MODULE(DrawInterface, m)
     m.doc() = "Interface for drawing";
 
     py::module::import("cnoid.Base");
+    py::module::import("cnoid.Util");
 
     py::class_< DrawInterface, DrawInterfacePtr, Referenced >(m, "DrawInterface")
         .def(py::init<Eigen::Vector3f>())
@@ -30,8 +31,11 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawLineArcArrow", &DrawInterface::drawLineArcArrow)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
         //
-        .def("draw", &DrawInterface::draw)
-        .def("add_object", &DrawInterface::add_object)
-        .def("remove_object", &DrawInterface::remove_object)
+        .def("hide_and_show", &DrawInterface::hide_and_show)
+        .def("add_object", &DrawInterface::add_object, py::arg("object"), py::arg("update") = false)
+        .def("remove_object", &DrawInterface::remove_object, py::arg("object"), py::arg("update") = false)
         ;
+
+    m.def("flush", &DrawInterface::flush);
+
 }

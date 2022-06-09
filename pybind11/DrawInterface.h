@@ -23,8 +23,15 @@ namespace cnoid {
         SgLineSetPtr lineSet;
         SgVertexArrayPtr vertices;
         SgColorArrayPtr colors;
+    // added by IRSL
+    public: static void flush()
+        {
+            //update view??
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+        }
 
     public:
+        // added by IRSL
         DrawInterface() {
             sv = SceneView::instance();
             sw = sv->sceneWidget();
@@ -32,15 +39,11 @@ namespace cnoid {
             //vetices.reset();
             //colors.reset();
         }
-        void add_object(SgNodePtr &obj) {
-            sw->sceneRoot()->addChildOnce(obj, true);
+        void add_object(SgNodePtr &obj, bool update) {
+            sw->sceneRoot()->addChildOnce(obj, update);
         }
-        void remove_object(SgNodePtr &obj) {
-            sw->sceneRoot()->removeChild(obj, true);
-        }
-        void draw() {
-            //update view??
-            QCoreApplication::processEvents(QEventLoop::AllEvents);
+        void remove_object(SgNodePtr &obj, bool update) {
+            sw->sceneRoot()->removeChild(obj, update);
         }
 
         // original settings
@@ -81,6 +84,11 @@ namespace cnoid {
 
         void hide(){
             sw->sceneRoot()->removeChild(lineSet, true);
+        }
+
+        void hide_and_show() {
+            sw->sceneRoot()->removeChild(lineSet);
+            sw->sceneRoot()->addChildOnce(lineSet, true);
         }
 
         void drawLine(Vector3f startPos, Vector3f endPos){

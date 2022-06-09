@@ -98,10 +98,12 @@ class DrawCoords(object):
         self.GLine.show()
         self.BLine.show()
 
-    def draw(self, coords, length = 0.1, axis_size = 0.02):
-        self.hide()
-        MessageView.instance.flush()
+    def hide_and_show(self):
+        self.RLine.hide_and_show()
+        self.GLine.hide_and_show()
+        self.BLine.hide_and_show()
 
+    def draw(self, coords, length = 0.1, axis_size = 0.02):
         rot = iu.Position_rotation(coords)
         ax_x = length * rot[:3, 0]
         ax_y = length * rot[:3, 1]
@@ -113,8 +115,8 @@ class DrawCoords(object):
         self.GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
         self.BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
 
-        self.show()
-        MessageView.instance.flush()
+        self.hide_and_show()
+        di.flush()
 
 class RobotModel(object):
     def __init__(self, robot):
