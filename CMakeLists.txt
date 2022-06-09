@@ -85,5 +85,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
+install(DIRECTORY sample
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  USE_SOURCE_PERMISSIONS
+)
+
 #add_subdirectory(sample)
 add_subdirectory(pybind11)

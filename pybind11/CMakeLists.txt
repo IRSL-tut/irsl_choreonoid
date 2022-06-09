@@ -1,3 +1,4 @@
+###
 set(TARGET PyIRSLUtil)
 
 add_cnoid_python_module(${TARGET} PyIRSLUtil.cpp)
@@ -10,9 +11,11 @@ target_link_libraries(${TARGET}
 
 target_compile_definitions(${TARGET} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
 
-set_target_properties(${TARGET}
-  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+#set_target_properties(${TARGET}
+#  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+install(TARGETS ${TARGET} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
 
+###
 set(TARGET2 PyDrawInterface)
 
 #set(headers DrawInterface.h)
@@ -26,5 +29,6 @@ target_link_libraries(${TARGET2}
 
 target_compile_definitions(${TARGET2} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
 
-set_target_properties(${TARGET2}
-  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+#set_target_properties(${TARGET2}
+#  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+install(TARGETS ${TARGET2} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
