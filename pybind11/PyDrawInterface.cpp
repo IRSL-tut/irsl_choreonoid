@@ -32,9 +32,32 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
         //
         .def("hide_and_show", &DrawInterface::hide_and_show)
-        .def("add_object", &DrawInterface::add_object, py::arg("object"), py::arg("update") = false)
-        .def("remove_object", &DrawInterface::remove_object, py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (DrawInterface::*)(SgGroupPtr &, bool)) &DrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (DrawInterface::*)(SgTransformPtr &, bool)) &DrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (DrawInterface::*)(SgPosTransformPtr &, bool)) &DrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (DrawInterface::*)(SgShapePtr &, bool)) &DrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        //
+        .def("remove_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (DrawInterface::*)(SgGroupPtr &, bool)) &DrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (DrawInterface::*)(SgTransformPtr &, bool)) &DrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (DrawInterface::*)(SgPosTransformPtr &, bool)) &DrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (DrawInterface::*)(SgShapePtr &, bool)) &DrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
         ;
+    //SgPlot
+    //SgPointSet
+    //SgLineSet
+    //SgOverlay
 
     m.def("flush", &DrawInterface::flush);
 

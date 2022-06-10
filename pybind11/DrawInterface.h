@@ -28,8 +28,8 @@ namespace cnoid {
         {
             //update view??
             QCoreApplication::processEvents(QEventLoop::AllEvents);
+            // TODO: How to notify for redrawing
         }
-
     public:
         // added by IRSL
         DrawInterface() {
@@ -42,10 +42,33 @@ namespace cnoid {
         void add_object(SgNodePtr &obj, bool update) {
             sw->sceneRoot()->addChildOnce(obj, update);
         }
+        void add_object(SgGroupPtr &obj, bool update) {
+            sw->sceneRoot()->addChildOnce(obj, update);
+        }
+        void add_object(SgTransformPtr &obj, bool update) {
+            sw->sceneRoot()->addChildOnce(obj, update);
+        }
+        void add_object(SgPosTransformPtr &obj, bool update) {
+            sw->sceneRoot()->addChildOnce(obj, update);
+        }
+        void add_object(SgShapePtr &obj, bool update) {
+            sw->sceneRoot()->addChildOnce(obj, update);
+        }
         void remove_object(SgNodePtr &obj, bool update) {
             sw->sceneRoot()->removeChild(obj, update);
         }
-
+        void remove_object(SgGroupPtr &obj, bool update) {
+            sw->sceneRoot()->removeChild(obj, update);
+        }
+        void remove_object(SgTransformPtr &obj, bool update) {
+            sw->sceneRoot()->removeChild(obj, update);
+        }
+        void remove_object(SgPosTransformPtr &obj, bool update) {
+            sw->sceneRoot()->removeChild(obj, update);
+        }
+        void remove_object(SgShapePtr &obj, bool update) {
+            sw->sceneRoot()->removeChild(obj, update);
+        }
         // original settings
         DrawInterface(Vector3f colorVec){
             sv = SceneView::instance();
