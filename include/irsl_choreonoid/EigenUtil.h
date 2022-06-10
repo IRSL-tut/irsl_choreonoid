@@ -16,4 +16,18 @@ namespace cnoid {
   void mid_rot(Matrix3& mid_rot, const double p, const Matrix3& rot1, const Matrix3& rot2, const double eps = 0.00001);
 
   void mid_coords(Position &mid_coords, const double p, const Position &c1, const Position &c2, const double eps = 0.00001);
+
+  //from EusLisp definition
+  //rotate_vector
+  //inverse_rotate_vector
+  //transform_vector
+  //inverse_transform_vector
+  //
+  //transformation
+  //inverse_transformation :local :world :wrt
+  //
+  //move-to :local :world :wrt
+  //translate :local :world :wrt
+  //locate :local :world :wrt
+  //transform  :local :world :wrt  WAW^-1 T
 }
