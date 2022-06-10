@@ -22,6 +22,12 @@ rr.robot.mass
 rr.robot.calcCenterOfMass()
 rr.robot.centerOfMass
 
+mass_coords = ru.DrawCoords()
+mass_coords.draw(iu.cnoidPosition(rr.robot.centerOfMass))
+
+larm_coords = ru.DrawCoords()
+larm_coords.draw(rr.larm_end_effector())
+
 # print joints
 #for j in rr.joint_list():
 #    print('{}:{:f}'.format(j.name, j.q * 180 / math.pi))

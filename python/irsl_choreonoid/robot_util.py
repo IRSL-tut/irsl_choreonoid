@@ -69,6 +69,9 @@ def loadRobot(fname, name = None):
 def findItem(name):
     return getRootItem().findItem(name)
 
+def removeItem(item_):
+    item_.detachFromParentItem()
+
 def findRobot(name):
     ret = findItem(name)
     ## add class check...
