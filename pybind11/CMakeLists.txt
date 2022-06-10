@@ -11,9 +11,17 @@ target_link_libraries(${TARGET}
 
 target_compile_definitions(${TARGET} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
 
-#set_target_properties(${TARGET}
-#  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
-install(TARGETS ${TARGET} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
+message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+if ("${CMAKE_INSTALL_PREFIX}" MATCHES ".*install.*")
+  ## install
+  message("in INSTALLSPACE")
+  install(TARGETS ${TARGET} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
+else()
+  ## devel
+  message("in DEVELSPACE")
+  set_target_properties(${TARGET}
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+endif()
 
 ###
 set(TARGET2 PyDrawInterface)
@@ -29,6 +37,15 @@ target_link_libraries(${TARGET2}
 
 target_compile_definitions(${TARGET2} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
 
-#set_target_properties(${TARGET2}
-#  PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
-install(TARGETS ${TARGET2} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
+message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+if ("${CMAKE_INSTALL_PREFIX}" MATCHES ".*install.*")
+  ## install
+  message("in INSTALLSPACE")
+  install(TARGETS ${TARGET2} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
+else()
+  ## devel
+  message("in DEVELSPACE")
+  set_target_properties(${TARGET2}
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+endif()
+
