@@ -49,3 +49,28 @@ else()
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
 endif()
 
+###
+set(TARGET3 PyAssimp)
+
+#set(headers DrawInterface.h)
+add_cnoid_python_module(${TARGET3} PyAssimpModule.cpp)
+
+target_link_libraries(${TARGET3}
+  ${CHOREONOID_BASE_LIBRARIES}
+  CnoidAssimpSceneLoader
+  )
+
+target_compile_definitions(${TARGET3} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
+
+message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+if ("${CMAKE_INSTALL_PREFIX}" MATCHES ".*install.*")
+  ## install
+  message("in INSTALLSPACE")
+  install(TARGETS ${TARGET3} LIBRARY DESTINATION ${choreonoid_PYTHON_DIR})
+else()
+  ## devel
+  message("in DEVELSPACE")
+  set_target_properties(${TARGET3}
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PYTHON_DIR})# copy the library for calling 'import cnoid.hoge'
+endif()
+
