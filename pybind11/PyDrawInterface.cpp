@@ -60,5 +60,4 @@ PYBIND11_MODULE(DrawInterface, m)
     //SgOverlay
 
     m.def("flush", &DrawInterface::flush);
-
 }

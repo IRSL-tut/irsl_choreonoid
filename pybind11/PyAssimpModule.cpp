@@ -10,12 +10,12 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(Assimp, m)
 {
-  m.doc() = "AssimpSceneLoader module";
+    m.doc() = "AssimpSceneLoader module";
 
-  py::module::import("cnoid.Util");
+    py::module::import("cnoid.Util");
 
-  py::class_<AssimpSceneLoader>(m, "AssimpSceneLoader")
-    .def(py::init<>())
-    .def("load", &AssimpSceneLoader::load)
-    ;
+    py::class_<AssimpSceneLoader>(m, "AssimpSceneLoader")
+        .def(py::init<>())
+        .def("load", &AssimpSceneLoader::load)
+        ;
 }
