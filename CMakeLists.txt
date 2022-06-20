@@ -11,21 +11,22 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 find_package(catkin REQUIRED)
 find_package(choreonoid REQUIRED)
 
-### debug print variables
-#get_cmake_property(_variableNames CACHE_VARIABLES)
-#get_cmake_property(_variableNames VARIABLES)
-#message("VARIABLES")
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#  message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
-
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES irsl_choreonoid
   #CATKIN_DEPENDS choreonoid
   DEPENDS CHOREONOID
 )
+
+### debug print variables
+##get_cmake_property(_variableNames CACHE_VARIABLES)
+#get_cmake_property(_variableNames VARIABLES)
+#message("VARIABLES>>>>")
+#list (SORT _variableNames)
+#foreach (_variableName ${_variableNames})
+#  message("${_variableName}=${${_variableName}}")
+#endforeach()
+#message("VARIABLES<<<<")
 
 # set path for installing jsk_choreonoid libraries in choreonoid
 set(choreonoid_PLUGINDIR ${CHOREONOID_PLUGIN_DIR})
