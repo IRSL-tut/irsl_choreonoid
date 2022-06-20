@@ -1,6 +1,8 @@
 #include "irsl_choreonoid/EigenUtil.h"
 
 namespace cnoid {
+
+#ifndef __irsl_use_inline__
     //void calcRodrigues(Matrix3& out_R, const Vector3& axis, double q)
     //AngleAxis(q, axis)
     Vector3 matrix_log(const Matrix3& m) {
@@ -73,4 +75,70 @@ namespace cnoid {
         mid_coords.translation() = (1 - p) * c1.translation() + p * c2.translation();
         mid_coords.linear() = ret_rot;
     }
+#endif
+
+#ifndef __irsl_use_inline__
+    void rotate_with_matrix(Position &coords, const Matrix3 &mat, const coords_wrt wrt)
+    {
+        Matrix3 rot = coords.linear();
+        Matrix3 rot_org = coords.linear();
+        if (wrt == local) {
+            rotm3times(rot, rot_org, mat);
+        } else if (wrt == world) {
+            rotm3times(rot, mat, rot_org);
+        } else {
+            return;
+        }
+        coords.linear() = rot;
+    }
+
+    void rotate(Position &coords, const double theta, const Vector3& axis, const coords_wrt wrt)
+    {
+        AngleAxis tmpr(theta, axis);
+        rotate_with_matrix(coords, tmpr.toRotationMatrix(), wrt);
+    }
+
+    void difference(const Position &coords, Vector3& dif_pos, Vector3& dif_rot, const Position& c)
+    {
+        dif_pos = c.translation() - coords.translation();
+        difference_rotation(dif_rot, coords.linear(), c.linear());
+    }
+
+    void inverse_transformation(const Position &coords, Position& inv)
+    {
+        inv = coords.inverse();
+    }
+
+    void transformation(const Position &coords, Position& trans_coords, const Position &c, const coords_wrt wrt)
+    {
+        if(wrt == local) {
+            // coords^-1 * c
+            inverse_transformation(coords, trans_coords);
+            transform(trans_coords, c);
+        } else if (wrt == world) {
+            // c * coords^-1
+            Position inv_trans;
+            inverse_transformation(coords, inv_trans);
+            trans_coords = c;
+            transform(trans_coords, inv_trans);
+        }
+    }
+
+    void transform(Position &coords, const Position& c, const coords_wrt wrt)
+    {
+        if (wrt == local) {
+            Position tmp = (coords * c);
+            Matrix3 rot;
+            rotm3times(rot, coords.linear(), c.linear());
+            coords.translation() = tmp.translation();
+            coords.linear() = rot;
+        } else if (wrt == world) {
+            Position tmp = (c * coords);
+            Matrix3 rot;
+            rotm3times(rot, c.linear(), coords.linear());
+            coords.translation() = tmp.translation();
+            coords.linear() = rot;
+        }
+    }
+#endif
 }
