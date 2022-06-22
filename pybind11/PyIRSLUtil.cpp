@@ -115,6 +115,7 @@ PYBIND11_MODULE(IRSLUtil, m)
     py::enum_<coordinates::wrt>(coords_cls, "wrt")
     .value("local", coordinates::wrt::local)
     .value("world", coordinates::wrt::world)
+    .value("parent", coordinates::wrt::parent)
     .export_values();
 
     coords_cls.def(py::init<>())
@@ -149,6 +150,7 @@ PYBIND11_MODULE(IRSLUtil, m)
     .def_property("rot",
                   [](coordinates &self) { return self.rot; },
                   [](coordinates &self, ref_mat3 mat) { self.rot = mat; })
+    .def("equal", &coordinates::equal, py::arg("c"), py::arg("eps") = 0.00001)
     .def("toPosition",
          [](const coordinates &self) -> Matrix4RM { Position p; self.toPosition(p); return p.matrix(); })
     .def("rotate_with_matrix",
