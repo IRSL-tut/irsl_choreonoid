@@ -47,6 +47,19 @@ def cnoidTranslation(cPosition):
   return cPosition[:3, 3]
 
 def loadRobot(fname, name = None):
+    '''Load robot model and add it as Item
+
+    Parameters
+    ----------
+    fname : str
+        file name of model
+    name : str
+        name of Item
+
+    Returns
+    -------
+    instance of cnoid.Body.Body
+    '''
     # print('loadRobot: %s'%(fname))
     bI = BodyItem()
     bI.load(fname)

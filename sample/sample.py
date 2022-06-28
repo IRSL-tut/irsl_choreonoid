@@ -6,25 +6,33 @@ import numpy as np
 import cnoid.IRSLUtil as iu
 import math
 
+## ロボットモデルの初期化
 rr = sr.init_sample_robot()
+## 姿勢を与える
 rr.set_pose('default')
+## 画面の更新
 rr.flush()
-rr.foot_mid_coords()
+## 左右脚先の中点
+cds0 = rr.foot_mid_coords()
 
+## 左右脚先の中点を与えた座標に一致させる（以下の場合は原点）
 rr.fix_leg_to_coords(np.identity(4))
-rr.flush()
+rr.flush()## 画面の更新
 
+## 腰を前後左右に動かして重心を左右脚先の中点上に一致させる
 rr.move_centroid_on_foot()
-rr.flush()
-rr.foot_mid_coords()
+rr.flush()## 画面の更新
+cds1 = rr.foot_mid_coords()## 左右脚先の中点
 
-rr.robot.mass
-rr.robot.calcCenterOfMass()
-rr.robot.centerOfMass
+rr.robot.mass ## ロボットの質量
+rr.robot.calcCenterOfMass() ## 重心の計算
+rr.robot.centerOfMass ## 計算された重心位置
 
+## 矢印の表示（重心）
 mass_coords = ru.DrawCoords()
 mass_coords.draw(iu.cnoidPosition(rr.robot.centerOfMass))
 
+## 矢印の表示（左手）
 larm_coords = ru.DrawCoords()
 larm_coords.draw(rr.larm_end_effector())
 
