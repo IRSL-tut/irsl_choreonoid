@@ -319,12 +319,15 @@ namespace cnoid {
                 //std::cerr << "**** invalid wrt! ****" << std::endl;
             }
 #endif
+            // return self^-1 * c (local)
+            // return c * self^-1 (world)
             coordinates tmp(c); // safe if &tc == &c
             inverse_transformation(tc);
             tc.transform(tmp, wrt);
         }
         void transformation(coordinates& tc, const coordinates &c, const coordinates &wrt) const
         {
+            // return w^-1 * c * self^-1 * w
             coordinates tmp(c); // safe if &tc == &c
             coordinates inv_self;
             inverse_transformation(inv_self);
@@ -337,6 +340,7 @@ namespace cnoid {
         void transform(const coordinates& c, const wrt wrt = local )
         {
             if (wrt == local) {
+                // self := self * c
                 pos += rot * c.pos;
 #if 0
                 Matrix3 rot_org(rot);
@@ -344,6 +348,7 @@ namespace cnoid {
 #endif
                 rotm3times(rot, rot, c.rot);
             } else if (wrt == world || wrt == parent) {
+                // self := c * self
 #if 0
                 Vector3 p(c.pos);
                 Matrix3 r(c.rot);
