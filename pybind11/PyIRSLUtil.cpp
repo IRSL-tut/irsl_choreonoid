@@ -2,7 +2,6 @@
    @author YoheiKakiuchi
 */
 
-#include <memory>
 #include <sstream>
 #include <pybind11/pybind11.h>
 
@@ -12,20 +11,6 @@
 
 using namespace cnoid;
 namespace py = pybind11;
-
-using Matrix4RM = Eigen::Matrix<double, 4, 4, Eigen::RowMajor>;
-using Matrix3RM = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
-
-// numpy (RowMajor) / Eigen (ColumnMajor)
-// Ref<T> for a writable reference,
-// const Ref<const T>& for a const reference
-// Ref<const T>, might still be interesting if you want to change the matrix that is referenced (not its content) through a call to Ref constructor using placement new.
-typedef Eigen::Ref<const Matrix4RM> ref_mat4;
-typedef Eigen::Ref<const Matrix3RM> ref_mat3;
-typedef Eigen::Ref<const Vector4>   ref_vec4;
-typedef Eigen::Ref<const Vector3>   ref_vec3;
-
-typedef std::shared_ptr< coordinates > coordinatesPtr;
 
 Matrix4RM mid_coords_(const double p, ref_mat4 c1, ref_mat4 c2, const double eps)
 {
