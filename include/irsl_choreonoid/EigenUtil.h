@@ -256,12 +256,25 @@ namespace cnoid {
             rotm3times(r2t, wrt.rot, r2t);
             rotm3times(rot, r2t, rot);
         }
+        void rotate_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
+        {
+            Matrix3 r2t = wrt.transpose();
+            //rot =  W * mat * W^1 * rot
+            rotm3times(r2t, mat, r2t);
+            rotm3times(r2t, wrt, r2t);
+            rotm3times(rot, r2t, rot);
+        }
         void rotate (const double theta, const Vector3& axis, const wrt wrt = local )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
         }
         void rotate (const double theta, const Vector3& axis, const coordinates &wrt )
+        {
+            Eigen::AngleAxis<double> tmpr(theta, axis);
+            rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
+        }
+        void rotate (const double theta, const Vector3& axis, const Matrix3 &wrt )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
@@ -276,9 +289,30 @@ namespace cnoid {
         }
         void orient_with_matrix (const Matrix3& mat, const coordinates &wrt )
         {
-            Matrix3 r2 = wrt.rot;
+            //Matrix3 r2 = wrt.rot;
             //rot =  W * mat
             rotm3times(rot, wrt.rot, mat);
+        }
+        void orient_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
+        {
+            //Matrix3 r2 = wrt.rot;
+            //rot =  W * mat
+            rotm3times(rot, wrt, mat);
+        }
+        void orient (const double theta, const Vector3& axis, const wrt wrt = local )
+        {
+            Eigen::AngleAxis<double> tmpr(theta, axis);
+            orient_with_matrix(tmpr.toRotationMatrix(), wrt);
+        }
+        void orient (const double theta, const Vector3& axis, const coordinates &wrt )
+        {
+            Eigen::AngleAxis<double> tmpr(theta, axis);
+            orient_with_matrix(tmpr.toRotationMatrix(), wrt);
+        }
+        void orient (const double theta, const Vector3& axis, const Matrix3 &wrt )
+        {
+            Eigen::AngleAxis<double> tmpr(theta, axis);
+            orient_with_matrix(tmpr.toRotationMatrix(), wrt);
         }
         //void rotate (const double theta, const Vector3& axis, const coordinates &wrt)
         /* void difference_rotation(Vector3& dif_rot, const coordinates& c) const { */

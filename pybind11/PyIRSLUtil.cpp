@@ -169,10 +169,42 @@ PYBIND11_MODULE(IRSLUtil, m)
          [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
          {  self.rotate_with_matrix(mat, wrt); },
          py::arg("mat"), py::arg("wrt") = coordinates::wrt::local )
+    .def("rotate_with_matrix",
+         [](coordinates &self, ref_mat3 mat, const coordinates &wrt)
+         {  self.rotate_with_matrix(mat, wrt); } )
+    .def("rotate_with_matrix",
+         [](coordinates &self, ref_mat3 mat, ref_mat3 wrt)
+         {  self.rotate_with_matrix(mat, wrt); } )
     .def("rotate",
          [](coordinates &self, double th_, ref_vec3 ax_, coordinates::wrt wrt)
          { self.rotate(th_, ax_, wrt); },
          py::arg("theta"), py::arg("axis"), py::arg("wrt") = coordinates::wrt::local )
+    .def("rotate",
+         [](coordinates &self, double th_, ref_vec3 ax_, const coordinates &wrt)
+         { self.rotate(th_, ax_, wrt); } )
+    .def("rotate",
+         [](coordinates &self, double th_, ref_vec3 ax_, ref_mat3 wrt)
+         { self.rotate(th_, ax_, wrt); } )
+    .def("orient_with_matrix",
+         [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
+         {  self.orient_with_matrix(mat, wrt); },
+         py::arg("mat"), py::arg("wrt") = coordinates::wrt::local )
+    .def("orient_with_matrix",
+         [](coordinates &self, ref_mat3 mat, const coordinates &wrt)
+         {  self.orient_with_matrix(mat, wrt); } )
+    .def("orient_with_matrix",
+         [](coordinates &self, ref_mat3 mat, ref_mat3 wrt)
+         {  self.orient_with_matrix(mat, wrt); } )
+    .def("orient",
+         [](coordinates &self, double th_, ref_vec3 ax_, coordinates::wrt wrt)
+         { self.orient(th_, ax_, wrt); },
+         py::arg("theta"), py::arg("axis"), py::arg("wrt") = coordinates::wrt::local )
+    .def("orient",
+         [](coordinates &self, double th_, ref_vec3 ax_, const coordinates &wrt)
+         { self.orient(th_, ax_, wrt); } )
+    .def("orient",
+         [](coordinates &self, double th_, ref_vec3 ax_, ref_mat3 wrt)
+         { self.orient(th_, ax_, wrt); } )
     .def("difference_rotation",
          [](const coordinates &self, coordinates &c) {
              Vector3 ret; self.difference_rotation(ret, c); return ret;
