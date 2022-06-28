@@ -29,6 +29,33 @@ PYBIND11_MODULE(IRSLUtil, m)
 
     m.def("mid_coords", mid_coords_, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
 
+    m.def("eps_eq", [] (const double a, const double b, const double eps) { return eps_eq(a, b, eps); },
+          py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
+    m.def("eps_eq", [] (ref_vec3 a, ref_vec3 b, const double eps) {
+            if (!eps_eq(a(0), b(0), eps)) return false;
+            if (!eps_eq(a(1), b(1), eps)) return false;
+            if (!eps_eq(a(2), b(2), eps)) return false;
+            return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
+    m.def("eps_eq", [] (ref_vec4 a, ref_vec4 b, const double eps) {
+            if (!eps_eq(a(0), b(0), eps)) return false;
+            if (!eps_eq(a(1), b(1), eps)) return false;
+            if (!eps_eq(a(2), b(2), eps)) return false;
+            if (!eps_eq(a(3), b(3), eps)) return false;
+            return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
+    m.def("eps_eq", [] (ref_mat3 a, ref_mat3 b, const double eps) {
+            const double *aptr = a.data();
+            const double *bptr = b.data();
+            for(size_t i = 0; i < a.size(); i++) {
+                if (!eps_eq(*aptr++, *bptr++, eps)) return false;
+            }
+            return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
+    m.def("eps_eq", [] (ref_mat4 a, ref_mat4 b, const double eps) {
+            const double *aptr = a.data();
+            const double *bptr = b.data();
+            for(size_t i = 0; i < a.size(); i++) {
+                if (!eps_eq(*aptr++, *bptr++, eps)) return false;
+            }
+            return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
     m.def("PositionInverse", [](ref_mat4 in_p) -> Matrix4RM { Position p(in_p); return p.inverse().matrix(); });
     m.def("Position_translation", [](ref_mat4 in_p) { Position p(in_p); return Vector3(p.translation()); });
     m.def("Position_quaternion", [](ref_mat4 in_p) { Quaternion q(Position(in_p).linear());
@@ -135,7 +162,7 @@ PYBIND11_MODULE(IRSLUtil, m)
     .def_property("rot",
                   [](coordinates &self) { return self.rot; },
                   [](coordinates &self, ref_mat3 mat) { self.rot = mat; })
-    .def("equal", &coordinates::equal, py::arg("c"), py::arg("eps") = 0.00001)
+    .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
          [](const coordinates &self) -> Matrix4RM { Position p; self.toPosition(p); return p.matrix(); })
     .def("rotate_with_matrix",

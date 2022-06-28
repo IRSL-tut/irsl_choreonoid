@@ -43,7 +43,23 @@ namespace cnoid {
         }
         return true;
     }
+    inline bool eps_eq(const Matrix3RM &a, const Matrix3RM &b, const double eps = 0.00001) {
+        const double *aptr = a.data();
+        const double *bptr = b.data();
+        for(size_t i = 0; i < a.size(); i++) {
+            if (!eps_eq(*aptr++, *bptr++, eps)) return false;
+        }
+        return true;
+    }
     inline bool eps_eq(const Matrix4 &a, const Matrix4 &b, const double eps = 0.00001) {
+        const double *aptr = a.data();
+        const double *bptr = b.data();
+        for(size_t i = 0; i < a.size(); i++) {
+            if (!eps_eq(*aptr++, *bptr++, eps)) return false;
+        }
+        return true;
+    }
+    inline bool eps_eq(const Matrix4RM &a, const Matrix4RM &b, const double eps = 0.00001) {
         const double *aptr = a.data();
         const double *bptr = b.data();
         for(size_t i = 0; i < a.size(); i++) {
