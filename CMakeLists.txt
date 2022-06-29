@@ -106,3 +106,5 @@ install(DIRECTORY test
 
 #add_subdirectory(sample)
 add_subdirectory(pybind11)
+
+add_subdirectory(plugins)
