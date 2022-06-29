@@ -5,9 +5,9 @@ import numpy as np
 
 import math
 
-def init_sample_robot():
+def init_sample_robot(world = True):
     fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
-    ru.loadRobot(fname, 'SampleRobot')
+    ru.loadRobot(fname, 'SampleRobot', world)
     i = ru.findItem('SampleRobot')
     return SampleRobot(i)
 

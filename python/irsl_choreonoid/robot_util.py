@@ -23,14 +23,24 @@ def getRootItem():
     else:
         return RootItem.instance
 
-def getWorld():
+def getWorld(name = 'World'):
     rI = getRootItem()
-    ret = rI.findItem("World")
+    ret = rI.findItem(name)
     if ret == None:
         ret = WorldItem()
+        ret.setName(name)
         rI.addChildItem(ret)
         getItemTreeView().checkItem(ret)
     return ret
+
+def addSimulator(world = None, simulator_name = 'AISTSimulator'):
+    if world is None:
+        world = getWorld()
+    sim_ = world.findItem(simulator_name)
+    if sim_ == None:
+        sim_ = AISTSimulatorItem()
+        world.addChildItem(sim_)
+        getItemTreeView().checkItem(sim_)
 
 def cnoidPosition(rotation = None, translation = None):
   ret = np.identity(4)
@@ -46,7 +56,7 @@ def cnoidRotation(cPosition):
 def cnoidTranslation(cPosition):
   return cPosition[:3, 3]
 
-def loadRobot(fname, name = None):
+def loadRobot(fname, name = None, world = True):
     '''Load robot model and add it as Item
 
     Parameters
@@ -71,11 +81,18 @@ def loadRobot(fname, name = None):
         rr = bI.body
     rr.calcForwardKinematics()
     bI.storeInitialState()
-    wd = getWorld()
-    if callable(wd.childItem):
-        wd.insertChildItem(bI, wd.childItem())
-    else:
-        wd.insertChildItem(bI, wd.childItem)
+    if world == True:
+        wd = getWorld()
+        if callable(wd.childItem):
+            wd.insertChildItem(bI, wd.childItem())
+        else:
+            wd.insertChildItem(bI, wd.childItem)
+    elif type(world) is cnoid.BodyPlugin.WorldItem:
+        if callable(world.childItem):
+            world.insertChildItem(bI, world.childItem())
+        else:
+            world.insertChildItem(bI, world.childItem)
+
     getItemTreeView().checkItem(bI)
     return rr
 
