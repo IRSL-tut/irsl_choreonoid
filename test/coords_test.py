@@ -1,10 +1,13 @@
-# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python/cnoid python3 coords_test.py
+# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 coords_test.py
 
-## import sys
-##sys.path.append('/catkin_ws/devel/lib/choreonoid-1.8/python/cnoid')
+##import sys
+##sys.path.append('/path_to/catkin_ws/devel/lib/choreonoid-1.8/python/cnoid')
+
+#exec(open('coords_test.py').read())
+
 ## under lib/choreonoid-1.8/cnoid
-from IRSLUtil import coordinates
-import IRSLUtil as iu
+from cnoid.IRSLUtil import coordinates
+import cnoid.IRSLUtil as iu
 import numpy as np
 import math
 
