@@ -8,16 +8,18 @@
 #include "irsl_choreonoid/EigenUtil.h"
 #include <cnoid/PyUtil>
 #include <cnoid/PyEigenTypes>
+#include <cnoid/Body>
+#include <cnoid/Link>
 
 using namespace cnoid;
 namespace py = pybind11;
 
-Matrix4RM mid_coords_(const double p, ref_mat4 c1, ref_mat4 c2, const double eps)
+Matrix4RM mid_coords_pos_(const double p, ref_mat4 c1, ref_mat4 c2, const double eps)
 {
     Position cnoid_pos;
     Position p_c1(c1), p_c2(c2);
     cnoid_pos.setIdentity();
-    mid_coords(cnoid_pos, p, p_c1, p_c2, eps);
+    mid_coords_pos(cnoid_pos, p, p_c1, p_c2, eps);
     return cnoid_pos.matrix();
 }
 
@@ -25,9 +27,13 @@ PYBIND11_MODULE(IRSLUtil, m)
 {
     m.doc() = "Utility for choreonoid";
 
-    //py::module::import("cnoid.Util");
+    py::module::import("cnoid.Body");
 
-    m.def("mid_coords", mid_coords_, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
+    m.def("mid_coords_pos", mid_coords_pos_, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
+    m.def("mid_coords", [] (const double p, const coordinates &c1, const coordinates &c2, const double eps) {
+            coordinatesPtr ret(new coordinates());
+            mid_coords(*ret, p, c1, c2, eps);
+            return ret; }, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
 
     m.def("eps_eq", [] (const double a, const double b, const double eps) { return eps_eq(a, b, eps); },
           py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
@@ -145,7 +151,9 @@ PYBIND11_MODULE(IRSLUtil, m)
                   { Position p(position); return new coordinates(p); }))
     .def("__repr__", [](const coordinates &self) {
             std::stringstream ss;
-            ss << "<coordinates ";
+            ss << "<coordinates[";
+            ss << std::hex << reinterpret_cast<const void *>(&self);
+            ss << "] ";
             Quaternion q(self.rot);
             ss << self.pos(0); ss << " ";
             ss << self.pos(1); ss << " ";
@@ -167,44 +175,44 @@ PYBIND11_MODULE(IRSLUtil, m)
          [](const coordinates &self) -> Matrix4RM { Position p; self.toPosition(p); return p.matrix(); })
     .def("rotate_with_matrix",
          [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
-         {  self.rotate_with_matrix(mat, wrt); },
+         {  self.rotate_with_matrix(mat, wrt); return &self; },
          py::arg("mat"), py::arg("wrt") = coordinates::wrt::local )
     .def("rotate_with_matrix",
          [](coordinates &self, ref_mat3 mat, const coordinates &wrt)
-         {  self.rotate_with_matrix(mat, wrt); } )
+         {  self.rotate_with_matrix(mat, wrt); return &self; } )
     .def("rotate_with_matrix",
          [](coordinates &self, ref_mat3 mat, ref_mat3 wrt)
-         {  self.rotate_with_matrix(mat, wrt); } )
+         {  self.rotate_with_matrix(mat, wrt); return &self; } )
     .def("rotate",
          [](coordinates &self, double th_, ref_vec3 ax_, coordinates::wrt wrt)
-         { self.rotate(th_, ax_, wrt); },
+         { self.rotate(th_, ax_, wrt); return &self; },
          py::arg("theta"), py::arg("axis"), py::arg("wrt") = coordinates::wrt::local )
     .def("rotate",
          [](coordinates &self, double th_, ref_vec3 ax_, const coordinates &wrt)
-         { self.rotate(th_, ax_, wrt); } )
+         { self.rotate(th_, ax_, wrt); return &self; } )
     .def("rotate",
          [](coordinates &self, double th_, ref_vec3 ax_, ref_mat3 wrt)
-         { self.rotate(th_, ax_, wrt); } )
+         { self.rotate(th_, ax_, wrt); return &self; } )
     .def("orient_with_matrix",
          [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
-         {  self.orient_with_matrix(mat, wrt); },
+         {  self.orient_with_matrix(mat, wrt); return &self; },
          py::arg("mat"), py::arg("wrt") = coordinates::wrt::local )
     .def("orient_with_matrix",
          [](coordinates &self, ref_mat3 mat, const coordinates &wrt)
-         {  self.orient_with_matrix(mat, wrt); } )
+         {  self.orient_with_matrix(mat, wrt); return &self; } )
     .def("orient_with_matrix",
          [](coordinates &self, ref_mat3 mat, ref_mat3 wrt)
-         {  self.orient_with_matrix(mat, wrt); } )
+         {  self.orient_with_matrix(mat, wrt); return &self; } )
     .def("orient",
          [](coordinates &self, double th_, ref_vec3 ax_, coordinates::wrt wrt)
-         { self.orient(th_, ax_, wrt); },
+         { self.orient(th_, ax_, wrt); return &self; },
          py::arg("theta"), py::arg("axis"), py::arg("wrt") = coordinates::wrt::local )
     .def("orient",
          [](coordinates &self, double th_, ref_vec3 ax_, const coordinates &wrt)
-         { self.orient(th_, ax_, wrt); } )
+         { self.orient(th_, ax_, wrt); return &self; } )
     .def("orient",
          [](coordinates &self, double th_, ref_vec3 ax_, ref_mat3 wrt)
-         { self.orient(th_, ax_, wrt); } )
+         { self.orient(th_, ax_, wrt); return &self; } )
     .def("difference_rotation",
          [](const coordinates &self, coordinates &c) {
              Vector3 ret; self.difference_rotation(ret, c); return ret;
@@ -215,22 +223,22 @@ PYBIND11_MODULE(IRSLUtil, m)
          } )
     .def("inverse_transformation",
          [](const coordinates &self) {
-             coordinates ret; self.inverse_transformation(ret); return ret;
+             coordinatesPtr ret(new coordinates()); self.inverse_transformation(*ret); return ret;
          } )
     .def("transformation",
          [](const coordinates &self, const coordinates &c, coordinates::wrt wrt) {
-             coordinates ret; self.transformation(ret, c, wrt); return ret;
+             coordinatesPtr ret(new coordinates()); self.transformation(*ret, c, wrt); return ret;
          }, py::arg("coords"), py::arg("wrt") = coordinates::wrt::local )
     .def("transformation",
          [](const coordinates &self, const coordinates &c, const coordinates &wrt) {
-             coordinates ret; self.transformation(ret, c, wrt); return ret;
+             coordinatesPtr ret(new coordinates()); self.transformation(*ret, c, wrt); return ret;
          } )
     .def("transform",
          [](coordinates &self, const coordinates &c, coordinates::wrt wrt)
-         { self.transform(c, wrt); }, py::arg("coords"), py::arg("wrt") = coordinates::wrt::local )
+         { self.transform(c, wrt); return &self; }, py::arg("coords"), py::arg("wrt") = coordinates::wrt::local )
     .def("transform",
          [](coordinates &self, const coordinates &c, const coordinates &wrt)
-         { self.transform(c, wrt); } )
+         { self.transform(c, wrt); return &self; } )
     ////
     .def("rotate_vector",
          [](const coordinates &self, Eigen::Ref<Vector3> vec) { Vector3 v(vec);
@@ -247,21 +255,68 @@ PYBIND11_MODULE(IRSLUtil, m)
     ///
     .def("translate",
          [](coordinates &self, ref_vec3 vec, coordinates::wrt wrt) {
-             self.translate(vec, wrt); }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
+             self.translate(vec, wrt); return &self; }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
     .def("translate",
          [](coordinates &self, ref_vec3 vec, const coordinates &wrt) {
-             self.translate(vec, wrt); } )
+             self.translate(vec, wrt); return &self; } )
     .def("locate",
          [](coordinates &self, ref_vec3 vec, coordinates::wrt wrt) {
-             self.locate(vec, wrt); }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
+             self.locate(vec, wrt); return &self; }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
     .def("locate",
          [](coordinates &self, ref_vec3 vec, const coordinates &wrt) {
-             self.locate(vec, wrt); } )
+             self.locate(vec, wrt); return &self; } )
     .def("move_to",
          [](coordinates &self, const coordinates &vec, coordinates::wrt wrt) {
-             self.move_to(vec, wrt); }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
+             self.move_to(vec, wrt); return &self; }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
     .def("move_to",
          [](coordinates &self, const coordinates &vec, const coordinates &wrt) {
-             self.move_to(vec, wrt); } )
+             self.move_to(vec, wrt); return &self; } )
+    //
+    .def("inverse", [](coordinates &self) { self.inverse(); return &self; } )
+    .def("mid_coords", [](const coordinates &self, const double p, const coordinates &c2, const double eps) {
+            coordinatesPtr ret(new coordinates());
+            self.mid_coords(*ret, p, c2, eps);
+            return ret; }, py::arg("p"), py::arg("c2"), py::arg("eps") = 0.00001);
     ;
+
+    // add method to ..
+    m.def("angleVector",
+          [](Body &self) {
+              int n = self.numJoints();
+              VectorX vec(n);
+              for(int i = 0; i < n; i++) {
+                  vec(i) = self.joint(i)->q();
+              }
+              return vec;
+          });
+    m.def("angleVector",
+          [](Body &self, VectorX &vec) {
+              int n = vec.size();
+              if (self.numJoints() < n) n = self.numJoints();
+              for(int i = 0; i < n; i++) {
+                  self.joint(i)->q() = vec(i);
+              }
+          });
+    m.def("getCoords",
+          [](Link &self) {
+              coordinatesPtr ret(new coordinates());
+              *ret = self.position();
+              return ret;
+          });
+    m.def("setCoords",
+          [](Link &self, const coordinates &cds) {
+              cds.toPosition(self.position());
+          });
+    m.def("getOffsetCoords",
+          [](Link &self) {
+              coordinatesPtr ret(new coordinates());
+              *ret = self.offsetPosition();
+              return ret;
+          });
+    m.def("setOffsetCoords",
+          [](Link &self, const coordinates &cds) {
+              Position p;
+              cds.toPosition(p);
+              self.setOffsetPosition(p);
+          });
 }
