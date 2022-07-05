@@ -148,7 +148,7 @@ namespace cnoid {
         }
     }
 
-    inline void mid_coords(Position &mid_coords, const double p, const Position &c1, const Position &c2, const double eps) { // eps = 0.00001
+    inline void mid_coords_pos(Position &mid_coords, const double p, const Position &c1, const Position &c2, const double eps) { // eps = 0.00001
         Matrix3 c1_rot(c1.linear());
         Matrix3 c2_rot(c2.linear());
         Matrix3 ret_rot;
@@ -192,14 +192,19 @@ namespace cnoid {
         coordinates(const AngleAxis& ax) : pos(Vector3::Zero()), rot(ax) {};
         coordinates(const coordinates& c) : pos(c.pos), rot(c.rot) {};
         coordinates(const Position &p) : pos(p.translation()), rot(p.linear()) {};
-        virtual ~coordinates() { }
+        virtual ~coordinates() {
+#if 0
+          std::cerr << "coordinates del: ";
+          std::cerr <<  std::hex << reinterpret_cast<void *>(this) << std::endl;
+#endif
+        }
 
         void set(const Vector3 &p) { pos = p; }
         void set(const Matrix3 &r) { rot = r; }
         void set(const Quaternion &q) { rot = q; }
         void set(const AngleAxis &ax) { rot = ax; }
 
-        bool equal(const coordinates &c, const double eps = 0.00001)
+        bool equal(const coordinates &c, const double eps = 0.00001) const
         {
             if (!eps_eq(pos, c.pos, eps)) return false;
             if (!eps_eq(rot, c.rot, eps)) return false;
@@ -226,7 +231,7 @@ namespace cnoid {
             rot = p.linear();
             return *this;
         }
-        void rotate_with_matrix (const Matrix3& mat, const wrt wrt = local )
+        coordinates &rotate_with_matrix (const Matrix3& mat, const wrt wrt = local )
         {
 #if 0
             Matrix3 rot_org(rot);
@@ -247,72 +252,84 @@ namespace cnoid {
                 // alias(rot) = mat * rot;
                 rotm3times(rot, mat, rot);
             }
+            return *this;
         }
-        void rotate_with_matrix (const Matrix3& mat, const coordinates &wrt )
+        coordinates &rotate_with_matrix (const Matrix3& mat, const coordinates &wrt )
         {
             Matrix3 r2t = wrt.rot.transpose();
             //rot =  W * mat * W^1 * rot
             rotm3times(r2t, mat, r2t);
             rotm3times(r2t, wrt.rot, r2t);
             rotm3times(rot, r2t, rot);
+            return *this;
         }
-        void rotate_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
+        coordinates &rotate_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
         {
             Matrix3 r2t = wrt.transpose();
             //rot =  W * mat * W^1 * rot
             rotm3times(r2t, mat, r2t);
             rotm3times(r2t, wrt, r2t);
             rotm3times(rot, r2t, rot);
+            return *this;
         }
-        void rotate (const double theta, const Vector3& axis, const wrt wrt = local )
+        coordinates &rotate (const double theta, const Vector3& axis, const wrt wrt = local )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
-        void rotate (const double theta, const Vector3& axis, const coordinates &wrt )
+        coordinates &rotate (const double theta, const Vector3& axis, const coordinates &wrt )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
-        void rotate (const double theta, const Vector3& axis, const Matrix3 &wrt )
+        coordinates &rotate (const double theta, const Vector3& axis, const Matrix3 &wrt )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             rotate_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
-        void orient_with_matrix (const Matrix3& mat, const wrt wrt = local )
+        coordinates &orient_with_matrix (const Matrix3& mat, const wrt wrt = local )
         {
             if (wrt == local) {
                 rotm3times(rot, rot, mat);
             } else if (wrt == world || wrt == parent) {
                 rot = mat;
             }
+            return *this;
         }
-        void orient_with_matrix (const Matrix3& mat, const coordinates &wrt )
+        coordinates &orient_with_matrix (const Matrix3& mat, const coordinates &wrt )
         {
             //Matrix3 r2 = wrt.rot;
             //rot =  W * mat
             rotm3times(rot, wrt.rot, mat);
+            return *this;
         }
-        void orient_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
+        coordinates &orient_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
         {
             //Matrix3 r2 = wrt.rot;
             //rot =  W * mat
             rotm3times(rot, wrt, mat);
+            return *this;
         }
-        void orient (const double theta, const Vector3& axis, const wrt wrt = local )
+        coordinates &orient (const double theta, const Vector3& axis, const wrt wrt = local )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             orient_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
-        void orient (const double theta, const Vector3& axis, const coordinates &wrt )
+        coordinates &orient (const double theta, const Vector3& axis, const coordinates &wrt )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             orient_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
-        void orient (const double theta, const Vector3& axis, const Matrix3 &wrt )
+        coordinates &orient (const double theta, const Vector3& axis, const Matrix3 &wrt )
         {
             Eigen::AngleAxis<double> tmpr(theta, axis);
             orient_with_matrix(tmpr.toRotationMatrix(), wrt);
+            return *this;
         }
         //void rotate (const double theta, const Vector3& axis, const coordinates &wrt)
         /* void difference_rotation(Vector3& dif_rot, const coordinates& c) const { */
@@ -332,13 +349,14 @@ namespace cnoid {
             difference_rotation__(dif_rot, rot, c.rot);
         }
         //abc
-        void inverse_transformation(coordinates& inv) const
+        coordinates &inverse_transformation(coordinates& inv) const
         {
             inv.rot = rot.transpose();
             inv.pos = inv.rot * (-1 * pos);
+            return inv;
         }
         //void transformation(coordinates& tc, coordinates c, const wrt wrt = local ) const
-        void transformation(coordinates& tc, const coordinates &c, const wrt wrt = local ) const
+        coordinates &transformation(coordinates& tc, const coordinates &c, const wrt wrt = local ) const
         {
 #if 0
             tc = *this;//??
@@ -358,8 +376,9 @@ namespace cnoid {
             coordinates tmp(c); // safe if &tc == &c
             inverse_transformation(tc);
             tc.transform(tmp, wrt);
+            return tc;
         }
-        void transformation(coordinates& tc, const coordinates &c, const coordinates &wrt) const
+        coordinates &transformation(coordinates& tc, const coordinates &c, const coordinates &wrt) const
         {
             // return w^-1 * c * self^-1 * w
             coordinates tmp(c); // safe if &tc == &c
@@ -370,8 +389,9 @@ namespace cnoid {
             tc.transform(tmp);
             tc.transform(inv_self);
             tc.transform(wrt);
+            return tc;
         }
-        void transform(const coordinates& c, const wrt wrt = local )
+        coordinates &transform(const coordinates& c, const wrt wrt = local )
         {
             if (wrt == local) {
                 // self := self * c
@@ -396,8 +416,9 @@ namespace cnoid {
             } else {
                 //std::cerr << "**** invalid wrt! ****" << std::endl;
             }
+            return *this;
         }
-        void transform(const coordinates& c, const coordinates &wrt )
+        coordinates &transform(const coordinates& c, const coordinates &wrt )
         {
             coordinates tmp(wrt);
             coordinates inv_wrt;
@@ -408,6 +429,7 @@ namespace cnoid {
             tmp.transform(*this);
 
             *this = tmp;
+            return *this;
         }
 
         ////
@@ -428,43 +450,61 @@ namespace cnoid {
         {
             vec = rot.transpose() * (vec - pos);
         }
-        void move_to (const coordinates &c, const wrt wrt = local )
+        coordinates &move_to (const coordinates &c, const wrt wrt = local )
         {
             if (wrt == local) {
                 transform(c);
             } else if (wrt == world || wrt == parent) {
                 *this = c;
             }
+            return *this;
         }
-        void move_to (const coordinates &c, const coordinates &wrt)
+        coordinates &move_to (const coordinates &c, const coordinates &wrt)
         {
             coordinates tmp(wrt);
             tmp.transform(c);
             *this = tmp;
+            return *this;
         }
-        void translate(const Vector3 &vec, const wrt wrt = local )
+        coordinates &translate(const Vector3 &vec, const wrt wrt = local )
         {
             if (wrt == local) {
                 pos += rot * vec;
             } else if (wrt == world || wrt == parent) {
                 pos += vec;
             }
+            return *this;
         }
-        void translate(const Vector3 &vec, const coordinates &wrt)
+        coordinates &translate(const Vector3 &vec, const coordinates &wrt)
         {
             pos += wrt.rot * vec;
+            return *this;
         }
-        void locate(const Vector3 &vec, const wrt wrt = local )
+        coordinates &locate(const Vector3 &vec, const wrt wrt = local )
         {
             if (wrt == local) {
                 pos += rot * vec;
             } else if (wrt == world || wrt == parent) {
                 pos = vec;
             }
+            return *this;
         }
-        void locate(const Vector3 &vec, const coordinates &wrt)
+        coordinates &locate(const Vector3 &vec, const coordinates &wrt)
         {
             pos = wrt.pos + (wrt.rot * vec);
+            return *this;
+        }
+        // new functions
+        coordinates &inverse() {
+            rot = rot.transpose();
+            pos = rot * (-1 * pos);
+            return *this;
+        }
+        coordinates &mid_coords(coordinates &mid_coords, const double p, const coordinates &c2, const double eps = 0.00001) const
+        {
+            mid_coords.pos = (1 - p) * pos + p * c2.pos;
+            mid_rot(mid_coords.rot, p, rot, c2.rot, eps);
+            return mid_coords;
         }
         // void orient(const Matrix3 &mat, const wrt wrt = local )
         // euler-angle
