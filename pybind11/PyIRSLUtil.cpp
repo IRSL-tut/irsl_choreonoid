@@ -272,11 +272,22 @@ PYBIND11_MODULE(IRSLUtil, m)
          [](coordinates &self, const coordinates &vec, const coordinates &wrt) {
              self.move_to(vec, wrt); return &self; } )
     //
+    .def("rotNormalize", &coordinates::rotNormalize)
+    .def("rotationAngle", [](const coordinates &self) {
+            double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
+            Vector4 ret; ret(0) = ax_(0); ret(1) = ax_(1); ret(2) = ax_(2); ret(3) = an_;
+            return ret; } )
+    .def("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
+    .def("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
+    .def("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
+    .def("getRPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
+    .def("setRPY", [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); } )
+    .def("setRPY", [](coordinates &self, double r, double p, double y) { self.setRPY(r,p,y); } )
     .def("inverse", [](coordinates &self) { self.inverse(); return &self; } )
     .def("mid_coords", [](const coordinates &self, const double p, const coordinates &c2, const double eps) {
             coordinatesPtr ret(new coordinates());
             self.mid_coords(*ret, p, c2, eps);
-            return ret; }, py::arg("p"), py::arg("c2"), py::arg("eps") = 0.00001);
+            return ret; }, py::arg("p"), py::arg("c2"), py::arg("eps") = 0.00001)
     ;
 
     // add method to ..
