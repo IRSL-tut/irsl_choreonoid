@@ -1,4 +1,5 @@
 #include <cnoid/EigenTypes>
+#include <cnoid/EigenUtil>
 #include <memory>
 #include <iostream>
 
@@ -495,6 +496,32 @@ namespace cnoid {
             return *this;
         }
         // new functions
+        void x_axis(Vector3 &ax) const {
+            ax = rot.col(0);
+        }
+        void y_axis(Vector3 &ay) const {
+            ay = rot.col(1);
+        }
+        void z_axis(Vector3 &az) const {
+            az = rot.col(2);
+        }
+        void rotationAngle(double &angle, Vector3 &axis) const {
+            AngleAxis _a(rot);
+            angle = _a.angle();
+            axis  = _a.axis();
+        }
+        void rotNormalize() {
+            normalizeRotation(rot);
+        }
+        void getRPY(Vector3 &rpy) const {
+            rpy = rpyFromRot(rot);
+        }
+        void setRPY(const Vector3 &rpy) {
+            rot = rotFromRpy(rpy);
+        }
+        void setRPY(double r, double p, double y) {
+            rot = rotFromRpy(r,p,y);
+        }
         coordinates &inverse() {
             rot = rot.transpose();
             pos = rot * (-1 * pos);
@@ -506,13 +533,8 @@ namespace cnoid {
             mid_rot(mid_coords.rot, p, rot, c2.rot, eps);
             return mid_coords;
         }
-        // void orient(const Matrix3 &mat, const wrt wrt = local )
         // euler-angle
-        // rpy-angle
         // rotation-angle
-        // x_axis
-        // y_axis
-        // z_axis
         // reset_coords
     };
 
