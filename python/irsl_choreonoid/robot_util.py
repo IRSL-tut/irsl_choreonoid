@@ -155,6 +155,19 @@ class DrawCoords(object):
 
         self.hide_and_show()
         di.flush()
+## add methods to choreonoid's class
+def __joint_list(self):
+    return [self.joint(idx) for idx in range(self.numJoints) ]
+def __link_list(self):
+    return [self.link(idx) for idx in range(self.numLinks) ]
+
+cnoid.Body.Body.jointList = __joint_list
+cnoid.Body.Body.linkList = __link_list
+cnoid.Body.Body.angleVector = lambda self, vec = None: iu.angleVector(self) if vec is None else iu.angleVector(self, vec)
+cnoid.Body.Link.getCoords = lambda self: iu.getCoords(self)
+cnoid.Body.Link.setCoords = lambda self, cds: iu.setCoords(self, cds)
+cnoid.Body.Link.getOffsetCoords = lambda self: iu.getOffsetCoords(self)
+cnoid.Body.Link.setOffsetCoords = = lambda self, cds: iu.setOffsetCoords(self, cds)
 
 class RobotModel(object):
     def __init__(self, robot):
