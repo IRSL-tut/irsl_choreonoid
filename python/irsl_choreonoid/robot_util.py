@@ -41,6 +41,7 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
         sim_ = AISTSimulatorItem()
         world.addChildItem(sim_)
         getItemTreeView().checkItem(sim_)
+    return sim_
 
 def cnoidPosition(rotation = None, translation = None):
   ret = np.identity(4)
@@ -56,7 +57,10 @@ def cnoidRotation(cPosition):
 def cnoidTranslation(cPosition):
   return cPosition[:3, 3]
 
-def loadRobot(fname, name = None, world = True):
+def loadRobot(fname):
+    return cnoid.Body.BodyLoader().load(str(fname))
+
+def loadRobotItem(fname, name = None, world = True):
     '''Load robot model and add it as Item
 
     Parameters
@@ -72,7 +76,7 @@ def loadRobot(fname, name = None, world = True):
     '''
     # print('loadRobot: %s'%(fname))
     bI = BodyItem()
-    bI.load(fname)
+    bI.load(str(fname))
     if name:
         bI.setName(name)
     if callable(bI.body):
@@ -94,7 +98,8 @@ def loadRobot(fname, name = None, world = True):
             world.insertChildItem(bI, world.childItem)
 
     getItemTreeView().checkItem(bI)
-    return rr
+    return bI
+
 
 def findItem(name):
     return getRootItem().findItem(name)
