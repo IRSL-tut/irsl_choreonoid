@@ -167,7 +167,7 @@ cnoid.Body.Body.angleVector = lambda self, vec = None: iu.angleVector(self) if v
 cnoid.Body.Link.getCoords = lambda self: iu.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: iu.setCoords(self, cds)
 cnoid.Body.Link.getOffsetCoords = lambda self: iu.getOffsetCoords(self)
-cnoid.Body.Link.setOffsetCoords = = lambda self, cds: iu.setOffsetCoords(self, cds)
+cnoid.Body.Link.setOffsetCoords = lambda self, cds: iu.setOffsetCoords(self, cds)
 
 class RobotModel(object):
     def __init__(self, robot):
@@ -195,33 +195,43 @@ class RobotModel(object):
         self.torso_tip_link = None
         self.torso_tip_to_eef = None
 
+    def init_ending():
+        for limb in ('rleg', 'lleg', 'rarm', 'larm', 'head', 'torso'):
+            eef = eval('self.%s_tip_to_eef'%(limb))
+            if not eef is None:
+                eval('self.%s_tip_to_eef_coords = iu.coordinates(self.%s_tip_to_eef)'%(limb, limb))
+                eval('self.%s_end_coords = lambda : self.%s_tip_link.getCoords().transform(self.%s_tip_to_eef_coords)'%(limb, limb, limb))
     #def robot(self):
     #    return robot
 
-    def links(self):
-        num = self.robot.numLinks
-        return [ self.robot.link(n) for n in range(num) ]
-
-    def joint_list(self):
-        num = self.robot.numJoints
-        return [ self.robot.joint(n) for n in range(num) ]
+    #def links(self):
+    #    num = self.robot.numLinks
+    #    return [ self.robot.link(n) for n in range(num) ]
+    def linkList(self):
+        return self.robot.linkList()
+    #def joint_list(self):
+    #    num = self.robot.numJoints
+    #    return [ self.robot.joint(n) for n in range(num) ]
+    def jointList(self):
+        return self.robot.jointList()
+    #def angle_vector(self, angles = None):
+    #    num = self.robot.numJoints
+    #    if not (angles is None):
+    #        if num != len(angles):
+    #            raise TypeError('length of angles does not equal with robot.numJoints')
+    #        for idx in range(num):
+    #            self.robot.joint(idx).q = angles[idx]
+    #        return None
+    #    else:
+    #        return np.array([ self.robot.joint(n).q for n in range(num) ])
+    def angleVector(self, angles = None):
+        return self.robot.angleVector(angles)
 
     def flush(self):
         if not (self.item is None):
             self.robot.calcForwardKinematics()
             self.item.notifyKinematicStateChange()
             MessageView.instance.flush()
-
-    def angle_vector(self, angles = None):
-        num = self.robot.numJoints
-        if not (angles is None):
-            if num != len(angles):
-                raise TypeError('length of angles does not equal with robot.numJoints')
-            for idx in range(num):
-                self.robot.joint(idx).q = angles[idx]
-            return None
-        else:
-            return np.array([ self.robot.joint(n).q for n in range(num) ])
 
     def default_pose__(self):
         pass
@@ -235,30 +245,37 @@ class RobotModel(object):
         return self.angle_vector()
 
     def end_effector(self, limb):
-        return eval('self.%s_end_effector()'%(limb))
+        tip_link = eval('self.%s_tip_link'%(limb))
+        tip_to_eef = eval('self.%s_tip_to_eef_coords'%(limb))
+        cds = tip_link.getCoords()
+        cds.transform(tip_to_eef)
+        return cds
 
-    def rleg_end_effector(self):
+    def end_effector_cnoid(self, limb):
+        return eval('self.%s_end_effector_cnoid()'%(limb))
+
+    def rleg_end_effector_cnoid(self):
         return self.rleg_tip_link.getPosition().dot(self.rleg_tip_to_eef)
 
-    def lleg_end_effector(self):
+    def lleg_end_effector_cnoid(self):
         return self.lleg_tip_link.getPosition().dot(self.lleg_tip_to_eef)
 
-    def rarm_end_effector(self):
+    def rarm_end_effector_cnoid(self):
         return self.rarm_tip_link.getPosition().dot(self.rarm_tip_to_eef)
 
-    def larm_end_effector(self):
+    def larm_end_effector_cnoid(self):
         return self.larm_tip_link.getPosition().dot(self.larm_tip_to_eef)
 
-    def head_end_effector(self):
+    def head_end_effector_cnoid(self):
         return self.head_tip_link.getPosition().dot(self.head_tip_to_eef)
 
-    def torso_end_effector(self):
+    def torso_end_effector_cnoid(self):
         return self.torso_tip_link.getPosition().dot(self.torso_tip_to_eef)
 
-    def foot_mid_coords(self, p = 0.5):
-        return iu.mid_coords(p, self.rleg_end_effector(), self.lleg_end_effector())
+    def foot_mid_coords_cnoid(self, p = 0.5):
+        return iu.mid_coords_pos(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
 
-    def fix_leg_to_coords(self, coords, p = 0.5):
+    def fix_leg_to_coords_cnoid(self, coords, p = 0.5):
         mc = self.foot_mid_coords(p)
         rL = self.robot.rootLink
         rL.setPosition(
@@ -266,9 +283,22 @@ class RobotModel(object):
             )
         self.robot.calcForwardKinematics()
 
-    def move_centroid_on_foot(self, p = 0.5, debug = False):
+    def foot_mid_coords(self, p = 0.5):
+        return iu.mid_coords(p, self.end_effector('rleg'), self.end_effector('lleg'))
+
+    def fix_leg_to_coords(self, coords, p = 0.5):
+        mc = self.foot_mid_coords(p)
+        rL = self.robot.rootLink
+        cds = mc.inverse_transformation()
+        cds.transform(coords)
+        cds.transform(rL.getCoords())
+        rL.seCoords(cds)
+        self.robot.calcForwardKinematics()
+
+    def move_centroid_on_foot_cnoid(self, p = 0.5, debug = False):
         mid_pos = self.foot_mid_coords(p)
-        mid_trans = iu.Position_translation(mid_pos)
+        #mid_trans = iu.Position_translation(mid_pos)
+        mid_trans = mid_pos.pos
 
         constraints = IK.Constraints()
 
@@ -276,14 +306,14 @@ class RobotModel(object):
         rl_constraint.A_link = self.rleg_tip_link
         rl_constraint.A_localpos = self.rleg_tip_to_eef
         #constraint->B_link() = nullptr;
-        rl_constraint.B_localpos = self.rleg_end_effector()
+        rl_constraint.B_localpos = self.rleg_end_effector().toPosition()
         constraints.push_back(rl_constraint)
 
         ll_constraint = IK.PositionConstraint()
         ll_constraint.A_link = self.lleg_tip_link
         ll_constraint.A_localpos = self.lleg_tip_to_eef
         #constraint->B_link() = nullptr;
-        ll_constraint.B_localpos = self.lleg_end_effector()
+        ll_constraint.B_localpos = self.lleg_end_effector().toPosition()
         constraints.push_back(ll_constraint)
 
         com_constraint = IK.COMConstraint()
@@ -320,5 +350,5 @@ class RobotModel(object):
 
         return loop
 
-    def fullbody_inverse_kinematics(self):
+    def fullbody_inverse_kinematics_cnoid(self):
         pass
