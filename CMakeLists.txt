@@ -104,5 +104,6 @@ install(DIRECTORY test
   USE_SOURCE_PERMISSIONS
 )
 
-#add_subdirectory(sample)
+add_subdirectory(plugins)
 add_subdirectory(pybind11)
+
