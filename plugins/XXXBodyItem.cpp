@@ -1,6 +1,7 @@
 #include "XXXBodyItem.h"
+#include "XXXSceneBody.h"
 
-#include <cnoid/SceneBody>
+//#include <cnoid/SceneBody>
 #include <cnoid/RootItem>
 #include <cnoid/LazySignal>
 #include <cnoid/ItemManager>
@@ -65,7 +66,7 @@ public:
     XXXBodyItem* self;
     BodyPtr body;
 
-    SceneBodyPtr sceneBody;
+    XXXSceneBodyPtr sceneBody;
 
     Impl(XXXBodyItem* self);
     Impl(XXXBodyItem* self, const Impl& org);
@@ -74,6 +75,7 @@ public:
 
     void setBody(Body* body);
     void setTransparency(float t);
+    void createSceneBody();
 
     // location
     //ref_ptr<BodyLocation> bodyLocation;
@@ -160,18 +162,15 @@ XXXBodyItem::Impl::Impl(XXXBodyItem* self, Body* body)
     : self(self),
       body(body)
 {
-
 }
 
 XXXBodyItem::Impl::Impl(XXXBodyItem* self, const Impl& org)
     : Impl(self, org.body->clone())
 {
-
 }
 
 XXXBodyItem::Impl::~Impl()
 {
-
 }
 
 //// protected / override Item Class
@@ -280,6 +279,28 @@ void XXXBodyItem::setBody(Body* body)
 void XXXBodyItem::Impl::setBody(Body* body_)
 {
     body = body_;
+    auto rootLink = body->rootLink();
+    if(rootLink->name().empty()){
+        rootLink->setName("Root");
+    }
+
+    body->initializePosition();//
+
+    auto& itemName = self->name();
+    if(itemName.empty()){
+        if(!body_->name().empty()){
+            self->setName(body_->name());
+        } else if(!body_->modelName().empty()){
+            self->setName(body_->modelName());
+        }
+    } else {
+        if(body_->name().empty()){
+            body->setName(itemName);
+        }
+        if(body_->modelName().empty()){
+            body->setModelName(itemName);
+        }
+    }
 }
 
 //// signals
@@ -322,7 +343,6 @@ void XXXBodyItem::notifyKinematicStateUpdate(bool doNotifyStateChange)
     if(doNotifyStateChange){
         impl->notifyKinematicStateChange(false, false, false, true);
     }
-    
     impl->sigKinematicStateUpdated();
 
     //if(isAttachedToParentBody_){
@@ -358,6 +378,8 @@ void XXXBodyItem::Impl::notifyKinematicStateChange(bool requestFK, bool requestV
         }
     }
 #endif
+    sigKinematicStateChanged.emit();
+    //sigKinematicStateChanged.request();
 }
 
 void XXXBodyItem::Impl::emitSigKinematicStateChanged()
@@ -526,34 +548,26 @@ SignalProxy<void()> LinkLocation::sigLocationChanged()
 #endif
 
 ////
-#if 0
-EditableSceneBody* XXXBodyItem::sceneBody()
+XXXSceneBody* XXXBodyItem::sceneBody()
 {
     if(!impl->sceneBody){
         impl->createSceneBody();
     }
     return impl->sceneBody;
 }
+SgNode* XXXBodyItem::getScene()
+{
+    return sceneBody();
+}
 void XXXBodyItem::Impl::createSceneBody()
 {
-    sceneBody = new EditableSceneBody(self);
+    sceneBody = new XXXSceneBody(self);
     sceneBody->setSceneDeviceUpdateConnection(true);
     if(transparency > 0.0f){
         sceneBody->setTransparency(transparency);
     }
 }
-SgNode* XXXBodyItem::getScene()
-{
-    return sceneBody();
-}
-#endif
-SgNode* XXXBodyItem::getScene()
-{
-    if(!impl->sceneBody) {
-        impl->sceneBody = new SceneBody(impl->body);
-    }
-    return impl->sceneBody;
-}
+
 //// transp
 float XXXBodyItem::transparency() const
 {
@@ -572,4 +586,3 @@ void XXXBodyItem::Impl::setTransparency(float t)
         transparency = t;
     }
 }
-

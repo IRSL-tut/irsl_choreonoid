@@ -31,6 +31,7 @@ public:
         auto bodyItem = static_cast<XXXBodyItem*>(item);
         BodyPtr newBody = new Body;
         newBody->rootLink()->addShapeNode(shape);
+        newBody->setName("Loaded_Body");
         bodyItem->setBody(newBody);
 
         auto itype = currentInvocationType();

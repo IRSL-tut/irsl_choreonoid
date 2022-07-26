@@ -11,7 +11,7 @@
 namespace cnoid {
 class ItemManager;
 class ItemFileIO;
-//class EditableSceneBody;
+class XXXSceneBody;
 
 //class CNOID_EXPORT XXXBodyItem : public Item, public LocatableItem, public RenderableItem
 //class CNOID_EXPORT XXXBodyItem : public Item, public LocatableItem, public RenderableItem
@@ -75,7 +75,6 @@ public:
     SignalProxy<void()> sigKinematicStateUpdated();
     void notifyKinematicStateUpdate(bool doNotifyStateChange = true);
 
-
     // LocatableItem function
     //virtual LocationProxyPtr getLocationProxy() override;
     //bool isLocationEditable() const;
@@ -84,9 +83,8 @@ public:
 
     // RenderableItem function
     virtual SgNode* getScene() override;
+    XXXSceneBody* sceneBody();
 
-    //EditableSceneBody* sceneBody();
-    //EditableSceneBody* existingSceneBody();
     float transparency() const;
     void setTransparency(float t);
 

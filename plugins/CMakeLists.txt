@@ -3,12 +3,14 @@ set(sources
   IRSLXXXPlugin.cpp
   XXXBodyItem.cpp
   XXXFileIO.cpp
+  XXXSceneBody.cpp
   )
 
 set(headers
   IRSLXXXPlugin.h
   XXXBodyItem.h
   XXXFileIO.h
+  XXXSceneBody.h
   )
 
 set(target CnoidIRSLXXXPlugin)

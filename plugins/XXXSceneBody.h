@@ -1,7 +1,9 @@
 #ifndef CNOID_IRSL_XXX_PLUGIN_SCENEBODY_H
 #define CNOID_IRSL_XXX_PLUGIN_SCENEBODY_H
 
+#include <cnoid/SceneWidgetEventHandler>
 #include <cnoid/SceneBody>
+#include <vector>
 #include "exportdecl.h"
 
 namespace cnoid {
