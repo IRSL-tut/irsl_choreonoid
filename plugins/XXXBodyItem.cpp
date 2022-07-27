@@ -127,7 +127,7 @@ void XXXBodyItem::initializeClass(ExtensionManager* ext)
 ////
 XXXBodyItem::XXXBodyItem()
 {
-    setAttributes(FileImmutable | Reloadable);
+    setAttributes(FileImmutable | Reloadable);//TODO
     impl = new Impl(this);
     // impl->init(false);
 }

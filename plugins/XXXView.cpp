@@ -1,17 +1,32 @@
 #include "XXXView.h"
 //#include "XXXWidget.h"
-//#include "XXXBodyItem.h"
+#include "XXXBodyItem.h"
 #include <cnoid/ViewManager>
 #include <cnoid/MenuManager>
+//#include <cnoid/ItemTreeView>
+#include <cnoid/RootItem>
+#include <cnoid/ItemFileIO>
+//#include <cnoid/Mapping>
+
+
+// itemtreeview?
 #include <cnoid/Archive>
 #include <cnoid/ActionGroup>
 #include <cnoid/ConnectionSet>
+#include <cnoid/Widget>
+#include <cnoid/Buttons>
+
 #include <QLabel>
 #include <QStyle>
 #include <QBoxLayout>
 #include <QScrollArea>
+#include <QTabWidget>
+#include <QTextEdit>
 
-#include <iostream>
+#include <vector>
+
+#define IRSL_DEBUG
+#include "irsl_debug.h"
 
 using namespace cnoid;
 
@@ -24,18 +39,27 @@ public:
     QLabel targetLabel;
     //XXXWidget* positionWidget;
     //ScopedConnection activeStateConnection;
+    QVBoxLayout *topLayout;
+    QTabWidget *partsTab;
 
     Impl(XXXView* self);
     //bool setTargetBodyAndLink(XXXBodyItem* bodyItem, Link* link);
     //void onAttachedMenuRequest(MenuManager& menuManager); // the same as base class
     //bool storeState(Archive& archive); // the same as base class
     //bool restoreState(const Archive& archive); //  the same as base class
+
+    void initialize(bool config);
+    void addTabs(bool config);
+    void partsButtonClicked(int index);
+    std::vector<PushButton *> partsButtons;
+
 };
 
 }
 
 void XXXView::initializeClass(ExtensionManager* ext)
 {
+    DEBUG_STREAM_INFO(XXXView,initializeClass, std::endl);
     ext->viewManager().registerClass<XXXView>("XXXView", "XXXView_View");
 }
 XXXView* XXXView::instance()
@@ -46,6 +70,7 @@ XXXView* XXXView::instance()
 
 XXXView::XXXView()
 {
+    DEBUG_STREAM_INFO(XXXView,XXXView(), std::endl);
     impl = new Impl(this);
 }
 XXXView::~XXXView()
@@ -54,6 +79,7 @@ XXXView::~XXXView()
 }
 void XXXView::onActivated()
 {
+    DEBUG_STREAM_INFO(XXXView,onActivated, std::endl);
     //auto bsm = BodySelectionManager::instance();
 #if 0
     impl->activeStateConnection =
@@ -66,11 +92,12 @@ void XXXView::onActivated()
 }
 void XXXView::onDeactivated()
 {
+    DEBUG_STREAM_INFO(XXXView,onDeactivated, std::endl);
     //impl->activeStateConnection.disconnect();
 }
 void XXXView::onAttachedMenuRequest(MenuManager& menu)
 {
-    std::cerr << "onAttachedMenuRequest" << std::endl;
+    DEBUG_STREAM_INFO(XXXView,onAttachedMenuRequest, std::endl);
 #if 0
     menu.setPath("/").setPath(_("Target link type"));
 
@@ -125,13 +152,23 @@ bool XXXView::restoreState(const Archive& archive)
     return true;
 }
 
+void XXXView::createButtons()
+{
+    impl->addTabs(true);
+}
+
 //// Impl
 XXXView::Impl::Impl(XXXView* self)
-    : self(self)
+    : self(self), partsTab(nullptr)
+{
+    initialize(false);
+}
+
+void XXXView::Impl::initialize(bool config)
 {
     self->setDefaultLayoutArea(MiddleRightArea);
 
-    auto topLayout = new QVBoxLayout;
+    topLayout = new QVBoxLayout;
     topLayout->setContentsMargins(0, 0, 0, 0);
     topLayout->setSpacing(0);
     self->setLayout(topLayout);
@@ -146,21 +183,75 @@ XXXView::Impl::Impl(XXXView* self)
     hbox->setContentsMargins(lmargin, tmargin / 2, rmargin, bmargin / 2);
     targetLabel.setStyleSheet("font-weight: bold");
     targetLabel.setAlignment(Qt::AlignLeft);
-    targetLabel.setText("---initial---");
+    targetLabel.setText("---not initialized---");
     hbox->addWidget(&targetLabel);
     hbox->addStretch();
     //
     topLayout->addLayout(hbox);
 
-#if 0
-    positionWidget = new XXXWidget(self);
-    //positionWidget->setTargetLinkType(XXXWidget::IkLink);
-    positionWidget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    positionWidget->setAutoFillBackground(false);
-    //
-    topLayout->addWidget(positionWidget);
-#endif
+    if (!config) {
+        return;
+    }
+
+    addTabs(config);
 }
+
+void XXXView::Impl::addTabs(bool config)
+{
+    if (!!partsTab) {
+        //delete partsButtons
+        delete partsTab;
+    }
+
+    targetLabel.setText("---initialized---");
+
+    partsTab = new QTabWidget(self); // parent??
+    //// tabbed
+    auto hbox = new QHBoxLayout;
+
+    // tab1
+    Widget *wd = new Widget(partsTab);
+    QVBoxLayout *qvbox = new QVBoxLayout(wd);
+    PushButton *bp = new PushButton("bt1", partsTab);
+    bp->sigClicked().connect( [&]() { partsButtonClicked(1); } );
+    qvbox->addWidget(bp);
+    qvbox->addWidget(new PushButton("bt2", partsTab));
+    qvbox->addWidget(new PushButton("bt3", partsTab));
+    qvbox->addWidget(new PushButton("bt4", partsTab));
+    partsTab->addTab(wd, "Tab1");
+
+    topLayout->addWidget(partsTab);
+}
+void XXXView::Impl::partsButtonClicked(int index)
+{
+    DEBUG_STREAM_INFO(XXXView::Impl,partsButtonClicked, " index: " << index << std::endl);
+
+    //ItemTreeView::instance()
+    ItemFileIO *ptr = XXXBodyItem::meshFileIO();
+    Mapping options;
+    //options.write("meshLengthUnitHint", "Millimeter");
+    options.write("meshLengthUnitHint", "millimeter");
+    Item *item = ptr->loadItem("/home/leus/sandbox/choreonoid_ws/src/irsl_choreonoid/DarwinOP3.stl",
+                               nullptr, true, nullptr, &options);
+
+
+    if (!!item) {
+        RootItem::instance()->addChildItem(item);
+    }
+}
+#if 0
+PushButton *XXXView::Impl::createButton(QWidget *parent)
+{
+    PushButton *bt = new PushButton("", parent);
+    partsButtons.push_back(bt);
+    return bt;
+}
+
+bool XXXView::Impl::createPartsButton(int index)
+{
+
+}
+#endif
 
 #if 0
 bool XXXView::Impl::setTargetBodyAndLink(XXXBodyItem* bodyItem, Link* link)

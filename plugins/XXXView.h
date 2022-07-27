@@ -15,6 +15,7 @@ public:
     XXXView();
     virtual ~XXXView();
 
+    void createButtons();
 protected:
     virtual void onActivated() override;
     virtual void onDeactivated() override;

@@ -44,6 +44,9 @@ public:
         }
         return true;
     }
+    void setScale(double _s) { scale = _s; }
+private:
+    double scale;
 };
 
 }
