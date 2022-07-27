@@ -37,30 +37,25 @@ public:
     SgGroupPtr markerGroup;
     CrossMarkerPtr crossMarker;
     SphereMarkerPtr sphereMarker;
-#if 0
-    zmpMarker = new SphereMarker(radius, Vector3f(0.0f, 1.0f, 0.0f), 0.3);
-    zmpMarker->addChild(new CrossMarker(radius * 2.5, Vector3f(0.0f, 1.0f, 0.0f), 2.0f));
-    zmpMarker->setName("ZMP");
-
-    markerGroup->addChildOnce(virtualElasticStringLine, update);
-    markerGroup->removeChild(virtualElasticStringLine, update);
-    virtualElasticStringLine->notifyUpdate(update.withAction(SgUpdate::Modified));
-#endif
+    SceneMarkerPtr sMarker;
 
     void test(bool on) {
         std::cerr << "test: " << on << std::endl;
         if (on) {
-            sphereMarker = new SphereMarker(0.05, Vector3f(0.0f, 1.0f, 0.0f), 0.3);
-            sphereMarker->addChild(new CrossMarker(0.05 * 2.5, Vector3f(0.0f, 1.0f, 0.0f), 2.0f));
-            sphereMarker->setName("HOGEEE");
-
-            markerGroup->addChildOnce(sphereMarker, update);
-        } else {
             //sphereMarker = new SphereMarker(0.05, Vector3f(0.0f, 1.0f, 0.0f), 0.3);
-            //shpereMarker->addChild(new CrossMarker(0.05 * 2.5, Vector3f(0.0f, 1.0f, 0.0f), 2.0f));
+            //sphereMarker->addChild(new CrossMarker(0.05 * 2.5, Vector3f(0.0f, 1.0f, 0.0f), 2.0f));
             //sphereMarker->setName("HOGEEE");
-            markerGroup->removeChild(sphereMarker, update);
-            sphereMarker.reset();
+            //markerGroup->addChildOnce(sphereMarker, update);
+            sMarker = new SceneMarker();
+            sMarker->setMarkerType(SceneMarker::AXES_MARKER);
+            sMarker->setMarkerSize(0.5);
+            sMarker->updateMarker(false);
+            markerGroup->addChildOnce(sMarker, update);
+        } else {
+            //markerGroup->removeChild(sphereMarker, update);
+            //sphereMarker.reset();
+            markerGroup->removeChild(sMarker, update);
+            sMarker.reset();
         }
     }
     void move() {
@@ -69,13 +64,8 @@ public:
 
         self->body()->rootLink()->setPosition(p);
         self->body()->calcForwardKinematics();
-        //
-        self->notifyUpdate(); // scenebody
-        bodyItem->notifyUpdate(); // move?? 1 // bodyItem
-        //
-        bodyItem->notifyKinematicStateChange();
-        self->updateSceneModel(); // move?? 2
-        self->updateSceneDeviceModels(true);
+
+        self->updateSceneModel(); // required for applying the movement in Display
     }
 };
 
@@ -159,6 +149,46 @@ bool XXXSceneBody::onButtonPressEvent(SceneWidgetEvent* event)
 {
     std::cerr << "XXXSceneBody(onButtonPressEvent)" << std::endl;
     //return true;
+    SceneWidgetEvent::EventType tp = event->type();
+    std::cerr << "Type: " << tp << std::endl;
+    switch(tp) {
+    case SceneWidgetEvent::ButtonPress:
+        int bt = event->button();
+        switch(bt) {
+        case Qt::LeftButton:
+            std::cerr << "Left" << std::endl;
+            break;
+        case Qt::RightButton:
+            std::cerr << "Right" << std::endl;
+            break;
+        case Qt::MiddleButton:
+            std::cerr << "Middle" << std::endl;
+            break;
+        }
+        break;
+    }
+    SgNodePath pt = event->nodePath();
+    std::cerr << "event->nodePath() : " << pt.size() << std::endl;
+    for (int i = 0 ; i < pt.size(); i++) {
+        SgNode *ptr = pt[i];
+        std::cerr << "---" << std::endl;
+        std::cerr << static_cast<void *> (ptr) << std::endl;
+        std::cerr << "name: " << ptr->name() << std::endl;
+        std::cerr << "class: " << ptr->className() << std::endl;
+        std::cerr << "attr: " << ptr->attributes() << std::endl;
+        if (ptr->hasUri()) {
+            std::cerr << "uri: " << ptr->uri() << std::endl;
+        }
+        if (ptr->hasAbsoluteUri()) {
+            std::cerr << "abs_uri: " << ptr->absoluteUri() << std::endl;
+        }
+        if (ptr->hasParents()) {
+            int j = 0;
+            for(auto it = ptr->parentBegin(); it != ptr->parentEnd(); it++, j++) {
+                std::cerr << "p" << j << " : " << static_cast<void *>(*it) << std::endl;
+            }
+        }
+    }
     return false;
     //if return true, handling events after this function may not occurred
 }

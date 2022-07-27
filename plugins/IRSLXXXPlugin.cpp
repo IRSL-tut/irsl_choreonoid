@@ -1,5 +1,7 @@
 #include "IRSLXXXPlugin.h"
 #include "XXXBodyItem.h"
+#include "XXXView.h"
+#include "XXXBar.h"
 
 #include <fmt/format.h>
 
@@ -25,10 +27,13 @@ bool IRSLXXXPlugin::initialize()
 {
     // classes
     XXXBodyItem::initializeClass(this);
-    //XXXSceneBody::initializeClass(this);
-    //XXXBar
-    //addToolBar();
-    //XXXView
+
+    //View
+    XXXView::initializeClass(this);
+
+    //ToolBar
+    addToolBar(XXXBar::instance());
+
     return true;
 }
 

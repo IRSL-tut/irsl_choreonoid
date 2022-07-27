@@ -4,6 +4,8 @@ set(sources
   XXXBodyItem.cpp
   XXXFileIO.cpp
   XXXSceneBody.cpp
+  XXXView.cpp
+  XXXBar.cpp
   )
 
 set(headers
@@ -11,6 +13,8 @@ set(headers
   XXXBodyItem.h
   XXXFileIO.h
   XXXSceneBody.h
+  XXXView.h
+  XXXBar.h
   )
 
 set(target CnoidIRSLXXXPlugin)

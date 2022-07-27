@@ -4,6 +4,9 @@
 #include <cnoid/BodyLoader>
 #include <cnoid/GeneralSceneFileImporterBase>
 
+//#include <cnoid/MessageView>
+#include <iostream>
+
 using namespace cnoid;
 
 namespace {
@@ -25,6 +28,7 @@ public:
     virtual bool load(Item* item, const std::string& filename) override {
         SgNode* shape = loadScene(filename);
         if(!shape){
+            std::cerr << "load failed: " << filename << std::endl;
             return false;
         }
 
