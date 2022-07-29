@@ -6,7 +6,6 @@ add_cnoid_python_module(${TARGET} PyIRSLUtil.cpp)
 target_link_libraries(${TARGET}
   ${catkin_LIBRARIES}
   ${CHOREONOID_BODY_LIBRARIES}
-  ${PROJECT_NAME}
   )
 
 target_compile_definitions(${TARGET} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
@@ -32,7 +31,6 @@ add_cnoid_python_module(${TARGET2} PyDrawInterface.cpp)
 target_link_libraries(${TARGET2}
   ${catkin_LIBRARIES}
   ${CHOREONOID_BASE_LIBRARIES}
-  ${PROJECT_NAME}
   )
 
 target_compile_definitions(${TARGET2} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})
