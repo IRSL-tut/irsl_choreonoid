@@ -1,109 +1,14 @@
 // g++ -c cnoid_yaml_test.cpp -I/home/irsl/sandbox/choreonoid_ws/devel/include/choreonoid-1.8
 // g++ -o cnoid_yaml_test cnoid_yaml_test.o -L/home/irsl/sandbox/choreonoid_ws/devel/lib -lCnoidUtil
 
-#include <cnoid/YAMLReader>
+#include "RobotAssembler.h"
 #include <iostream>
 
-typedef long ConnectingType;
-typedef long ConnectingConfigurationType;
-class ConnectingConfiguration;
-class ConnectingTypeMatch;
-class ConnectingPoint;
-class Actuator;
-class ExtraInfo;
-class Geometry;
-class Parts;
-
-std::vector<std::string> listConnectingTypeNames;
-std::vector<ConnectingConfiguration> listConnectingConfiguration;
-
-class ConnectingConfiguration
-{
-    std::string name;
-    std::string description;
-    coordinates coords;
-};
-
-class ConnectingTypeMatch
-{
-    ConnectingType[2] pair;
-    std::vector<ConnectingConfigurationType> allowed_configuration;
-};
-
-class ConnectingPoint
-{
-    std::string name;
-    std::vector<ConnectingType> type_list;
-    coordinate coords;
-};
-
-class Actuator : public ConnectingPoint
-{
-    enum ActuatorType {
-        None = 0,
-        Revolute = 1 << 0,
-        Linear = 1 << 1,
-        Free = 1 << 2,
-        Fixed = 1 << 3
-    }; // sphere
-    ActuatorType type;
-    cnoid::Vector3 axis;
-};
-
-class ExtraInfo
-{
-    enum Type {
-        None,
-        IMU,
-        Touch,
-        Force,
-    };
-    std::string name;
-    Type type;
-    coordinates coords;
-    // parameters Mapping
-};
-
-class Geometry
-{
-    enum Type {
-        None,
-        Mesh,
-        Box,
-        Cylinder,
-        Sphere,
-        Cone,
-        Capsule,
-        Ellipsoid
-    };
-
-    coordinates coords;
-    std::string uri;
-    double scale;
-    Type type;
-    std::vector<double> parameter;
-};
-
-class Parts
-{
-public:
-    std::string type;
-    std::string class_name;
-
-    std::vector<Geometry> visual;
-    std::vector<Geometry> collision;
-
-    bool hasMassParam;
-    double mass;
-    cnoid::Vector3 COM; // center of mass
-    cnoid::Matrix3 inertia_tensor;
-
-    std::vector<ConnectingPoint> connecting_points;
-    std::vector<Actuator> actuators;
-    std::vector<ExtraInfo> extra_data;
-};
-
 using namespace cnoid;
+namespace ra = cnoid::robot_assembler;
+
+#if 0
+#include <cnoid/YAMLReader>
 
 void parseNode(ValueNode *val, int indent = 0);
 
@@ -172,3 +77,68 @@ int main(int argc, char **argv) {
         }
     }
 }
+#endif
+
+void print(ra::ConnectingConfiguration &in, int i)
+{
+    std::cout << "[ConnectingConfiguration] " << i;
+    std::cout << " / name: " << in.name;
+    std::cout << " / desc: " << in.description;
+    std::cout << " / coords: " << in.coords.pos;
+    Vector3 rpy; in.coords.getRPY(rpy);
+    std::cout << " " << rpy << std::endl;
+}
+
+void print(ra::ConnectingTypeMatch &in)
+{
+    std::cout << "[ConnectingTypeMatch] ";
+    std::cout << "(" << in.pair[0] << "," << in.pair[1] << ") / [";
+    for(int i = 0; i < in.allowed_configuration.size(); i++) {
+        if (i == 0) {
+            std::cout << in.allowed_configuration[i];
+        } else {
+            std::cout << ", " << in.allowed_configuration[i];
+        }
+    }
+    std::cout << "]" << std::endl;
+}
+
+int main(int argc, char **argv) {
+
+    ra::RobotAssemblerConfiguration conf;
+
+    bool ret = false;
+    if (argc > 1) {
+        std::cerr << "argc > 1" << std::endl;
+        ret = conf.parseYaml(argv[1]);
+    }
+    if (ret) {
+        std::cerr << "success" << std::endl;
+
+        {
+            std::vector<std::string> &lst = conf.listConnectingTypeNames;
+            std::cout << "listConnectingTypeNames: " << lst.size() << std::endl;
+            for(int i = 0; i < lst.size(); i++) {
+                std::cout << "  " << i << " " << lst[i] << std::endl;
+            }
+        }
+        {
+            std::vector<ra::ConnectingConfiguration> &lst = conf.listConnectingConfiguration;
+            std::cout << "listConnectingConfiguration: " << lst.size() << std::endl;
+            for(int i = 0; i < lst.size(); i++) {
+                print(lst[i], i);
+            }
+        }
+        {
+            std::vector<ra::ConnectingTypeMatch> &lst = conf.listConnectingTypeMatch;
+            std::cout << "listConnectingTypeMatch: " << lst.size() << std::endl;
+            for(int i = 0; i < lst.size(); i++) {
+                print(lst[i]);
+            }
+        }
+    }
+}
+
+
+
+
