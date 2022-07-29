@@ -1,5 +1,5 @@
 #include <cnoid/EigenTypes>
-#include <cnoid/EigenUtil>
+#include <cnoid/EigenUtil> // rotFromRpy
 #include <memory>
 #include <iostream>
 
@@ -17,7 +17,8 @@ typedef Eigen::Ref<const Matrix3RM> ref_mat3;
 typedef Eigen::Ref<const cnoid::Vector4>   ref_vec4;
 typedef Eigen::Ref<const cnoid::Vector3>   ref_vec3;
 
-#define __irsl_use_inline__
+//#define __irsl_use_inline__
+// all functions are inline function ...
 
 namespace cnoid {
     inline bool eps_eq(const double a, const double b, const double eps = 0.00001) {
@@ -68,15 +69,9 @@ namespace cnoid {
         }
         return true;
     }
-    //void calcRodrigues(Matrix3& out_R, const Vector3& axis, double q); => angle_axis
-#ifndef __irsl_use_inline__
-    Vector3 matrix_log(const Matrix3& m);
-    void rotm3times (Matrix3& m12, const Matrix3& m1, const Matrix3& m2);
-    void difference_rotation(Vector3& ret_dif_rot, const Matrix3& self_rot, const Matrix3& target_rot);
-    void mid_rot(Matrix3& mid_rot, const double p, const Matrix3& rot1, const Matrix3& rot2, const double eps = 0.00001);
 
-    void mid_coords(Position &mid_coords, const double p, const Position &c1, const Position &c2, const double eps = 0.00001);
-#else
+    //void calcRodrigues(Matrix3& out_R, const Vector3& axis, double q); => angle_axis
+
     inline Vector3 matrix_log(const Matrix3& m) {
         Vector3 mlog;
         double q0, th;
@@ -104,7 +99,7 @@ namespace cnoid {
 
     // matrix product using quaternion normalization
     // m12 <= m1 * m2
-    inline void rotm3times (Matrix3& m12, const Matrix3& m1, const Matrix3& m2)
+    inline void _rotm3times (Matrix3& m12, const Matrix3& m1, const Matrix3& m2)
     {
         Quaternion eiq1(m1);
         Quaternion eiq2(m2);
@@ -114,7 +109,7 @@ namespace cnoid {
         m12 = eiq3.toRotationMatrix();
     }
     // m1 <= m1 * m2
-    inline void rot_with_normalize (Matrix3& m1, const Matrix3& m2)
+    inline void _rot_with_normalize (Matrix3& m1, const Matrix3& m2)
     {
         Quaternion eiq1(m1);
         Quaternion eiq2(m2);
@@ -124,18 +119,13 @@ namespace cnoid {
         m1 = eiq3.toRotationMatrix();
     }
 
-    inline void difference_rotation(Vector3& ret_dif_rot, const Matrix3& self_rot, const Matrix3& target_rot)
-    {
-        //ret_dif_rot = self_rot * hrp::omegaFromRot(self_rot.transpose() * target_rot);
-        ret_dif_rot = self_rot * matrix_log ( self_rot.transpose() * target_rot );
-    }
-    inline void difference_rotation__(Vector3& ret_dif_rot, const Matrix3& self_rot, const Matrix3& target_rot)
+    inline void _difference_rotation (Vector3& ret_dif_rot, const Matrix3& self_rot, const Matrix3& target_rot)
     {
         //ret_dif_rot = self_rot * hrp::omegaFromRot(self_rot.transpose() * target_rot);
         ret_dif_rot = self_rot * matrix_log ( self_rot.transpose() * target_rot );
     }
 
-    inline void mid_rot(Matrix3& mid_rot, const double p, const Matrix3& rot1, const Matrix3& rot2, const double eps)
+    inline void _mid_rot(Matrix3& mid_rot, const double p, const Matrix3& rot1, const Matrix3& rot2, const double eps)
     {
         Matrix3 r(rot1.transpose() * rot2);
         Vector3 omega(matrix_log(r));
@@ -145,7 +135,7 @@ namespace cnoid {
             //calcRodrigues(r, omega.normalized(), omega.norm()*p);
             r = AngleAxis(omega.norm()*p, omega.normalized());
             //mid_rot = c1.rot * r;
-            rotm3times(mid_rot, rot1, r);
+            _rotm3times(mid_rot, rot1, r);
         }
     }
 
@@ -153,16 +143,15 @@ namespace cnoid {
         Matrix3 c1_rot(c1.linear());
         Matrix3 c2_rot(c2.linear());
         Matrix3 ret_rot;
-        mid_rot(ret_rot, p, c1_rot, c2_rot, eps);
+        _mid_rot(ret_rot, p, c1_rot, c2_rot, eps);
         mid_coords.translation() = (1 - p) * c1.translation() + p * c2.translation();
         mid_coords.linear() = ret_rot;
     }
 
-#endif
-
     // from rats coordinates
     // coordinates => Position(Isometry3d)
     // copy from hrpsys-base/rtc/ImpedanceController/RatsMatrix
+    // original idea from https://github.com/euslisp/EusLisp/blob/master/lisp/l/coordinates.l
     struct coordinates {
         enum wrt {
             default_wrt,
@@ -183,16 +172,19 @@ namespace cnoid {
         Vector3 pos;
         Matrix3 rot;
 
-        coordinates() : pos(Vector3::Zero()), rot(Matrix3::Identity()) {};
-        coordinates(const Vector3& p, const Matrix3& r) : pos(p), rot(r) {};
-        coordinates(const Vector3& p, const Quaternion& q) : pos(p), rot(q) {};
-        coordinates(const Vector3& p, const AngleAxis& ax) : pos(p), rot(ax) {};
-        coordinates(const Vector3& p) : pos(p), rot(Matrix3::Identity()) {};
-        coordinates(const Matrix3& r) : pos(Vector3::Zero()), rot(r) {};
-        coordinates(const Quaternion& q) : pos(Vector3::Zero()), rot(q) {};
-        coordinates(const AngleAxis& ax) : pos(Vector3::Zero()), rot(ax) {};
-        coordinates(const coordinates& c) : pos(c.pos), rot(c.rot) {};
-        coordinates(const Position &p) : pos(p.translation()), rot(p.linear()) {};
+        coordinates() : pos(Vector3::Zero()), rot(Matrix3::Identity()) {}
+        coordinates(const Vector3& p, const Matrix3& r) : pos(p), rot(r) {}
+        coordinates(const Vector3& p, const Quaternion& q) : pos(p), rot(q) {}
+        coordinates(const Vector3& p, const AngleAxis& ax) : pos(p), rot(ax) {}
+        coordinates(const Vector3& p) : pos(p), rot(Matrix3::Identity()) {}
+        coordinates(const Matrix3& r) : pos(Vector3::Zero()), rot(r) {}
+        coordinates(const Quaternion& q) : pos(Vector3::Zero()), rot(q) {}
+        coordinates(const AngleAxis& ax) : pos(Vector3::Zero()), rot(ax) {}
+        coordinates(const coordinates& c) : pos(c.pos), rot(c.rot) {}
+        coordinates(const Position& p) : pos(p.translation()), rot(p.linear()) {}
+        coordinates(const Vector3& pp, double r, double p, double y) : pos(pp) { setRPY(r, p, y); }
+        coordinates(const Vector3& pp, const Vector3& rpy) : pos(pp) { setRPY(rpy); }
+        coordinates(double r, double p, double y) : pos(Vector3::Zero()) { setRPY(r, p, y); }
         virtual ~coordinates() {
 #if 0
           std::cerr << "coordinates del: ";
@@ -238,20 +230,20 @@ namespace cnoid {
             Matrix3 rot_org(rot);
             if (wrt == local) {
                 // alias(rot) = rot * mat;
-                rotm3times(rot, rot_org, mat);
+                _rotm3times(rot, rot_org, mat);
             } else if(wrt == world) {
                 // alias(rot) = mat * rot;
-                rotm3times(rot, mat, rot_org);
+                _rotm3times(rot, mat, rot_org);
             } else {
                 //std::cerr << "**** invalid wrt! ****" << std::endl;
             }
 #endif
             if (wrt == local) {
                 // alias(rot) = rot * mat;
-                rotm3times(rot, rot, mat);
+                _rotm3times(rot, rot, mat);
             } else if(wrt == world || wrt == parent) {
                 // alias(rot) = mat * rot;
-                rotm3times(rot, mat, rot);
+                _rotm3times(rot, mat, rot);
             }
             return *this;
         }
@@ -259,18 +251,18 @@ namespace cnoid {
         {
             Matrix3 r2t = wrt.rot.transpose();
             //rot =  W * mat * W^1 * rot
-            rotm3times(r2t, mat, r2t);
-            rotm3times(r2t, wrt.rot, r2t);
-            rotm3times(rot, r2t, rot);
+            _rotm3times(r2t, mat, r2t);
+            _rotm3times(r2t, wrt.rot, r2t);
+            _rotm3times(rot, r2t, rot);
             return *this;
         }
         coordinates &rotate_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
         {
             Matrix3 r2t = wrt.transpose();
             //rot =  W * mat * W^1 * rot
-            rotm3times(r2t, mat, r2t);
-            rotm3times(r2t, wrt, r2t);
-            rotm3times(rot, r2t, rot);
+            _rotm3times(r2t, mat, r2t);
+            _rotm3times(r2t, wrt, r2t);
+            _rotm3times(rot, r2t, rot);
             return *this;
         }
         coordinates &rotate (const double theta, const Vector3& axis, const wrt wrt = local )
@@ -294,7 +286,7 @@ namespace cnoid {
         coordinates &orient_with_matrix (const Matrix3& mat, const wrt wrt = local )
         {
             if (wrt == local) {
-                rotm3times(rot, rot, mat);
+                _rotm3times(rot, rot, mat);
             } else if (wrt == world || wrt == parent) {
                 rot = mat;
             }
@@ -304,14 +296,14 @@ namespace cnoid {
         {
             //Matrix3 r2 = wrt.rot;
             //rot =  W * mat
-            rotm3times(rot, wrt.rot, mat);
+            _rotm3times(rot, wrt.rot, mat);
             return *this;
         }
         coordinates &orient_with_matrix (const Matrix3& mat, const Matrix3 &wrt )
         {
             //Matrix3 r2 = wrt.rot;
             //rot =  W * mat
-            rotm3times(rot, wrt, mat);
+            _rotm3times(rot, wrt, mat);
             return *this;
         }
         coordinates &orient (const double theta, const Vector3& axis, const wrt wrt = local )
@@ -339,7 +331,7 @@ namespace cnoid {
         void difference(Vector3& dif_pos, Vector3& dif_rot, const coordinates& c) const
         {
             dif_pos = c.pos - pos;
-            difference_rotation__(dif_rot, rot, c.rot);
+            _difference_rotation(dif_rot, rot, c.rot);
         }
         void difference_position(Vector3& dif_pos, const coordinates& c) const
         {
@@ -347,7 +339,7 @@ namespace cnoid {
         }
         void difference_rotation(Vector3& dif_rot, const coordinates& c) const
         {
-            difference_rotation__(dif_rot, rot, c.rot);
+            _difference_rotation(dif_rot, rot, c.rot);
         }
         //abc
         coordinates &inverse_transformation(coordinates& inv) const
@@ -399,21 +391,21 @@ namespace cnoid {
                 pos += rot * c.pos;
 #if 0
                 Matrix3 rot_org(rot);
-                rotm3times(rot, rot_org, c.rot);
+                _rotm3times(rot, rot_org, c.rot);
 #endif
-                rotm3times(rot, rot, c.rot);
+                _rotm3times(rot, rot, c.rot);
             } else if (wrt == world || wrt == parent) {
                 // self := c * self
 #if 0
                 Vector3 p(c.pos);
                 Matrix3 r(c.rot);
                 p += r * pos;
-                rotm3times(r, c.rot, rot);
+                _rotm3times(r, c.rot, rot);
                 pos = p;
                 rot = r;
 #endif
                 pos = c.pos + (c.rot * pos);
-                rotm3times(rot, c.rot, rot);
+                _rotm3times(rot, c.rot, rot);
             } else {
                 //std::cerr << "**** invalid wrt! ****" << std::endl;
             }
@@ -510,6 +502,18 @@ namespace cnoid {
             angle = _a.angle();
             axis  = _a.axis();
         }
+        void setRotationAngle(const double angle, const Vector3 &axis, bool normalize = true) {
+            Vector3 ax_(axis);
+            double an_ = angle;
+            if (normalize) {
+                ax_.normalize();
+            } else {
+                an_ *= ax_.norm();
+                ax_.normalize();
+            }
+            AngleAxis aa(an_, ax_);
+            rot = aa;
+        }
         void rotNormalize() {
             normalizeRotation(rot);
         }
@@ -530,7 +534,7 @@ namespace cnoid {
         coordinates &mid_coords(coordinates &mid_coords, const double p, const coordinates &c2, const double eps = 0.00001) const
         {
             mid_coords.pos = (1 - p) * pos + p * c2.pos;
-            mid_rot(mid_coords.rot, p, rot, c2.rot, eps);
+            _mid_rot(mid_coords.rot, p, rot, c2.rot, eps);
             return mid_coords;
         }
         // euler-angle
@@ -539,28 +543,22 @@ namespace cnoid {
     };
 
 typedef std::shared_ptr< coordinates > coordinatesPtr;
+#if 0 // deprecated
+    inline void mid_coords(coordinates& mid_coords, const double p, const coordinates& c1, const coordinates& c2, const double eps = 0.00001)
+    {
+        mid_coords.pos = (1 - p) * c1.pos + p * c2.pos;
+        _mid_rot(mid_coords.rot, p, c1.rot, c2.rot, eps);
+    };
+#endif
 
-#ifndef __irsl_use_inline__
-    //void rotate_with_matrix (const hrp::Matrix33& mat, const std::string& wrt = ":local");
-    void rotate_with_matrix(Position &coords, const Matrix3 &mat, const coordinates::wrt wrt = coordinates::wrt::local ); //wrt
-    //void rotate (const double theta, const hrp::Vector3& axis, const std::string& wrt = ":local");
-    void rotate(Position &coords, const double theta, const Vector3& axis, const coordinates::wrt wrt = coordinates::wrt::local ); // wrt
-    //void difference(hrp::Vector3& dif_pos, hrp::Vector3& dif_rot, const coordinates& c);
-    void difference(const Position &coords, Vector3& dif_pos, Vector3& dif_rot, const Position& c);
-    //void inverse_transformation(coordinates& inv);
-    void inverse_transformation(const Position &coords, Position& inv);
-    //void transformation(coordinates& tc, coordinates c, const std::string& wrt = ":local") const;
-    void transformation(const Position &coords, Position& trans_coords, const Position &c, const coordinates::wrt wrt = coordinates::wrt::local ); // wrt
-    //void transform(const coordinates& c, const std::string& wrt = ":local");
-    void transform(Position &coords, const Position& c, const coordinates::wrt wrt = coordinates::wrt::local ); // wrt
-#else
+    //// for cnoid::Poisition
     inline void rotate_with_matrix(Position &coords, const Matrix3 &mat, const coordinates::wrt wrt = coordinates::wrt::local )
     {
         Matrix3 rot = coords.linear();
         if (wrt == coordinates::wrt::local) {
-            rotm3times(rot, rot, mat);
+            _rotm3times(rot, rot, mat);
         } else if (wrt == coordinates::wrt::world || wrt == coordinates::wrt::parent) {
-            rotm3times(rot, mat, rot);
+            _rotm3times(rot, mat, rot);
         } else {
             return;
         }
@@ -576,11 +574,11 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
     inline void difference(const Position &coords, Vector3& dif_pos, Vector3& dif_rot, const Position& c)
     {
         dif_pos = c.translation() - coords.translation();
-        difference_rotation(dif_rot, coords.linear(), c.linear());
+        _difference_rotation(dif_rot, coords.linear(), c.linear());
     }
     inline void difference_rotation(const Position &coords, Vector3& dif_rot, const Position& c)
     {
-        difference_rotation(dif_rot, coords.linear(), c.linear());
+        _difference_rotation(dif_rot, coords.linear(), c.linear());
     }
     inline void difference_position(const Position &coords, Vector3& dif_pos, const Position& c)
     {
@@ -596,13 +594,13 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
         if (wrt == coordinates::wrt::local) {
             Position tmp = (coords * c);
             Matrix3 rot;
-            rotm3times(rot, coords.linear(), c.linear());
+            _rotm3times(rot, coords.linear(), c.linear());
             coords.translation() = tmp.translation();
             coords.linear() = rot;
         } else if (wrt == coordinates::wrt::world || wrt == coordinates::wrt::parent) {
             Position tmp = (c * coords);
             Matrix3 rot;
-            rotm3times(rot, c.linear(), coords.linear());
+            _rotm3times(rot, c.linear(), coords.linear());
             coords.translation() = tmp.translation();
             coords.linear() = rot;
         }
@@ -628,10 +626,4 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
         transform(trans_coords, tmp, wrt);
     }
 
-#endif
-    inline void mid_coords(coordinates& mid_coords, const double p, const coordinates& c1, const coordinates& c2, const double eps = 0.00001)
-    {
-        mid_coords.pos = (1 - p) * c1.pos + p * c2.pos;
-        mid_rot(mid_coords.rot, p, c1.rot, c2.rot, eps);
-    };
 }

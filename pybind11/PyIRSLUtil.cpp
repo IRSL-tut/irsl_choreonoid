@@ -5,7 +5,7 @@
 #include <sstream>
 #include <pybind11/pybind11.h>
 
-#include "irsl_choreonoid/EigenUtil.h"
+#include "irsl_choreonoid/Coordinates.h"
 #include <cnoid/PyUtil>
 #include <cnoid/PyEigenTypes>
 #include <cnoid/Body>
@@ -29,12 +29,12 @@ PYBIND11_MODULE(IRSLUtil, m)
 
     py::module::import("cnoid.Body");
 
-    m.def("mid_coords_pos", mid_coords_pos_, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
+#if 0 // deprecated
     m.def("mid_coords", [] (const double p, const coordinates &c1, const coordinates &c2, const double eps) {
             coordinatesPtr ret(new coordinates());
             mid_coords(*ret, p, c1, c2, eps);
             return ret; }, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
-
+#endif
     m.def("eps_eq", [] (const double a, const double b, const double eps) { return eps_eq(a, b, eps); },
           py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
     m.def("eps_eq", [] (ref_vec3 a, ref_vec3 b, const double eps) {
@@ -62,6 +62,8 @@ PYBIND11_MODULE(IRSLUtil, m)
                 if (!eps_eq(*aptr++, *bptr++, eps)) return false;
             }
             return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
+
+    /// for cnoid::Position
     m.def("PositionInverse", [](ref_mat4 in_p) -> Matrix4RM { Position p(in_p); return p.inverse().matrix(); });
     m.def("Position_translation", [](ref_mat4 in_p) { Position p(in_p); return Vector3(p.translation()); });
     m.def("Position_quaternion", [](ref_mat4 in_p) { Quaternion q(Position(in_p).linear());
@@ -128,6 +130,9 @@ PYBIND11_MODULE(IRSLUtil, m)
             return trans_c.matrix(); },
         py::arg("cds"), py::arg("c"), py::arg("wrt") = "local");
 
+    m.def("Position_mid_coords", mid_coords_pos_, py::arg("p"), py::arg("c1"), py::arg("c2"), py::arg("eps") = 0.00001);
+
+    //// for coordinates
     py::class_< coordinates, coordinatesPtr > coords_cls(m, "coordinates");
 
     py::enum_<coordinates::wrt>(coords_cls, "wrt")
@@ -138,7 +143,7 @@ PYBIND11_MODULE(IRSLUtil, m)
 
     coords_cls.def(py::init<>())
     .def(py::init([](ref_vec3 trs, ref_mat3 rot)
-                  { return new coordinates(trs, rot); }))
+                  { Vector3 v(trs); Matrix3 m(rot);  return new coordinates(v, m); }))
     .def(py::init([](ref_vec3 trs)
                   { Vector3 v(trs); return new coordinates(v); }))
     .def(py::init([](ref_mat3 rot)
@@ -277,6 +282,10 @@ PYBIND11_MODULE(IRSLUtil, m)
             double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
             Vector4 ret; ret(0) = ax_(0); ret(1) = ax_(1); ret(2) = ax_(2); ret(3) = an_;
             return ret; } )
+    .def("setRotationAngle", [](coordinates &self, const ref_vec4 ret) {
+            double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
+            self.setRotationAngle(an_, ax_);
+            return &self; } )
     .def("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
     .def("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
     .def("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
