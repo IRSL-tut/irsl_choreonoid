@@ -333,40 +333,39 @@ bool RobotAssemblerConfiguration::Impl::parseGeneralSettings(ValueNode *vn)
     ::UnitConfig::Unit _a_unit = ::UnitConfig::None;
     ::UnitConfig::Unit _l_unit = ::UnitConfig::None;
     ::UnitConfig::Unit _m_unit = ::UnitConfig::None;
-    {
-        ValueNode *target = vn->toMapping()->find("angleUnit");
-        if(target->isValid() && target->isString()) {
-            std::string str = target->toString();
-            if (str == "deg" || str == "degree" || str == "DEG" || str == "DEGREE" ) {
-                _a_unit = ::UnitConfig::degree;
-            }
+    { // angle
+    ValueNode *target = vn->toMapping()->find("angleUnit");
+    if(target->isValid() && target->isString()) {
+        std::string str = target->toString();
+        if (str == "deg" || str == "degree" || str == "DEG" || str == "DEGREE" ) {
+            _a_unit = ::UnitConfig::degree;
         }
-    }
-    {
-        ValueNode *target = vn->toMapping()->find("lengthUnit");
-        if(target->isValid() && target->isString()) {
-            std::string str = target->toString();
-            if (str == "mm" || str == "MM" || str == "millimeter" || str == "Millimeter" ) {
-                _l_unit = ::UnitConfig::mm;
-            }
+    } }
+
+    { // length
+    ValueNode *target = vn->toMapping()->find("lengthUnit");
+    if(target->isValid() && target->isString()) {
+        std::string str = target->toString();
+        if (str == "mm" || str == "MM" || str == "millimeter" || str == "Millimeter" ) {
+            _l_unit = ::UnitConfig::mm;
         }
-    }
-    {
-        ValueNode *target = vn->toMapping()->find("massUnit");
-        if(target->isValid() && target->isString()) {
-            std::string str = target->toString();
-            if (str == "g" || str == "gram" ) {
-                _m_unit = ::UnitConfig::g;
-            }
+    } }
+
+    { // mass
+    ValueNode *target = vn->toMapping()->find("massUnit");
+    if(target->isValid() && target->isString()) {
+        std::string str = target->toString();
+        if (str == "g" || str == "gram" ) {
+            _m_unit = ::UnitConfig::g;
         }
-    }
+    } }
     uc.setScale(_a_unit, _l_unit, _m_unit);
     return true;
 }
 bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueNode *vn)
 {
     if ( !vn->isMapping() ) {
-        //
+        // [todo]
         return false;
     }
     Mapping *val = vn->toMapping();
@@ -385,10 +384,10 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueN
                 reverseTypeNames.insert(std::make_pair(str, i));
             }
             if (!strlist) {
-                // invalid type
+                // [todo] invalid type
             }
         } else {
-            // error ?
+            // [todo] error ?
         }
     }
     {
@@ -408,11 +407,11 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueN
                 reverseConfNames.insert(std::make_pair(_conf.name, i));
             }
             if (!maplist) {
-                // invalid type
+                // [todo] invalid type
                 std::cerr << "invalid type 0" << std::endl;
             }
         } else {
-            // error ?
+            // [todo] error ?
             std::cerr << "error 0" << std::endl;
             return false;
         }
@@ -433,11 +432,11 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueN
                 self->listConnectingTypeMatch.push_back(_match);
             }
             if (!maplist) {
-                // invalid type
+                // [todo] invalid type
                 std::cerr << "invalid type 1" << std::endl;
             }
         } else {
-            // error ?
+            // [todo] error ?
             std::cerr << "error 1" << std::endl;
         }
     }
@@ -495,7 +494,7 @@ bool RobotAssemblerConfiguration::Impl::parseCoords(Mapping *map_, coordinates &
 
 bool RobotAssemblerConfiguration::Impl::parseConnectingConf(ValueNode *vn, ConnectingConfiguration &out) {
     if ( !vn->isMapping() ) {
-        // error message
+        // [todo] error message
         return false;
     }
     Mapping *val = vn->toMapping();
@@ -504,6 +503,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConf(ValueNode *vn, Conne
     if (ret->isValid() && ret->isScalar()) {
         out.name = ret->toString();
     } else {
+        // [todo] error message
         std::cerr << "not scalar" << std::endl;
         return false;
     }
@@ -516,7 +516,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConf(ValueNode *vn, Conne
 
 bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, ConnectingTypeMatch &out) {
     if ( !vn->isMapping() ) {
-        // error message
+        // [todo] error message
         return false;
     }
     Mapping *val = vn->toMapping();
@@ -524,23 +524,25 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, 
     if (ret->isValid() && ret->isListing()) {
         Listing *lst = ret->toListing();
         if (lst->size() < 2 || !lst->at(0)->isScalar() || !lst->at(1)->isScalar() ) {
-            // error message
+            // [todo] error message
             return false;
         }
         std::string pair_a = lst->at(0)->toString();
         std::string pair_b = lst->at(1)->toString();
         auto it_a = reverseTypeNames.find(pair_a);
         if (it_a == reverseTypeNames.end()) { // not found
+            // [todo]
             return false;
         }
         out.pair[0] = it_a->second;
         auto it_b = reverseTypeNames.find(pair_b);
         if (it_b == reverseTypeNames.end()) { // not found
+            // [todo]
             return false;
         }
         out.pair[1] = it_b->second;
     } else {
-        // error message
+        // [todo] error message
         return false;
     }
     ret = val->find("allowed-configuration");
@@ -551,16 +553,16 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, 
                 std::string str = lst->at(i)->toString();
                 auto it = reverseConfNames.find(str);
                 if (it == reverseConfNames.end()) { // not found
-                    // error message
+                    // [todo] error message
                     return false;
                 }
                 out.allowed_configuration.push_back(it->second);
             } else {
-                // invalid but not critical
+                // [todo] invalid but not critical
             }
         }
     } else {
-        // error message
+        // [todo] error message
         return false;
     }
     return true;
@@ -568,7 +570,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, 
 bool RobotAssemblerConfiguration::Impl::parsePartsSettings(ValueNode *vn)
 {
     if ( !vn->isListing() ) {
-        //
+        // [todo]
         return false;
     }
     Listing *lst = vn->toListing();
@@ -587,6 +589,7 @@ bool RobotAssemblerConfiguration::Impl::parsePartsSettings(ValueNode *vn)
 bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
 {
     if( !vn->isMapping() ) {
+        // [todo]
         return false;
     }
     Mapping *mp = vn->toMapping();
@@ -599,9 +602,9 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     {   // <<visual
     ValueNode *val = mp->find("visual");
     if ( ! val->isValid() ) {
-        //
+        // [todo]
     } else if ( ! val->isListing() ) {
-
+        // [todo]
     } else {
         Listing *lst = val->toListing();
         for(int i = 0; i < lst->size(); i++) {
@@ -614,9 +617,9 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     {   // <<collision
     ValueNode *val = mp->find("collision");
     if ( ! val->isValid() ) {
-        //
+        // [todo]
     } else if ( ! val->isListing() ) {
-
+        // [todo]
     } else {
         Listing *lst = val->toListing();
         for(int i = 0; i < lst->size(); i++) {
@@ -632,12 +635,12 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     if (val->isValid() && val->isMapping()) {
         Mapping *mass_map = val->toMapping();
         if(!mapDouble(mass_map, "mass", out.mass, std::cerr)) {
-            //
+            // [todo]
             return false;
         }
         std::vector<double> com;
         if(!mapVector(mass_map, "center-of-mass", com, std::cerr)) {
-            //
+            // [todo]
             return false;
         } else {
             if (com.size() >= 3) {
@@ -649,7 +652,7 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
         }
         std::vector<double> it;
         if(!mapVector(mass_map, "inertia-tensor", it, std::cerr)) {
-            //
+            // [todo]
             return false;
         } else {
             if (it.size() >= 9) {
@@ -668,9 +671,9 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     {   // <<connecting-points
     ValueNode *val = mp->find("connecting-points");
     if ( ! val->isValid() ) {
-        //
+        // [todo]
     } else if ( ! val->isListing() ) {
-
+        // [todo]
     } else {
         Listing *lst = val->toListing();
         for(int i = 0; i < lst->size(); i++) {
@@ -683,9 +686,9 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     {   // <<actuators
     ValueNode *val = mp->find("actuators");
     if ( ! val->isValid() ) {
-        //
+        // [todo]
     } else if ( ! val->isListing() ) {
-
+        // [todo]
     } else {
         Listing *lst = val->toListing();
         for(int i = 0; i < lst->size(); i++) {
@@ -698,9 +701,9 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     {   // <<extra-data
     ValueNode *val = mp->find("extra-data");
     if ( ! val->isValid() ) {
-        //
+        // [todo]
     } else if ( ! val->isListing() ) {
-
+        // [todo]
     } else {
         Listing *lst = val->toListing();
         for(int i = 0; i < lst->size(); i++) {
@@ -715,18 +718,238 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
 
 bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &geom)
 {
+    if ( ! vn->isMapping() ) {
+        // [todo]
+        return false;
+    }
+    Mapping *mp = vn->toMapping();
+    // coords
+    parseCoords(mp, geom.coords);
+    // scale
+    geom.scale = 1.0;
+    mapDouble(mp, "scale", geom.scale, std::cerr, false);
+    // type
+    std::string tp_; geom.type = Geometry::None;
+    mapString(mp, "type", tp_, std::cerr, false);
+    if (tp_ == "mesh") {
+        geom.type = Geometry::Mesh;
+    } else if (tp_ == "box") {
+        geom.type = Geometry::Box;
+    } else if (tp_ == "cylinder") {
+        geom.type = Geometry::Cylinder;
+    } else if (tp_ == "sphere") {
+        geom.type = Geometry::Sphere;
+    } else if (tp_ == "cone") {
+        geom.type = Geometry::Cone;
+    } else if (tp_ == "capsule") {
+        geom.type = Geometry::Capsule;
+    } else if (tp_ == "ellipsoid") {
+        geom.type = Geometry::Ellipsoid;
+    } else if (tp_.size() > 0) {
+        std::cerr << "unknown geometry type: " << tp_ << std::endl;
+        return false;
+    }
+
+    if (geom.type == Geometry::None) {
+        ValueNode *val;
+        std::vector<double> vec;
+        if ( (val = mp->find("box"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 3) {
+                    geom.type = Geometry::Box;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("cylinder"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 2) {
+                    geom.type = Geometry::Cylinder;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("sphere"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 1) {
+                    geom.type = Geometry::Sphere;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("cone"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 1) { // [todo] param length
+                    geom.type = Geometry::Cone;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("capsule"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 1) { // [todo] param length
+                    geom.type = Geometry::Capsule;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("ellipsoid"))->isValid() ) {
+            if( readVector(val, vec, std::cerr) ) {
+                if (vec.size() >= 1) { // [todo] param length
+                    geom.type = Geometry::Ellipsoid;
+                    geom.parameter = vec;
+                } else {
+                    // [todo]
+                }
+            }
+        } else if ( (val = mp->find("dummy"))->isValid() ) {
+            geom.type = Geometry::Dummy;
+        }
+        //
+        if (geom.type == Geometry::None) {
+            // [todo]
+            std::cerr << "Could not found geometry type!" << std::endl;
+            return false;
+        }
+    } else if (geom.type == Geometry::Mesh) {
+        if(! mapString(mp, "url", geom.url, std::cerr, true)) {
+            // [todo]
+            std::cerr << "mesh type geometry requires url:" << std::endl;
+            return false;
+        }
+    } else {
+        std::vector<double> vec;
+        if(! mapVector(mp, "parameter", vec, std::cerr, true)) {
+            // [todo]
+            std::cerr << "non meth type geometry requires parameter:" << std::endl;
+            return false;
+        }
+        geom.parameter = vec;
+    }
     return true;
 }
 bool RobotAssemblerConfiguration::Impl::parseConnectingPoint(ValueNode *vn, ConnectingPoint &cpt)
 {
+    if ( ! vn->isMapping() ) {
+        return false;
+    }
+    Mapping *mp = vn->toMapping();
+    if (!mapString(mp, "name", cpt.name, std::cerr)) {
+        return false;
+    }
+    ValueNode *val = mp->find("types");
+    if ( ! val->isValid() ) {
+        return false;
+    }
+    if ( ! val->isListing() ) {
+        return false;
+    }
+    Listing *lst = val->toListing();
+    for(int i = 0; i < lst->size(); i++) {
+        if(lst->at(i)->isScalar()) {
+            std::string key = lst->at(i)->toString();
+            auto it = reverseTypeNames.find(key);
+            if (it == reverseTypeNames.end()) {
+                // [todo] key not found (not fatal)
+                continue;
+            }
+            cpt.type_list.push_back(it->second);
+        } else {
+            // [todo] error (not fatal)
+        }
+    }
+    if(cpt.type_list.size() < 1) {
+        // [todo] no types
+        return false;
+    }
+    parseCoords(mp, cpt.coords);
+
     return true;
 }
 bool RobotAssemblerConfiguration::Impl::parseActuator(ValueNode *vn, Actuator &act)
 {
+    if (! vn->isMapping() ) {
+        return false;
+    }
+    Mapping *mp = vn->toMapping();
+    std::string act_type;
+    if (!mapString(mp, "actuator-type", act_type, std::cerr)) {
+        return false;
+    }
+    ConnectingPoint::PartsType tp_;
+    if (act_type == "rotational") {
+        tp_ =  ConnectingPoint::Rotational;
+    } else if (act_type == "linear") {
+        tp_ =  ConnectingPoint::Linear;
+    } else if (act_type ==  "fixed") {
+        tp_ =  ConnectingPoint::Fixed;
+    } else {
+        std::cerr << "unknown actuator-type:" << act_type << std::endl;
+        return false;
+    }
+    act = Actuator(tp_);
+
+    ValueNode *val = mp->find("axis");
+    if ( ! val->isValid() ) {
+        // [todo] no axis
+        act.axis = Vector3(0, 0, 1);
+    } else if ( val->isScalar() ) {
+        std::string ax = val->toString();
+        if (ax == "x") {
+            act.axis = Vector3(1, 0, 0);
+        } else if (ax == "y") {
+            act.axis = Vector3(0, 1, 0);
+        } else if (ax == "z") {
+            act.axis = Vector3(0, 0, 1);
+        } else if (ax == "-x") {
+            act.axis = Vector3(-1, 0, 0);
+        } else if (ax == "-y") {
+            act.axis = Vector3(0, -1, 0);
+        } else if (ax == "-z") {
+            act.axis = Vector3(0, 0, -1);
+        } else {
+            std::cerr << "invalid axis[string] : " << ax << std::endl;
+            return false;
+        }
+    } else if ( val->isListing() ) {
+        std::vector<double> ax;
+        readVector(val, ax, std::cerr);
+        if (ax.size() >= 3) {
+            Vector3 v(ax[0], ax[1], ax[2]);
+            v.normalize();
+            act.axis = v;
+        } else {
+            // [todo] size error
+        }
+    } else {
+        // [todo] invalid (mapping)
+        std::cerr << "invalid axis " << std::endl;
+        return false;
+    }
+    std::vector<double> qlim;
+    mapVector(mp, "limit", qlim, std::cerr, false);
+    std::vector<double> vlim;
+    mapVector(mp, "vlimit", vlim, std::cerr, false);
+    std::vector<double> tlim;
+    mapVector(mp, "tqlimit", tlim, std::cerr, false);
+
+    bool ret;
+    ret = parseConnectingPoint(vn, *static_cast<ConnectingPoint *>(&act) );
+    if (!ret) {
+        // [todo] fatal
+        return false;
+    }
+
     return true;
 }
 bool RobotAssemblerConfiguration::Impl::parseExtraInfo(ValueNode *vn, ExtraInfo &einfo)
 {
+    // TODO
     return true;
 }
 }; };

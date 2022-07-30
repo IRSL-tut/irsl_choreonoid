@@ -30,24 +30,54 @@ struct ConnectingTypeMatch
     std::vector<ConnectingConfigurationType> allowed_configuration;
 };
 
-struct ConnectingPoint
+class PointBase
 {
+public:
     std::string name;
-    std::vector<ConnectingType> type_list;
     coordinates coords;
 };
 
-struct Actuator : public ConnectingPoint
+class ConnectingPoint : public PointBase
 {
-    enum ActuatorType {
-        None = 0,
-        Revolute = 1 << 0,
-        Linear = 1 << 1,
-        Free = 1 << 2,
-        Fixed = 1 << 3
-    }; // sphere
-    ActuatorType type;
+public:
+    //using PointBase::name;
+    //using PointBase::coords;
+
+    enum PartsType {
+        Parts = 0, // Parts
+        Rotational = 1 << 0, // Actuator
+        Linear     = 1 << 1,
+        Fixed      = 1 << 2,
+        Sphere     = 1 << 3,
+        Plane      = 1 << 4,
+        Spherical  = 1 << 5,
+        Free       = 1 << 6,
+        UNDEFINED  = 1 << 7
+    };
+
+    ConnectingPoint() : type(Parts) {}
+    virtual PartsType getType() { return type; }
+
+    std::vector<ConnectingType> type_list;
+protected:
+    PartsType type;
+};
+
+class Actuator : public ConnectingPoint
+{
+public:
+    //using ConnectingPoint::name;
+    //using ConnectingPoint::coords;
+    //using ConnectingPoint::type_list;
+
+    Actuator() { type = UNDEFINED; }
+    //Actuator(const ConnectingPoint &cpt, PartsType _tp) { *this = cpt; type = _tp; }
+    Actuator(PartsType _tp) { type = _tp; }
+    //ActuatorType type;
     Vector3 axis;
+    double limit[2];
+    double vlimit[2];
+    double tqlimit[2];
 };
 
 struct ExtraInfo
@@ -74,11 +104,12 @@ struct Geometry
         Sphere,
         Cone,
         Capsule,
-        Ellipsoid
+        Ellipsoid,
+        Dummy // can not detect collision
     };
 
     coordinates coords;
-    std::string uri;
+    std::string url;
     double scale;
     Type type;
     std::vector<double> parameter;

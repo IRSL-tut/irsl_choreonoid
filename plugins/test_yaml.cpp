@@ -78,15 +78,21 @@ int main(int argc, char **argv) {
     }
 }
 #endif
-
+void print(coordinates &cds)
+{
+    std::cout << "((" << cds.pos(0) << ", "
+              << cds.pos(1) << ", " << cds.pos(2);
+    Vector3 rpy; cds.getRPY(rpy);
+    std::cout << ") (" << rpy(0)  << ", " << rpy(1)  << ", "
+              << rpy(2) << "))";
+}
 void print(ra::ConnectingConfiguration &in, int i)
 {
     std::cout << "[ConnectingConfiguration] " << i;
     std::cout << " / name: " << in.name;
     std::cout << " / desc: " << in.description;
-    std::cout << " / coords: " << in.coords.pos;
-    Vector3 rpy; in.coords.getRPY(rpy);
-    std::cout << " " << rpy << std::endl;
+    std::cout << " / coords: ";
+    print(in.coords); std::cout << std::endl;
 }
 
 void print(ra::ConnectingTypeMatch &in)
@@ -101,6 +107,100 @@ void print(ra::ConnectingTypeMatch &in)
         }
     }
     std::cout << "]" << std::endl;
+}
+
+void print(ra::ConnectingPoint &in)
+{
+    ra::ConnectingPoint::PartsType tp_ = in.getType();
+    if (tp_ == ra::ConnectingPoint::Parts) {
+        std::cout << "  [ConnectingPoint]" << std::endl;
+    } else {
+        std::cout << "  [Actuator]" << std::endl;
+    }
+    std::cout << "    name: " << in.name << std::endl;
+    std::cout << "    coords: ";
+    print(in.coords); std::cout << std::endl;
+    std::cout << "    type_list: ";
+    for(int i = 0; i < in.type_list.size(); i++) {
+        if(i == 0) {
+            std::cout << in.type_list[i];
+        } else {
+            std::cout << ", " << in.type_list[i];
+        }
+    }
+    std::cout << std::endl;
+}
+
+void print(ra::Actuator &in)
+{
+    print(*static_cast<ra::ConnectingPoint *> (&in));
+    ra::ConnectingPoint::PartsType tp_ = in.getType();
+    std::cout << "    actuator_type: ";
+    switch (tp_) {
+    case ra::ConnectingPoint::Rotational:
+        std::cout << "rotational";
+        break;
+    default:
+        std::cout << "unknown";
+        break;
+    }
+    std::cout << std::endl;
+
+    std::cout << "    axis: " << in.axis(0) << ", " << in.axis(1) << ", " << in.axis(2) << std::endl;
+}
+
+void print(ra::Geometry &in)
+{
+    std::cout << "  [Geometry]" << std::endl;
+    std::cout << "    type: " << in.type << std::endl;
+    std::cout << "    scale: " << in.scale << std::endl;
+    std::cout << "    coords: "; print(in.coords); std::cout << std::endl;
+    if (in.url.size() > 0) {
+        std::cout << "    url: " << in.url << std::endl;
+    }
+    if (in.parameter.size() > 0) {
+        std::cout << "    param: [";
+        for(int i = 0; i < in.parameter.size(); i++) {
+            if (i == 0) {
+                std::cout << in.parameter[i];
+            } else {
+                std::cout << ", " << in.parameter[i];
+            }
+        }
+        std::cout << "]" << std::endl;
+    }
+}
+
+void print(ra::Parts &in)
+{
+    std::cout << "[Parts]" << std::endl;;
+    std::cout << "  name: " << in.type << std::endl;
+    std::cout << "  class: " << in.class_name << std::endl;
+
+    if (in.hasMassParam) {
+        std::cout << "  mass: " << in.mass << std::endl;
+        std::cout << "   COM: " << in.COM(0) << ", " << in.COM(1) << ", " << in.COM(2) << std::endl;
+        std::cout << "  inertia: " << in.inertia_tensor << std::endl;
+    } else {
+        std::cout << "  ## no mass-param" << std::endl;
+    }
+
+    std::cout << "  visual: " << in.visual.size() << std::endl;
+    for(int i = 0; i < in.visual.size(); i++) {
+        print(in.visual[i]);
+    }
+    std::cout << "  collision: " << in.collision.size() << std::endl;
+    for(int i = 0; i < in.collision.size(); i++) {
+        print(in.collision[i]);
+    }
+    std::cout << "  connecting-points: " << in.connecting_points.size() << std::endl;
+    for(int i = 0; i < in.connecting_points.size(); i++) {
+        print(in.connecting_points[i]);
+    }
+    std::cout << "  actuators: " << in.actuators.size() << std::endl;
+    for(int i = 0; i < in.actuators.size(); i++) {
+        print(in.actuators[i]);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -136,9 +236,14 @@ int main(int argc, char **argv) {
                 print(lst[i]);
             }
         }
+        {
+            std::cout << "mapParts: " << conf.mapParts.size() << std::endl;
+            for (auto it = conf.mapParts.begin(); it != conf.mapParts.end(); it++) {
+                // it->first;
+                //ra::Parts &pt = it->second;
+                //print(pt);
+                print(it->second);
+            }
+        }
     }
 }
-
-
-
-
