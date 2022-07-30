@@ -1,4 +1,4 @@
-#include "XXXFileIO.h"
+#include "AssemblerFileIO.h"
 #include <cnoid/ItemManager>
 #include <cnoid/SceneGraph>
 #include <cnoid/BodyLoader>
@@ -19,11 +19,11 @@ class SceneFileImporter : public GeneralSceneFileImporterBase
 {
 public:
     SceneFileImporter() {
-        setCaption("XXXBody");
+        setCaption("AssemblerBody");
         setFileTypeCaption("Scene / Mesh");
     }
     virtual Item* createItem() override {
-        return new XXXBodyItem;
+        return new AssemblerBodyItem;
     }
     virtual bool load(Item* item, const std::string& filename) override {
         SgNode* shape = loadScene(filename);
@@ -32,7 +32,7 @@ public:
             return false;
         }
 
-        auto bodyItem = static_cast<XXXBodyItem*>(item);
+        auto bodyItem = static_cast<AssemblerBodyItem*>(item);
         BodyPtr newBody = new Body;
         newBody->rootLink()->addShapeNode(shape);
         newBody->setName("Loaded_Body");
@@ -51,13 +51,13 @@ private:
 
 }
 
-void XXXBodyItem::registerXXXBodyItemFileIoSet(ItemManager* im)
+void AssemblerBodyItem::registerAssemblerBodyItemFileIoSet(ItemManager* im)
 {
     //::bodyFileIO = new BodyItemBodyFileIO;
     //im->addFileIO<BodyItem>(::bodyFileIO);
 
     ::meshFileIO = new SceneFileImporter;
-    im->addFileIO<XXXBodyItem>(::meshFileIO);
+    im->addFileIO<AssemblerBodyItem>(::meshFileIO);
 
     //im->addFileIO<BodyItem>(new StdSceneFileExporter);
     //im->addFileIO<BodyItem>(new ObjFileExporter);
@@ -68,7 +68,7 @@ void XXXBodyItem::registerXXXBodyItemFileIoSet(ItemManager* im)
 //    return ::bodyFileIO;
 //}
 
-ItemFileIO* XXXBodyItem::meshFileIO()
+ItemFileIO* AssemblerBodyItem::meshFileIO()
 {
     return ::meshFileIO;
 }

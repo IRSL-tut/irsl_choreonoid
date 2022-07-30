@@ -1,5 +1,5 @@
-#include "XXXBodyItem.h"
-#include "XXXSceneBody.h"
+#include "AssemblerBodyItem.h"
+#include "AssemblerSceneBody.h"
 
 //#include <cnoid/SceneBody>
 #include <cnoid/RootItem>
@@ -23,9 +23,9 @@ namespace {
 class BodyLocation : public LocationProxy
 {
 public:
-    XXXBodyItem::Impl* impl;
+    AssemblerBodyItem::Impl* impl;
 
-    BodyLocation(XXXBodyItem::Impl* impl);
+    BodyLocation(AssemblerBodyItem::Impl* impl);
     void updateLocationType();
     virtual Isometry3 getLocation() const override;
     virtual bool isEditable() const override;
@@ -40,12 +40,12 @@ public:
 class LinkLocation : public LocationProxy
 {
 public:
-    weak_ref_ptr<XXXBodyItem> refXXXBodyItem;
+    weak_ref_ptr<AssemblerBodyItem> refAssemblerBodyItem;
     weak_ref_ptr<Link> refLink;
 
     LinkLocation();
-    LinkLocation(XXXBodyItem* bodyItem, Link* link);
-    void setTarget(XXXBodyItem* bodyItem, Link* link);
+    LinkLocation(AssemblerBodyItem* bodyItem, Link* link);
+    void setTarget(AssemblerBodyItem* bodyItem, Link* link);
     virtual std::string getName() const override;
     virtual Isometry3 getLocation() const override;
     virtual bool isEditable() const override;
@@ -58,19 +58,19 @@ public:
 
 namespace cnoid {
 
-class XXXBodyItem::Impl
+class AssemblerBodyItem::Impl
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    XXXBodyItem* self;
+    AssemblerBodyItem* self;
     BodyPtr body;
 
-    XXXSceneBodyPtr sceneBody;
+    AssemblerSceneBodyPtr sceneBody;
 
-    Impl(XXXBodyItem* self);
-    Impl(XXXBodyItem* self, const Impl& org);
-    Impl(XXXBodyItem* self, Body* body);
+    Impl(AssemblerBodyItem* self);
+    Impl(AssemblerBodyItem* self, const Impl& org);
+    Impl(AssemblerBodyItem* self, Body* body);
     ~Impl();
 
     void setBody(Body* body);
@@ -100,7 +100,7 @@ static void onSigOptionsParsed(boost::program_options::variables_map& variables)
     if(variables.count("xxxbody")){
         vector<string> bodyFileNames = variables["xxxbody"].as<vector<string>>();
         for(size_t i=0; i < bodyFileNames.size(); ++i){
-            XXXBodyItemPtr item(new XXXBodyItem);
+            AssemblerBodyItemPtr item(new AssemblerBodyItem);
             auto rootItem = RootItem::instance();
             if(item->load(bodyFileNames[i], rootItem, "CHOREONOID-BODY")){
                 item->setChecked(true);
@@ -110,13 +110,13 @@ static void onSigOptionsParsed(boost::program_options::variables_map& variables)
     }
 }
 
-void XXXBodyItem::initializeClass(ExtensionManager* ext)
+void AssemblerBodyItem::initializeClass(ExtensionManager* ext)
 {
     ItemManager* im = &ext->itemManager();
-    im->registerClass<XXXBodyItem>("XXXBodyItem");
+    im->registerClass<AssemblerBodyItem>("AssemblerBodyItem");
 
-    // Implemented in XXXBodyItemFileIO.cpp
-    registerXXXBodyItemFileIoSet(im);
+    // Implemented in AssemblerBodyItemFileIO.cpp
+    registerAssemblerBodyItemFileIoSet(im);
 
     //// option ???
     OptionManager& om = ext->optionManager();
@@ -125,20 +125,20 @@ void XXXBodyItem::initializeClass(ExtensionManager* ext)
 }
 
 ////
-XXXBodyItem::XXXBodyItem()
+AssemblerBodyItem::AssemblerBodyItem()
 {
     setAttributes(FileImmutable | Reloadable);//TODO
     impl = new Impl(this);
     // impl->init(false);
 }
 
-XXXBodyItem::XXXBodyItem(const std::string& name)
-    : XXXBodyItem()
+AssemblerBodyItem::AssemblerBodyItem(const std::string& name)
+    : AssemblerBodyItem()
 {
-    XXXBodyItem::setName(name);
+    AssemblerBodyItem::setName(name);
 }
 
-XXXBodyItem::XXXBodyItem(const XXXBodyItem& org)
+AssemblerBodyItem::AssemblerBodyItem(const AssemblerBodyItem& org)
     : Item(org)
 {
     impl = new Impl(this, *org.impl);
@@ -146,49 +146,49 @@ XXXBodyItem::XXXBodyItem(const XXXBodyItem& org)
     setChecked(org.isChecked());
 }
 
-XXXBodyItem::~XXXBodyItem()
+AssemblerBodyItem::~AssemblerBodyItem()
 {
     delete impl;
 }
 
 //// Impl
-XXXBodyItem::Impl::Impl(XXXBodyItem* self)
+AssemblerBodyItem::Impl::Impl(AssemblerBodyItem* self)
     : Impl(self, new Body)
 {
     body->rootLink()->setName("Root");
 }
 
-XXXBodyItem::Impl::Impl(XXXBodyItem* self, Body* body)
+AssemblerBodyItem::Impl::Impl(AssemblerBodyItem* self, Body* body)
     : self(self),
       body(body)
 {
 }
 
-XXXBodyItem::Impl::Impl(XXXBodyItem* self, const Impl& org)
+AssemblerBodyItem::Impl::Impl(AssemblerBodyItem* self, const Impl& org)
     : Impl(self, org.body->clone())
 {
 }
 
-XXXBodyItem::Impl::~Impl()
+AssemblerBodyItem::Impl::~Impl()
 {
 }
 
 //// protected / override Item Class
-Item* XXXBodyItem::doDuplicate() const
+Item* AssemblerBodyItem::doDuplicate() const
 {
-    std::cerr << "doDuplicate(XXXBodyItem)" << std::endl;
-    return new XXXBodyItem(*this);
+    std::cerr << "doDuplicate(AssemblerBodyItem)" << std::endl;
+    return new AssemblerBodyItem(*this);
 }
-bool XXXBodyItem::doAssign(const Item* srcItem)
+bool AssemblerBodyItem::doAssign(const Item* srcItem)
 {
-    std::cerr << "doAssign(XXXBodyItem)" << std::endl;
+    std::cerr << "doAssign(AssemblerBodyItem)" << std::endl;
     return false;
     //??
     //return impl->doAssign(srcItem);
 }
-void XXXBodyItem::onTreePathChanged()
+void AssemblerBodyItem::onTreePathChanged()
 {
-    std::cerr << "doTreePathChanged(XXXBodyItem)" << std::endl;
+    std::cerr << "doTreePathChanged(AssemblerBodyItem)" << std::endl;
 #if 0
     auto worldItem = findOwnerItem<WorldItem>();
     if(!worldItem){
@@ -207,18 +207,18 @@ void XXXBodyItem::onTreePathChanged()
     }
 #endif
 }
-void XXXBodyItem::onConnectedToRoot()
+void AssemblerBodyItem::onConnectedToRoot()
 {
-    std::cerr << "doTreePathChanged(XXXBodyItem)" << std::endl;
+    std::cerr << "doTreePathChanged(AssemblerBodyItem)" << std::endl;
     //storeKinematicState(impl->lastEditState);
 }
-void XXXBodyItem::doPutProperties(PutPropertyFunction& putProperty)
+void AssemblerBodyItem::doPutProperties(PutPropertyFunction& putProperty)
 {
-    std::cerr << "doPutProperties(XXXBodyItem)" << std::endl;
+    std::cerr << "doPutProperties(AssemblerBodyItem)" << std::endl;
     //impl->doPutProperties(putProperty);
 }
 #if 0
-void XXXBodyItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
+void AssemblerBodyItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 {
     putProperty(_("Model name"), body->modelName());
     putProperty(_("Num links"), body->numLinks());
@@ -252,7 +252,7 @@ void XXXBodyItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 //// protected
 
 // override
-bool XXXBodyItem::setName(const std::string& name)
+bool AssemblerBodyItem::setName(const std::string& name)
 {
 #if 0
     auto body = impl->body;
@@ -266,17 +266,17 @@ bool XXXBodyItem::setName(const std::string& name)
     return Item::setName(name);
 }
 
-Body* XXXBodyItem::body() const
+Body* AssemblerBodyItem::body() const
 {
     return impl->body;
 }
 
-void XXXBodyItem::setBody(Body* body)
+void AssemblerBodyItem::setBody(Body* body)
 {
     impl->setBody(body);
 }
 
-void XXXBodyItem::Impl::setBody(Body* body_)
+void AssemblerBodyItem::Impl::setBody(Body* body_)
 {
     body = body_;
     auto rootLink = body->rootLink();
@@ -304,41 +304,41 @@ void XXXBodyItem::Impl::setBody(Body* body_)
 }
 
 //// signals
-SignalProxy<void()> XXXBodyItem::sigKinematicStateChanged()
+SignalProxy<void()> AssemblerBodyItem::sigKinematicStateChanged()
 {
     return impl->sigKinematicStateChanged.signal();
 }
-SignalProxy<void()> XXXBodyItem::sigKinematicStateUpdated()
+SignalProxy<void()> AssemblerBodyItem::sigKinematicStateUpdated()
 {
     return impl->sigKinematicStateUpdated;
 }
-SignalProxy<void(int flags)> XXXBodyItem::sigModelUpdated()
+SignalProxy<void(int flags)> AssemblerBodyItem::sigModelUpdated()
 {
     return impl->sigModelUpdated;
 }
-void XXXBodyItem::notifyModelUpdate(int flags)
+void AssemblerBodyItem::notifyModelUpdate(int flags)
 {
     impl->sigModelUpdated(flags);
 }
-void XXXBodyItem::notifyKinematicStateChange(bool requestFK, bool requestVelFK, bool requestAccFK)
+void AssemblerBodyItem::notifyKinematicStateChange(bool requestFK, bool requestVelFK, bool requestAccFK)
 {
     impl->notifyKinematicStateChange(requestFK, requestVelFK, requestAccFK, true);
 }
-void XXXBodyItem::notifyKinematicStateChange(Connection& connectionToBlock, bool requestFK, bool requestVelFK, bool requestAccFK)
+void AssemblerBodyItem::notifyKinematicStateChange(Connection& connectionToBlock, bool requestFK, bool requestVelFK, bool requestAccFK)
 {
     impl->sigKinematicStateChanged.requestBlocking(connectionToBlock);
     impl->notifyKinematicStateChange(requestFK, requestVelFK, requestAccFK, true);
 }
-void XXXBodyItem::notifyKinematicStateChangeLater(bool requestFK, bool requestVelFK, bool requestAccFK)
+void AssemblerBodyItem::notifyKinematicStateChangeLater(bool requestFK, bool requestVelFK, bool requestAccFK)
 {
     impl->notifyKinematicStateChange(requestFK, requestVelFK,requestAccFK, false);
 }
-void XXXBodyItem::notifyKinematicStateChangeLater(Connection& connectionToBlock, bool requestFK, bool requestVelFK, bool requestAccFK)
+void AssemblerBodyItem::notifyKinematicStateChangeLater(Connection& connectionToBlock, bool requestFK, bool requestVelFK, bool requestAccFK)
 {
     impl->sigKinematicStateChanged.requestBlocking(connectionToBlock);
     impl->notifyKinematicStateChange(requestFK, requestVelFK, requestAccFK, false);
 }
-void XXXBodyItem::notifyKinematicStateUpdate(bool doNotifyStateChange)
+void AssemblerBodyItem::notifyKinematicStateUpdate(bool doNotifyStateChange)
 {
     if(doNotifyStateChange){
         impl->notifyKinematicStateChange(false, false, false, true);
@@ -346,7 +346,7 @@ void XXXBodyItem::notifyKinematicStateUpdate(bool doNotifyStateChange)
     impl->sigKinematicStateUpdated();
 
     //if(isAttachedToParentBody_){
-    //impl->parentXXXBodyItem->notifyKinematicStateUpdate(false);
+    //impl->parentAssemblerBodyItem->notifyKinematicStateUpdate(false);
     //}
 
     //auto record = new KinematicStateRecord(impl, impl->lastEditState);
@@ -354,15 +354,15 @@ void XXXBodyItem::notifyKinematicStateUpdate(bool doNotifyStateChange)
     //storeKinematicState(impl->lastEditState);
 }
 
-void XXXBodyItem::Impl::notifyKinematicStateChange(bool requestFK, bool requestVelFK, bool requestAccFK, bool isDirect)
+void AssemblerBodyItem::Impl::notifyKinematicStateChange(bool requestFK, bool requestVelFK, bool requestAccFK, bool isDirect)
 {
 #if 0
     updateElements.reset();
 
     if(isProcessingInverseKinematicsIncludingParentBody){
         isProcessingInverseKinematicsIncludingParentBody = false;
-        if(parentXXXBodyItem){
-            parentXXXBodyItem->impl->notifyKinematicStateChange(
+        if(parentAssemblerBodyItem){
+            parentAssemblerBodyItem->impl->notifyKinematicStateChange(
                 requestFK, requestVelFK, requestAccFK, isDirect);
         }
     } else {
@@ -382,17 +382,17 @@ void XXXBodyItem::Impl::notifyKinematicStateChange(bool requestFK, bool requestV
     //sigKinematicStateChanged.request();
 }
 
-void XXXBodyItem::Impl::emitSigKinematicStateChanged()
+void AssemblerBodyItem::Impl::emitSigKinematicStateChanged()
 {
 #if 0
     if(isFkRequested){
         fkTraverse.calcForwardKinematics(isVelFkRequested, isAccFkRequested);
         isFkRequested = isVelFkRequested = isAccFkRequested = false;
     }
-    if(isKinematicStateChangeNotifiedByParentXXXBodyItem){
-        isKinematicStateChangeNotifiedByParentXXXBodyItem = false;
+    if(isKinematicStateChangeNotifiedByParentAssemblerBodyItem){
+        isKinematicStateChangeNotifiedByParentAssemblerBodyItem = false;
     } else {
-        if(parentXXXBodyItem && !attachmentToParent){
+        if(parentAssemblerBodyItem && !attachmentToParent){
             setRelativeOffsetPositionFromParentBody();
         }
     }
@@ -400,14 +400,14 @@ void XXXBodyItem::Impl::emitSigKinematicStateChanged()
     sigKinematicStateChanged.signal()();
 }
 #if 0
-LocationProxyPtr XXXBodyItem::getLocationProxy()
+LocationProxyPtr AssemblerBodyItem::getLocationProxy()
 {
     if(!impl->bodyLocation){
         impl->bodyLocation = new BodyLocation(impl);
     }
     return impl->bodyLocation;
 }
-LocationProxyPtr XXXBodyItem::createLinkLocationProxy(Link* link)
+LocationProxyPtr AssemblerBodyItem::createLinkLocationProxy(Link* link)
 {
     return new LinkLocation(this, link);
 }
@@ -415,7 +415,7 @@ LocationProxyPtr XXXBodyItem::createLinkLocationProxy(Link* link)
 
 #if 0
 namespace {
-BodyLocation::BodyLocation(XXXBodyItem::Impl* impl)
+BodyLocation::BodyLocation(AssemblerBodyItem::Impl* impl)
     : LocationProxy(impl->attachmentToParent ? OffsetLocation : GlobalLocation),
       impl(impl)
 {
@@ -453,7 +453,7 @@ bool BodyLocation::setLocation(const Isometry3& T)
     auto rootLink = impl->body->rootLink();
     if(impl->attachmentToParent){
         rootLink->setOffsetPosition(T);
-        impl->parentXXXBodyItem->notifyKinematicStateChange(true);
+        impl->parentAssemblerBodyItem->notifyKinematicStateChange(true);
     } else {
         rootLink->setPosition(T);
         impl->body->calcForwardKinematics();
@@ -471,16 +471,16 @@ Item* BodyLocation::getCorrespondingItem()
 }
 LocationProxyPtr BodyLocation::getParentLocationProxy() const
 {
-    if(impl->parentXXXBodyItem){
+    if(impl->parentAssemblerBodyItem){
         if(impl->attachmentToParent){
             if(!impl->parentLinkLocation){
                 impl->parentLinkLocation = new LinkLocation;
             }
             auto parentLink = impl->body->parentBodyLink();
-            impl->parentLinkLocation->setTarget(impl->parentXXXBodyItem, parentLink);
+            impl->parentLinkLocation->setTarget(impl->parentAssemblerBodyItem, parentLink);
             return impl->parentLinkLocation;
         } else {
-            return impl->parentXXXBodyItem->getLocationProxy();
+            return impl->parentAssemblerBodyItem->getLocationProxy();
         }
     }
     return nullptr;
@@ -494,16 +494,16 @@ LinkLocation::LinkLocation()
 {
 
 }
-LinkLocation::LinkLocation(XXXBodyItem* bodyItem, Link* link)
+LinkLocation::LinkLocation(AssemblerBodyItem* bodyItem, Link* link)
     : LocationProxy(GlobalLocation),
-      refXXXBodyItem(bodyItem),
+      refAssemblerBodyItem(bodyItem),
       refLink(link)
 {
 
 }
-void LinkLocation::setTarget(XXXBodyItem* bodyItem, Link* link)
+void LinkLocation::setTarget(AssemblerBodyItem* bodyItem, Link* link)
 {
-    refXXXBodyItem = bodyItem;
+    refAssemblerBodyItem = bodyItem;
     refLink = link;
 }
 std::string LinkLocation::getName() const
@@ -526,18 +526,18 @@ bool LinkLocation::isEditable() const
 }
 Item* LinkLocation::getCorrespondingItem()
 {
-    return refXXXBodyItem.lock();
+    return refAssemblerBodyItem.lock();
 }
 LocationProxyPtr LinkLocation::getParentLocationProxy() const
 {
-    if(auto body = refXXXBodyItem.lock()){
+    if(auto body = refAssemblerBodyItem.lock()){
         body->getLocationProxy();
     }
     return nullptr;
 }
 SignalProxy<void()> LinkLocation::sigLocationChanged()
 {
-    if(auto bodyItem = refXXXBodyItem.lock()){
+    if(auto bodyItem = refAssemblerBodyItem.lock()){
         return bodyItem->sigKinematicStateChanged();
     } else {
         static Signal<void()> dummySignal;
@@ -548,20 +548,20 @@ SignalProxy<void()> LinkLocation::sigLocationChanged()
 #endif
 
 ////
-XXXSceneBody* XXXBodyItem::sceneBody()
+AssemblerSceneBody* AssemblerBodyItem::sceneBody()
 {
     if(!impl->sceneBody){
         impl->createSceneBody();
     }
     return impl->sceneBody;
 }
-SgNode* XXXBodyItem::getScene()
+SgNode* AssemblerBodyItem::getScene()
 {
     return sceneBody();
 }
-void XXXBodyItem::Impl::createSceneBody()
+void AssemblerBodyItem::Impl::createSceneBody()
 {
-    sceneBody = new XXXSceneBody(self);
+    sceneBody = new AssemblerSceneBody(self);
     sceneBody->setSceneDeviceUpdateConnection(true);
     if(transparency > 0.0f){
         sceneBody->setTransparency(transparency);
@@ -569,15 +569,15 @@ void XXXBodyItem::Impl::createSceneBody()
 }
 
 //// transp
-float XXXBodyItem::transparency() const
+float AssemblerBodyItem::transparency() const
 {
     return impl->transparency;
 }
-void XXXBodyItem::setTransparency(float t)
+void AssemblerBodyItem::setTransparency(float t)
 {
     impl->setTransparency(t);
 }
-void XXXBodyItem::Impl::setTransparency(float t)
+void AssemblerBodyItem::Impl::setTransparency(float t)
 {
     if(t != transparency){
         if(sceneBody){

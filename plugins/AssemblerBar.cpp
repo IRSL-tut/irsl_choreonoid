@@ -1,5 +1,5 @@
-#include "XXXBar.h"
-//#include "XXXBodyItem.h"
+#include "AssemblerBar.h"
+//#include "AssemblerBodyItem.h"
 
 #include <vector>
 #include <iostream>
@@ -8,12 +8,12 @@ using namespace cnoid;
 
 namespace cnoid {
 
-class XXXBar::Impl
+class AssemblerBar::Impl
 {
 public:
-    Impl(XXXBar* _self);
+    Impl(AssemblerBar* _self);
 
-    XXXBar *self;
+    AssemblerBar *self;
     std::vector<ToolButton *> buttons;
 
     void addButton(const char *icon, const char *tooltip, std::function<void()> func);
@@ -23,31 +23,31 @@ public:
 
 }
 
-XXXBar* XXXBar::instance()
+AssemblerBar* AssemblerBar::instance()
 {
-    static XXXBar* instance = new XXXBar;
+    static AssemblerBar* instance = new AssemblerBar;
     return instance;
 }
 
-XXXBar::XXXBar()
-    : ToolBar("XXXBar")
+AssemblerBar::AssemblerBar()
+    : ToolBar("AssemblerBar")
 {
     impl = new Impl(this);
 }
 
-XXXBar::~XXXBar()
+AssemblerBar::~AssemblerBar()
 {
     delete impl;
 }
 
-XXXBar::Impl::Impl(XXXBar* _self)
+AssemblerBar::Impl::Impl(AssemblerBar* _self)
 {
     self = _self;
     addButton(":/Body/icon/storepose.svg", "No tooltip 0",
               [&](){ buttonClicked(0); } );
 }
 
-void XXXBar::Impl::addButton(const char *icon, const char *tooltip, std::function<void()> func)
+void AssemblerBar::Impl::addButton(const char *icon, const char *tooltip, std::function<void()> func)
 {
     ToolButton *button;
     button = self->addButton(QIcon(icon));
@@ -57,7 +57,7 @@ void XXXBar::Impl::addButton(const char *icon, const char *tooltip, std::functio
     buttons.push_back(button);
 }
 
-void XXXBar::Impl::buttonClicked(int n)
+void AssemblerBar::Impl::buttonClicked(int n)
 {
     std::cerr << "buttonClicked:" << n << std::endl;
 }

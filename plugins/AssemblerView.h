@@ -1,19 +1,19 @@
-#ifndef CNOID_IRSL_XXX_PLUGIN_VIEW_H
-#define CNOID_IRSL_XXX_PLUGIN_VIEW_H
+#ifndef CNOID_ROBOT_ASSEMBLER_PLUGIN_VIEW_H
+#define CNOID_ROBOT_ASSEMBLER_PLUGIN_VIEW_H
 
 #include <cnoid/View>
 #include "exportdecl.h"
 
 namespace cnoid {
 
-class CNOID_EXPORT XXXView : public View
+class CNOID_EXPORT AssemblerView : public View
 {
 public:
     static void initializeClass(ExtensionManager* ext);
-    static XXXView* instance(); // instance??
+    static AssemblerView* instance(); // instance??
 
-    XXXView();
-    virtual ~XXXView();
+    AssemblerView();
+    virtual ~AssemblerView();
 
     void createButtons();
 protected:

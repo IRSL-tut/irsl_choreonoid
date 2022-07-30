@@ -1,23 +1,25 @@
 
 set(sources
-  IRSLXXXPlugin.cpp
-  XXXBodyItem.cpp
-  XXXFileIO.cpp
-  XXXSceneBody.cpp
-  XXXView.cpp
-  XXXBar.cpp
+  RobotAssemblerPlugin.cpp
+  AssemblerBodyItem.cpp
+  AssemblerFileIO.cpp
+  AssemblerSceneBody.cpp
+  AssemblerView.cpp
+  AssemblerBar.cpp
+  RobotAssembler.cpp
   )
 
 set(headers
-  IRSLXXXPlugin.h
-  XXXBodyItem.h
-  XXXFileIO.h
-  XXXSceneBody.h
-  XXXView.h
-  XXXBar.h
+  RobotAssemblerPlugin.h
+  AssemblerBodyItem.h
+  AssemblerFileIO.h
+  AssemblerSceneBody.h
+  AssemblerView.h
+  AssemblerBar.h
+  RobotAssembler.h
   )
 
-set(target CnoidIRSLXXXPlugin)
+set(target CnoidRobotAssemblerPlugin)
 #<#choreonoid_make_gettext_mo_files(${target} mofiles)
 #<#qt5_add_resources(RC_SRCS BodyPlugin.qrc)
 include_directories(${CHOREONOID_INCLUDE_DIRS})

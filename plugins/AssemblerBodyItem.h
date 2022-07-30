@@ -1,5 +1,5 @@
-#ifndef CNOID_IRSL_XXX_PLUGIN_BODY_ITEM_H
-#define CNOID_IRSL_XXX_PLUGIN_BODY_ITEM_H
+#ifndef CNOID_ROBOT_ASSEMBLER_PLUGIN_BODY_ITEM_H
+#define CNOID_ROBOT_ASSEMBLER_PLUGIN_BODY_ITEM_H
 
 #include <cnoid/Item>
 #include <cnoid/Body>
@@ -11,25 +11,25 @@
 namespace cnoid {
 class ItemManager;
 class ItemFileIO;
-class XXXSceneBody;
+class AssemblerSceneBody;
 
-//class CNOID_EXPORT XXXBodyItem : public Item, public LocatableItem, public RenderableItem
-//class CNOID_EXPORT XXXBodyItem : public Item, public LocatableItem, public RenderableItem
-class CNOID_EXPORT XXXBodyItem : public Item, public RenderableItem
+//class CNOID_EXPORT AssemblerBodyItem : public Item, public LocatableItem, public RenderableItem
+//class CNOID_EXPORT AssemblerBodyItem : public Item, public LocatableItem, public RenderableItem
+class CNOID_EXPORT AssemblerBodyItem : public Item, public RenderableItem
 {
 public:
     static void initializeClass(ExtensionManager* ext);
 
-    // The following functions are Implemented in XXXBodyItemFileIO.cpp
-    static void registerXXXBodyItemFileIoSet(ItemManager* im);
-    //! The actual type of the IO object returned by this function is XXXBodyItemBodyFileIO.
+    // The following functions are Implemented in AssemblerBodyItemFileIO.cpp
+    static void registerAssemblerBodyItemFileIoSet(ItemManager* im);
+    //! The actual type of the IO object returned by this function is AssemblerBodyItemBodyFileIO.
     //static ItemFileIO* bodyFileIO();
     static ItemFileIO* meshFileIO();
 
-    XXXBodyItem();
-    XXXBodyItem(const std::string& name);
-    XXXBodyItem(const XXXBodyItem& org);
-    virtual ~XXXBodyItem();
+    AssemblerBodyItem();
+    AssemblerBodyItem(const std::string& name);
+    AssemblerBodyItem(const AssemblerBodyItem& org);
+    virtual ~AssemblerBodyItem();
 
     virtual bool setName(const std::string& name) override;
 
@@ -39,7 +39,7 @@ public:
     // API for a composite body
     // The following body and link pair is basically determined by
     // the parent-child relationship in the item tree
-    //XXXBodyItem* parentXXXBodyItem();
+    //AssemblerBodyItem* parentAssemblerBodyItem();
 
     enum ModelUpdateFlag {
         LinkSetUpdate = 1 << 0,
@@ -83,7 +83,7 @@ public:
 
     // RenderableItem function
     virtual SgNode* getScene() override;
-    XXXSceneBody* sceneBody();
+    AssemblerSceneBody* sceneBody();
 
     float transparency() const;
     void setTransparency(float t);
@@ -101,7 +101,7 @@ private:
     Impl* impl;
 };
 
-typedef ref_ptr<XXXBodyItem> XXXBodyItemPtr;
+typedef ref_ptr<AssemblerBodyItem> AssemblerBodyItemPtr;
 
 }
 

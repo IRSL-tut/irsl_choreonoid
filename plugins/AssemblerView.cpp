@@ -1,6 +1,6 @@
-#include "XXXView.h"
-//#include "XXXWidget.h"
-#include "XXXBodyItem.h"
+#include "AssemblerView.h"
+//#include "AssemblerWidget.h"
+#include "AssemblerBodyItem.h"
 #include <cnoid/ViewManager>
 #include <cnoid/MenuManager>
 //#include <cnoid/ItemTreeView>
@@ -32,18 +32,18 @@ using namespace cnoid;
 
 namespace cnoid {
 
-class XXXView::Impl
+class AssemblerView::Impl
 {
 public:
-    XXXView* self;
+    AssemblerView* self;
     QLabel targetLabel;
-    //XXXWidget* positionWidget;
+    //AssemblerWidget* positionWidget;
     //ScopedConnection activeStateConnection;
     QVBoxLayout *topLayout;
     QTabWidget *partsTab;
 
-    Impl(XXXView* self);
-    //bool setTargetBodyAndLink(XXXBodyItem* bodyItem, Link* link);
+    Impl(AssemblerView* self);
+    //bool setTargetBodyAndLink(AssemblerBodyItem* bodyItem, Link* link);
     //void onAttachedMenuRequest(MenuManager& menuManager); // the same as base class
     //bool storeState(Archive& archive); // the same as base class
     //bool restoreState(const Archive& archive); //  the same as base class
@@ -57,29 +57,29 @@ public:
 
 }
 
-void XXXView::initializeClass(ExtensionManager* ext)
+void AssemblerView::initializeClass(ExtensionManager* ext)
 {
-    DEBUG_STREAM_INFO(XXXView,initializeClass, std::endl);
-    ext->viewManager().registerClass<XXXView>("XXXView", "XXXView_View");
+    DEBUG_STREAM_INFO(AssemblerView,initializeClass, std::endl);
+    ext->viewManager().registerClass<AssemblerView>("AssemblerView", "AssemblerView_View");
 }
-XXXView* XXXView::instance()
+AssemblerView* AssemblerView::instance()
 {
-    static XXXView* instance_ = ViewManager::getOrCreateView<XXXView>();
+    static AssemblerView* instance_ = ViewManager::getOrCreateView<AssemblerView>();
     return instance_;
 }
 
-XXXView::XXXView()
+AssemblerView::AssemblerView()
 {
-    DEBUG_STREAM_INFO(XXXView,XXXView(), std::endl);
+    DEBUG_STREAM_INFO(AssemblerView,AssemblerView(), std::endl);
     impl = new Impl(this);
 }
-XXXView::~XXXView()
+AssemblerView::~AssemblerView()
 {
     delete impl;
 }
-void XXXView::onActivated()
+void AssemblerView::onActivated()
 {
-    DEBUG_STREAM_INFO(XXXView,onActivated, std::endl);
+    DEBUG_STREAM_INFO(AssemblerView,onActivated, std::endl);
     //auto bsm = BodySelectionManager::instance();
 #if 0
     impl->activeStateConnection =
@@ -90,14 +90,14 @@ void XXXView::onActivated()
             });
 #endif
 }
-void XXXView::onDeactivated()
+void AssemblerView::onDeactivated()
 {
-    DEBUG_STREAM_INFO(XXXView,onDeactivated, std::endl);
+    DEBUG_STREAM_INFO(AssemblerView,onDeactivated, std::endl);
     //impl->activeStateConnection.disconnect();
 }
-void XXXView::onAttachedMenuRequest(MenuManager& menu)
+void AssemblerView::onAttachedMenuRequest(MenuManager& menu)
 {
-    DEBUG_STREAM_INFO(XXXView,onAttachedMenuRequest, std::endl);
+    DEBUG_STREAM_INFO(AssemblerView,onAttachedMenuRequest, std::endl);
 #if 0
     menu.setPath("/").setPath(_("Target link type"));
 
@@ -115,18 +115,18 @@ void XXXView::onAttachedMenuRequest(MenuManager& menu)
 #endif
 }
 
-bool XXXView::storeState(Archive& archive)
+bool AssemblerView::storeState(Archive& archive)
 {
 #if 0
     impl->positionWidget->storeState(&archive);
     switch(impl->positionWidget->targetLinkType()){
-    case XXXWidget::AnyLink:
+    case AssemblerWidget::AnyLink:
         archive.write("target_link_type", "any_link");
         break;
-    case XXXWidget::RootOrIkLink:
+    case AssemblerWidget::RootOrIkLink:
         archive.write("target_link_type", "root_or_ik_link");
         break;
-    case XXXWidget::IkLink:
+    case AssemblerWidget::IkLink:
         archive.write("target_link_type", "ik_link");
         break;
     }
@@ -134,37 +134,37 @@ bool XXXView::storeState(Archive& archive)
     return true;
 }
 
-bool XXXView::restoreState(const Archive& archive)
+bool AssemblerView::restoreState(const Archive& archive)
 {
 #if 0
     impl->positionWidget->restoreState(&archive);
     string type;
     if(archive.read("target_link_type", type)){
         if(type == "any_link"){
-            impl->positionWidget->setTargetLinkType(XXXWidget::AnyLink);
+            impl->positionWidget->setTargetLinkType(AssemblerWidget::AnyLink);
         } else if(type == "root_or_ik_link"){
-            impl->positionWidget->setTargetLinkType(XXXWidget::RootOrIkLink);
+            impl->positionWidget->setTargetLinkType(AssemblerWidget::RootOrIkLink);
         } else if(type == "ik_link"){
-            impl->positionWidget->setTargetLinkType(XXXWidget::IkLink);
+            impl->positionWidget->setTargetLinkType(AssemblerWidget::IkLink);
         }
     }
 #endif
     return true;
 }
 
-void XXXView::createButtons()
+void AssemblerView::createButtons()
 {
     impl->addTabs(true);
 }
 
 //// Impl
-XXXView::Impl::Impl(XXXView* self)
+AssemblerView::Impl::Impl(AssemblerView* self)
     : self(self), partsTab(nullptr)
 {
     initialize(false);
 }
 
-void XXXView::Impl::initialize(bool config)
+void AssemblerView::Impl::initialize(bool config)
 {
     self->setDefaultLayoutArea(MiddleRightArea);
 
@@ -196,7 +196,7 @@ void XXXView::Impl::initialize(bool config)
     addTabs(config);
 }
 
-void XXXView::Impl::addTabs(bool config)
+void AssemblerView::Impl::addTabs(bool config)
 {
     if (!!partsTab) {
         //delete partsButtons
@@ -222,12 +222,12 @@ void XXXView::Impl::addTabs(bool config)
 
     topLayout->addWidget(partsTab);
 }
-void XXXView::Impl::partsButtonClicked(int index)
+void AssemblerView::Impl::partsButtonClicked(int index)
 {
-    DEBUG_STREAM_INFO(XXXView::Impl,partsButtonClicked, " index: " << index << std::endl);
+    DEBUG_STREAM_INFO(AssemblerView::Impl,partsButtonClicked, " index: " << index << std::endl);
 
     //ItemTreeView::instance()
-    ItemFileIO *ptr = XXXBodyItem::meshFileIO();
+    ItemFileIO *ptr = AssemblerBodyItem::meshFileIO();
     Mapping options;
     //options.write("meshLengthUnitHint", "Millimeter");
     options.write("meshLengthUnitHint", "millimeter");
@@ -240,21 +240,21 @@ void XXXView::Impl::partsButtonClicked(int index)
     }
 }
 #if 0
-PushButton *XXXView::Impl::createButton(QWidget *parent)
+PushButton *AssemblerView::Impl::createButton(QWidget *parent)
 {
     PushButton *bt = new PushButton("", parent);
     partsButtons.push_back(bt);
     return bt;
 }
 
-bool XXXView::Impl::createPartsButton(int index)
+bool AssemblerView::Impl::createPartsButton(int index)
 {
 
 }
 #endif
 
 #if 0
-bool XXXView::Impl::setTargetBodyAndLink(XXXBodyItem* bodyItem, Link* link)
+bool AssemblerView::Impl::setTargetBodyAndLink(AssemblerBodyItem* bodyItem, Link* link)
 {
 #if 0
     positionWidget->setTargetBodyAndLink(bodyItem, link);

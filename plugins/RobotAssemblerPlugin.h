@@ -1,15 +1,15 @@
-#ifndef CNOID_IRSL_XXX_PLUGIN_H
-#define CNOID_IRSL_XXX_PLUGIN_H
+#ifndef CNOID_ROBOT_ASSEMBLER_PLUGIN_H
+#define CNOID_ROBOT_ASSEMBLER_PLUGIN_H
 
 #include <cnoid/Plugin>
 
 namespace cnoid {
 
-class IRSLXXXPlugin : public Plugin
+class RobotAssemblerPlugin : public Plugin
 {
 public:
-    static IRSLXXXPlugin* instance();
-    IRSLXXXPlugin();
+    static RobotAssemblerPlugin* instance();
+    RobotAssemblerPlugin();
     virtual bool initialize() override;
     virtual bool finalize() override;
     virtual const char* description() const override;

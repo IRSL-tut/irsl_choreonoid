@@ -1,5 +1,5 @@
-#include "XXXSceneBody.h"
-#include "XXXBodyItem.h"
+#include "AssemblerSceneBody.h"
+#include "AssemblerBodyItem.h"
 #include <cnoid/ExtensionManager>
 #include <cnoid/SceneMarkers>
 #include <cnoid/MenuManager>
@@ -8,31 +8,31 @@
 
 using namespace cnoid;
 
-class XXXSceneLink::Impl {
+class AssemblerSceneLink::Impl {
 public:
-    XXXSceneLink *self;
+    AssemblerSceneLink *self;
     SgUpdate& update; //???
 
-    Impl(XXXSceneBody* sceneBody, XXXSceneLink* link);
+    Impl(AssemblerSceneBody* sceneBody, AssemblerSceneLink* link);
     ~Impl();
 };
 
-class XXXSceneBody::Impl {
+class AssemblerSceneBody::Impl {
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    Impl(XXXSceneBody* self, XXXBodyItem* bodyItem);
+    Impl(AssemblerSceneBody* self, AssemblerBodyItem* bodyItem);
     ~Impl();
 
-    XXXSceneLink* xxxSceneLink(int index) {
-        return static_cast<XXXSceneLink*>(self->sceneLink(index));
+    AssemblerSceneLink* xxxSceneLink(int index) {
+        return static_cast<AssemblerSceneLink*>(self->sceneLink(index));
     }
 
     SgUpdate update;
 
-    XXXSceneBody *self;
-    XXXBodyItemPtr bodyItem;
+    AssemblerSceneBody *self;
+    AssemblerBodyItemPtr bodyItem;
 
     SgGroupPtr markerGroup;
     CrossMarkerPtr crossMarker;
@@ -69,70 +69,70 @@ public:
     }
 };
 
-XXXSceneLink::XXXSceneLink(XXXSceneBody* sceneBody, Link* link)
+AssemblerSceneLink::AssemblerSceneLink(AssemblerSceneBody* sceneBody, Link* link)
     : SceneLink(sceneBody, link)
 {
     impl = new Impl(sceneBody, this);
 }
-XXXSceneLink::~XXXSceneLink()
+AssemblerSceneLink::~AssemblerSceneLink()
 {
     delete impl;
 }
 
-XXXSceneLink::Impl::Impl(XXXSceneBody* sceneBody, XXXSceneLink* link)
+AssemblerSceneLink::Impl::Impl(AssemblerSceneBody* sceneBody, AssemblerSceneLink* link)
     : self(link), update(sceneBody->impl->update)
 {
 
 }
-XXXSceneLink::Impl::~Impl()
+AssemblerSceneLink::Impl::~Impl()
 {
 
 }
 
-/// XXXSceneBody
-void XXXSceneBody::initializeClass(ExtensionManager* ext) {
+/// AssemblerSceneBody
+void AssemblerSceneBody::initializeClass(ExtensionManager* ext) {
 //    ext->setProjectArchiver(
 //        "EditableSceneBody",
 //        EditableSceneBody::Impl::storeProperties,
 //        EditableSceneBody::Impl::restoreProperties);
 }
 
-XXXSceneBody::XXXSceneBody(XXXBodyItem* bodyItem)
+AssemblerSceneBody::AssemblerSceneBody(AssemblerBodyItem* bodyItem)
 {
     impl = new Impl(this, bodyItem);
     //impl->initialize();
 }
 
-XXXBodyItem* XXXSceneBody::bodyItem() {
+AssemblerBodyItem* AssemblerSceneBody::bodyItem() {
     return impl->bodyItem;
 }
 
-//XXXSceneLink* XXXSceneBody::xxxSceneLink(int index) {
-//    //return static_cast<XXXSceneLink*>(this->sceneLink(index));
-//    return impl->XXXSceneLink(index);
+//AssemblerSceneLink* AssemblerSceneBody::xxxSceneLink(int index) {
+//    //return static_cast<AssemblerSceneLink*>(this->sceneLink(index));
+//    return impl->AssemblerSceneLink(index);
 //}
 
-void XXXSceneBody::setLinkVisibilities(const std::vector<bool>& visibilities) {
+void AssemblerSceneBody::setLinkVisibilities(const std::vector<bool>& visibilities) {
 
 }
 
-void XXXSceneBody::updateSceneModel() {
+void AssemblerSceneBody::updateSceneModel() {
     this->SceneBody::updateSceneModel();
 }
 
-XXXSceneBody::~XXXSceneBody()
+AssemblerSceneBody::~AssemblerSceneBody()
 {
     delete impl;
 }
 
-XXXSceneBody::Impl::Impl(XXXSceneBody* _self, XXXBodyItem* _bodyItem)
+AssemblerSceneBody::Impl::Impl(AssemblerSceneBody* _self, AssemblerBodyItem* _bodyItem)
     : self(_self),
       bodyItem(_bodyItem)
 {
     // initialize
-    self->setBody(bodyItem->body(), [this](Link* link){ return new XXXSceneLink(self, link); });
+    self->setBody(bodyItem->body(), [this](Link* link){ return new AssemblerSceneLink(self, link); });
 
-    self->setName("XXX:" + self->name());
+    self->setName("Assembler:" + self->name());
     markerGroup = new SgGroup;
     markerGroup->setName("Marker");
     self->addChild(markerGroup);
@@ -141,13 +141,13 @@ XXXSceneBody::Impl::Impl(XXXSceneBody* _self, XXXBodyItem* _bodyItem)
 }
 
 //// overrides
-void XXXSceneBody::onSceneModeChanged(SceneWidgetEvent* event)
+void AssemblerSceneBody::onSceneModeChanged(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onSceneModeChanged)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onSceneModeChanged)" << std::endl;
 }
-bool XXXSceneBody::onButtonPressEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onButtonPressEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onButtonPressEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onButtonPressEvent)" << std::endl;
     //return true;
     SceneWidgetEvent::EventType tp = event->type();
     std::cerr << "Type: " << tp << std::endl;
@@ -192,47 +192,47 @@ bool XXXSceneBody::onButtonPressEvent(SceneWidgetEvent* event)
     return false;
     //if return true, handling events after this function may not occurred
 }
-bool XXXSceneBody::onDoubleClickEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onDoubleClickEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onDoubleClickEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onDoubleClickEvent)" << std::endl;
     return false;
 }
-bool XXXSceneBody::onButtonReleaseEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onButtonReleaseEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onButtonReleaseEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onButtonReleaseEvent)" << std::endl;
     return false;
 }
-bool XXXSceneBody::onPointerMoveEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onPointerMoveEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onPointerMoveEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onPointerMoveEvent)" << std::endl;
     return false;
 }
-void XXXSceneBody::onPointerLeaveEvent(SceneWidgetEvent* event)
+void AssemblerSceneBody::onPointerLeaveEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onPointerLeaveEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onPointerLeaveEvent)" << std::endl;
 }
-bool XXXSceneBody::onKeyPressEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onKeyPressEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onKeyPressEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onKeyPressEvent)" << std::endl;
     return false;
 }
-bool XXXSceneBody::onKeyReleaseEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onKeyReleaseEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onKeyReleaseEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onKeyReleaseEvent)" << std::endl;
     return false;
 }
-bool XXXSceneBody::onScrollEvent(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onScrollEvent(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onScrollEvent)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onScrollEvent)" << std::endl;
     return false;
 }
-void XXXSceneBody::onFocusChanged(SceneWidgetEvent* event, bool on)
+void AssemblerSceneBody::onFocusChanged(SceneWidgetEvent* event, bool on)
 {
-    std::cerr << "XXXSceneBody(onFocusChanged)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onFocusChanged)" << std::endl;
 }
-bool XXXSceneBody::onContextMenuRequest(SceneWidgetEvent* event)
+bool AssemblerSceneBody::onContextMenuRequest(SceneWidgetEvent* event)
 {
-    std::cerr << "XXXSceneBody(onContextMenuRequest)" << std::endl;
+    std::cerr << "AssemblerSceneBody(onContextMenuRequest)" << std::endl;
     auto menu = event->contextMenu();
 
     menu->addItem("Clear")->sigTriggered().connect(

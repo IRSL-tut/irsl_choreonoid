@@ -1,9 +1,9 @@
 #include <cnoid/OptionManager> //??
 
-#include "IRSLXXXPlugin.h"
-#include "XXXBodyItem.h"
-#include "XXXView.h"
-#include "XXXBar.h"
+#include "RobotAssemblerPlugin.h"
+#include "AssemblerBodyItem.h"
+#include "AssemblerView.h"
+#include "AssemblerBar.h"
 
 #include <fmt/format.h>
 
@@ -15,7 +15,7 @@ using namespace cnoid;
 namespace po = boost::program_options;
 
 namespace {
-IRSLXXXPlugin* instance_ = nullptr;
+RobotAssemblerPlugin* instance_ = nullptr;
 }
 
 static void onSigOptionsParsed(po::variables_map& variables)
@@ -24,53 +24,53 @@ static void onSigOptionsParsed(po::variables_map& variables)
         std::string fname_ = variables["assembler"].as<std::string>();
         DEBUG_STREAM("robot_assembler config file: " << fname_ << std::endl);
 
-        XXXView *ptr = XXXView::instance();
+        AssemblerView *ptr = AssemblerView::instance();
         ptr->createButtons();
     }
 }
 
-IRSLXXXPlugin* IRSLXXXPlugin::instance()
+RobotAssemblerPlugin* RobotAssemblerPlugin::instance()
 {
     return instance_;
 }
 
-IRSLXXXPlugin::IRSLXXXPlugin()
-    : Plugin("IRSLXXX")
+RobotAssemblerPlugin::RobotAssemblerPlugin()
+    : Plugin("RobotAssembler")
 {
-    DEBUG_STREAM_INFO(IRSLXXXPlugin,IRSLXXXPlugin, std::endl);
+    DEBUG_STREAM_INFO(RobotAssemblerPlugin,RobotAssemblerPlugin, std::endl);
     setActivationPriority(0);
     instance_ = this;
 }
 
-bool IRSLXXXPlugin::initialize()
+bool RobotAssemblerPlugin::initialize()
 {
-    DEBUG_STREAM_INFO(IRSLXXXPlugin,initialize(), std::endl);
+    DEBUG_STREAM_INFO(RobotAssemblerPlugin,initialize(), std::endl);
     OptionManager& om = this->optionManager();
     om.addOption("assembler", po::value<std::string>(), "load robot_assembler config file");
     om.sigOptionsParsed(1).connect(onSigOptionsParsed);
 
     // classes
-    XXXBodyItem::initializeClass(this);
+    AssemblerBodyItem::initializeClass(this);
 
     //View
-    XXXView::initializeClass(this);
+    AssemblerView::initializeClass(this);
 
     //ToolBar
-    addToolBar(XXXBar::instance());
+    addToolBar(AssemblerBar::instance());
 
     return true;
 }
 
-bool IRSLXXXPlugin::finalize()
+bool RobotAssemblerPlugin::finalize()
 {
     instance_ = nullptr;
     return true;
 }
 
-const char* IRSLXXXPlugin::description() const
+const char* RobotAssemblerPlugin::description() const
 {
     static std::string text =
-        fmt::format("IRSLXXX Plugin Version {}\n", CNOID_FULL_VERSION_STRING) +
+        fmt::format("RobotAssembler Plugin Version {}\n", CNOID_FULL_VERSION_STRING) +
         "\n" +
         "Copyrigh (c) 2022 IRSL-tut Development Team.\n"
         "\n" +
@@ -81,4 +81,4 @@ const char* IRSLXXXPlugin::description() const
 }
 
 
-CNOID_IMPLEMENT_PLUGIN_ENTRY(IRSLXXXPlugin);
+CNOID_IMPLEMENT_PLUGIN_ENTRY(RobotAssemblerPlugin);

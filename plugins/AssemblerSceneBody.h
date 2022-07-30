@@ -1,5 +1,5 @@
-#ifndef CNOID_IRSL_XXX_PLUGIN_SCENEBODY_H
-#define CNOID_IRSL_XXX_PLUGIN_SCENEBODY_H
+#ifndef CNOID_ROBOT_ASSEMBLER_PLUGIN_SCENEBODY_H
+#define CNOID_ROBOT_ASSEMBLER_PLUGIN_SCENEBODY_H
 
 #include <cnoid/SceneWidgetEventHandler>
 #include <cnoid/SceneBody>
@@ -9,16 +9,16 @@
 namespace cnoid {
 
 class ExtensionManager;
-class XXXBodyItem;
-class XXXSceneBody;
+class AssemblerBodyItem;
+class AssemblerSceneBody;
 
-class CNOID_EXPORT XXXSceneLink : public SceneLink
+class CNOID_EXPORT AssemblerSceneLink : public SceneLink
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-    XXXSceneLink(XXXSceneBody* sceneBody, Link* link);
-    ~XXXSceneLink();
+    AssemblerSceneLink(AssemblerSceneBody* sceneBody, Link* link);
+    ~AssemblerSceneLink();
 
 #if 0
     void showOrigin(bool on);
@@ -33,22 +33,22 @@ private:
     class Impl;
     Impl* impl;
 
-    friend class XXXSceneBody;
+    friend class AssemblerSceneBody;
 };
-typedef ref_ptr<XXXSceneLink> XXXSceneLinkPtr;
+typedef ref_ptr<AssemblerSceneLink> AssemblerSceneLinkPtr;
 
-class CNOID_EXPORT XXXSceneBody : public SceneBody, public SceneWidgetEventHandler
+class CNOID_EXPORT AssemblerSceneBody : public SceneBody, public SceneWidgetEventHandler
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     static void initializeClass(ExtensionManager* ext);
 
-    XXXSceneBody(XXXBodyItem* bodyItem);
+    AssemblerSceneBody(AssemblerBodyItem* bodyItem);
 
-    XXXBodyItem* bodyItem();
+    AssemblerBodyItem* bodyItem();
 
-    XXXSceneLink* xxxSceneLink(int index);
+    AssemblerSceneLink* xxxSceneLink(int index);
     void setLinkVisibilities(const std::vector<bool>& visibilities);
 
     virtual void updateSceneModel() override;
@@ -67,16 +67,16 @@ public:
     virtual bool onContextMenuRequest(SceneWidgetEvent* event) override;
 
 protected:
-    virtual ~XXXSceneBody();
+    virtual ~AssemblerSceneBody();
 
 private:
-    XXXSceneBody(const XXXSceneBody& org);
+    AssemblerSceneBody(const AssemblerSceneBody& org);
 
     class Impl;
     Impl* impl;
-    friend class XXXSceneLink;
+    friend class AssemblerSceneLink;
 };
-typedef ref_ptr<XXXSceneBody> XXXSceneBodyPtr;
+typedef ref_ptr<AssemblerSceneBody> AssemblerSceneBodyPtr;
 
 }
 
