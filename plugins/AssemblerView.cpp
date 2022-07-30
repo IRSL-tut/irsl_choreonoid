@@ -8,7 +8,6 @@
 #include <cnoid/ItemFileIO>
 //#include <cnoid/Mapping>
 
-
 // itemtreeview?
 #include <cnoid/Archive>
 #include <cnoid/ActionGroup>
@@ -30,6 +29,8 @@
 
 using namespace cnoid;
 
+namespace ra = cnoid::robot_assembler;
+
 namespace cnoid {
 
 class AssemblerView::Impl
@@ -49,10 +50,13 @@ public:
     //bool restoreState(const Archive& archive); //  the same as base class
 
     void initialize(bool config);
-    void addTabs(bool config);
+
     void partsButtonClicked(int index);
     std::vector<PushButton *> partsButtons;
 
+    void createButtons(ra::RobotAssemblerConfigurationPtr &conf);
+
+    ra::RobotAssemblerConfigurationPtr asm_conf;
 };
 
 }
@@ -152,9 +156,9 @@ bool AssemblerView::restoreState(const Archive& archive)
     return true;
 }
 
-void AssemblerView::createButtons()
+void AssemblerView::createButtons(ra::RobotAssemblerConfigurationPtr &conf)
 {
-    impl->addTabs(true);
+    impl->createButtons(conf);
 }
 
 //// Impl
@@ -189,36 +193,54 @@ void AssemblerView::Impl::initialize(bool config)
     //
     topLayout->addLayout(hbox);
 
+#if 0
     if (!config) {
         return;
     }
-
     addTabs(config);
+#endif
 }
 
-void AssemblerView::Impl::addTabs(bool config)
+//void AssemblerView::Impl::addTabs(bool config)
+void AssemblerView::Impl::createButtons(ra::RobotAssemblerConfigurationPtr &conf)
 {
     if (!!partsTab) {
-        //delete partsButtons
+        partsButtons.clear();
         delete partsTab;
     }
+    asm_conf = conf;
+
+    int parts_num = conf->mapParts.size();
+    int tab_num = ((parts_num - 1) / 10) + 1;
 
     targetLabel.setText("---initialized---");
 
     partsTab = new QTabWidget(self); // parent??
     //// tabbed
-    auto hbox = new QHBoxLayout;
+    //auto hbox = new QHBoxLayout;
 
-    // tab1
-    Widget *wd = new Widget(partsTab);
-    QVBoxLayout *qvbox = new QVBoxLayout(wd);
-    PushButton *bp = new PushButton("bt1", partsTab);
-    bp->sigClicked().connect( [&]() { partsButtonClicked(1); } );
-    qvbox->addWidget(bp);
-    qvbox->addWidget(new PushButton("bt2", partsTab));
-    qvbox->addWidget(new PushButton("bt3", partsTab));
-    qvbox->addWidget(new PushButton("bt4", partsTab));
-    partsTab->addTab(wd, "Tab1");
+    int parts_index = 0;
+    auto parts = conf->mapParts.begin();
+    for(int tab_idx = 0; tab_idx < tab_num; tab_idx++) {
+        Widget *wd = new Widget(partsTab);
+        QVBoxLayout *qvbox = new QVBoxLayout(wd);
+        //
+        for(int j = 0; j < 10; j++) {
+            if (parts != conf->mapParts.end()) {
+                std::string name = parts->first;
+                PushButton *bp = new PushButton(name.c_str(), partsTab);
+                bp->sigClicked().connect( [=]() { partsButtonClicked(parts_index); } );
+                qvbox->addWidget(bp);
+                partsButtons.push_back(bp);
+                parts_index++;
+            } else {
+                break;
+            }
+            parts++;
+        }
+        std::string tab_name = "Tab";
+        partsTab->addTab(wd, tab_name.c_str());
+    }
 
     topLayout->addWidget(partsTab);
 }
@@ -226,6 +248,17 @@ void AssemblerView::Impl::partsButtonClicked(int index)
 {
     DEBUG_STREAM_INFO(AssemblerView::Impl,partsButtonClicked, " index: " << index << std::endl);
 
+    PushButton *bp = partsButtons[index];
+
+    std::string name = bp->text().toStdString();
+
+    AssemblerBodyItem *itm = AssemblerBodyItem::createItemFromAssemblerConf(name, *asm_conf);
+
+    if (!!itm) {
+        itm->setChecked(true);
+        RootItem::instance()->addChildItem(itm);
+    }
+#if 0
     //ItemTreeView::instance()
     ItemFileIO *ptr = AssemblerBodyItem::meshFileIO();
     Mapping options;
@@ -234,11 +267,12 @@ void AssemblerView::Impl::partsButtonClicked(int index)
     Item *item = ptr->loadItem("/home/leus/sandbox/choreonoid_ws/src/irsl_choreonoid/DarwinOP3.stl",
                                nullptr, true, nullptr, &options);
 
-
     if (!!item) {
         RootItem::instance()->addChildItem(item);
     }
+#endif
 }
+
 #if 0
 PushButton *AssemblerView::Impl::createButton(QWidget *parent)
 {

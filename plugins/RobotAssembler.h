@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #pragma once
 
@@ -154,4 +155,46 @@ private:
     Impl *impl;
 };
 
+typedef std::shared_ptr<RobotAssemblerConfiguration> RobotAssemblerConfigurationPtr;
+
+class RoboasmCoords;
+typedef std::shared_ptr<RoboasmCoords> RoboasmCoordsPtr;
+class RoboasmCoords : coordinates
+{
+    std::string name;
+    RoboasmCoordsPtr parent;
+    std::vector<RoboasmCoordsPtr> descendants;
+
+    // virtual
+    void update();
+    void updateDescendants();
+
+    void assoc(RoboasmCoordsPtr c);
+    void dissocParent();
+
+    void toRootList();
+    void allDescendants();
+    void toNextLink();
+
+    void connectingPoints();
+    void activeConnectingPoints();
+    void actuators();
+    void activeActuators();
+    void find();
+};
+
+class RoboasmConnectingPoint : public RoboasmCoords
+{
+};
+typedef std::shared_ptr<RoboasmConnectingPoint> RoboasmConnectingPointPtr;
+
+class RoboasmParts : public RoboasmCoords
+{
+};
+typedef std::shared_ptr<RoboasmParts> RoboasmPartsPtr;
+
+class RoboasmRobot : public RoboasmCoords
+{
+};
+typedef std::shared_ptr<RoboasmRobot> RoboasmRobotPtr;
 }; };

@@ -8,6 +8,8 @@
 #include <cnoid/RenderableItem>
 #include "exportdecl.h"
 
+#include "RobotAssembler.h"
+
 namespace cnoid {
 class ItemManager;
 class ItemFileIO;
@@ -25,6 +27,9 @@ public:
     //! The actual type of the IO object returned by this function is AssemblerBodyItemBodyFileIO.
     //static ItemFileIO* bodyFileIO();
     static ItemFileIO* meshFileIO();
+
+    static AssemblerBodyItem *createItemFromAssemblerConf
+      (const std::string &name, cnoid::robot_assembler::RobotAssemblerConfiguration &conf);
 
     AssemblerBodyItem();
     AssemblerBodyItem(const std::string& name);

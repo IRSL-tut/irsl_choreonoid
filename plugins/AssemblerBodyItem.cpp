@@ -1,5 +1,6 @@
 #include "AssemblerBodyItem.h"
 #include "AssemblerSceneBody.h"
+#include "RobotAssemblerHelper.h"
 
 //#include <cnoid/SceneBody>
 #include <cnoid/RootItem>
@@ -13,6 +14,8 @@
 #include <algorithm>
 #include <iostream>
 
+#define IRSL_DEBUG
+#include "irsl_debug.h"
 
 using namespace std;
 using namespace cnoid;
@@ -122,6 +125,28 @@ void AssemblerBodyItem::initializeClass(ExtensionManager* ext)
     OptionManager& om = ext->optionManager();
     om.addOption("xxxbody", boost::program_options::value< vector<string> >(), "load a xxxbody file");
     om.sigOptionsParsed(1).connect(onSigOptionsParsed);
+}
+
+AssemblerBodyItem *AssemblerBodyItem::createItemFromAssemblerConf
+(const std::string &name, cnoid::robot_assembler::RobotAssemblerConfiguration &conf)
+{
+    AssemblerBodyItem *itm = new AssemblerBodyItem();
+
+    auto it = conf.mapParts.find(name);
+    if (it == conf.mapParts.end()) {
+        std::cerr << "designated parts: " << name << " was not found!"<< std::endl;
+    }
+
+    SgNode *sg = cnoid::robot_assembler::createSceneFromGeomatry(it->second.visual);
+    if (!!sg) {
+        DEBUG_STREAM_INFO(AssemblerBodyItem, createItemFromAssemblerConf, "sg created" << std::endl);
+        BodyPtr newBody = new Body;
+        newBody->rootLink()->addShapeNode(sg);
+        newBody->setName("Loaded_Body");
+        itm->setBody(newBody);
+    }
+
+    return itm;
 }
 
 ////

@@ -62,6 +62,12 @@ public:
         Vector3 vec(in[0], in[1], in[2]);
         convPoint(vec, out);
     }
+    // length vector
+    void convLengthVector(const std::vector<double> &in, std::vector<double>  &out) {
+        out.clear();
+        out.resize(in.size());
+        for(int i = 0; i < in.size(); i++) out[i] = length_scale * in[i];
+    }
     // vector4 -> angleAxis
     void convRotationAngle(const Vector4 &in, AngleAxis &out) {
         Vector3 ax_(in(0), in(1), in(2));
@@ -78,6 +84,7 @@ public:
         out = inertia_scale * in;
     }
     void convInertiaTensor(const std::vector<double> in, Matrix3 &out) {
+        // [TODO]
         Matrix3 mat = Matrix3::Zero();
         if (in.size() >= 9) {
             mat(0, 0) = in[0];
@@ -757,7 +764,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 3) {
                     geom.type = Geometry::Box;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -766,7 +775,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 2) {
                     geom.type = Geometry::Cylinder;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -775,7 +786,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 1) {
                     geom.type = Geometry::Sphere;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -784,7 +797,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 1) { // [todo] param length
                     geom.type = Geometry::Cone;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -793,7 +808,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 1) { // [todo] param length
                     geom.type = Geometry::Capsule;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -802,7 +819,9 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
             if( readVector(val, vec, std::cerr) ) {
                 if (vec.size() >= 1) { // [todo] param length
                     geom.type = Geometry::Ellipsoid;
-                    geom.parameter = vec;
+                    std::vector<double> nvec;
+                    uc.convLengthVector(vec, nvec);
+                    geom.parameter = nvec;
                 } else {
                     // [todo]
                 }
@@ -826,10 +845,12 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
         std::vector<double> vec;
         if(! mapVector(mp, "parameter", vec, std::cerr, true)) {
             // [todo]
-            std::cerr << "non meth type geometry requires parameter:" << std::endl;
+            std::cerr << "non mesh type geometry requires parameter:" << std::endl;
             return false;
         }
-        geom.parameter = vec;
+        std::vector<double> nvec;
+        uc.convLengthVector(vec, nvec);
+        geom.parameter = nvec;
     }
     return true;
 }

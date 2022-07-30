@@ -7,6 +7,7 @@ set(sources
   AssemblerView.cpp
   AssemblerBar.cpp
   RobotAssembler.cpp
+  RobotAssemblerHelper.cpp
   )
 
 set(headers
@@ -17,6 +18,7 @@ set(headers
   AssemblerView.h
   AssemblerBar.h
   RobotAssembler.h
+  RobotAssemblerHelper.h
   )
 
 set(target CnoidRobotAssemblerPlugin)

@@ -2,7 +2,10 @@
 #define CNOID_ROBOT_ASSEMBLER_PLUGIN_VIEW_H
 
 #include <cnoid/View>
+#include "RobotAssembler.h"
 #include "exportdecl.h"
+
+namespace ra = cnoid::robot_assembler;
 
 namespace cnoid {
 
@@ -15,7 +18,7 @@ public:
     AssemblerView();
     virtual ~AssemblerView();
 
-    void createButtons();
+    void createButtons(ra::RobotAssemblerConfigurationPtr &conf);
 protected:
     virtual void onActivated() override;
     virtual void onDeactivated() override;
