@@ -1,0 +1,21 @@
+p <= (make-parts-from-key p-type p-name) create configuretion -> roboasm-parts
+
+arobot <= (make-robot-assembler-robot p :name "")
+
+loop
+   p-type  <= (cadr (assoc :parts-type plist)))
+   p-name  <= (cadr (assoc :parts-name plist)))
+   p-point <= (cadr (assoc :parts-point plist)))
+   attach-point <= (cadr (assoc :robot-parts-point plist)))
+   config  <= (cadr (assoc :configuration plist)))
+   p <= (make-parts-from-key p-type p-name) // create configuretion -> roboasm-parts
+
+   p-p <= (send p :find p-point :active-fixed-points))
+   r-p <= (send arobot :find attach-point :active-fixed-points)
+
+   (if (not p) ==> error
+   (if (not (and r-p p-p)) ==> error
+
+   ret => (send arobot :attach p
+                :parts-point p-p :robot-point r-p
+                :attach-configuration (if (eq config :default) nil config))

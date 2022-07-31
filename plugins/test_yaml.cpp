@@ -6,7 +6,7 @@
 
 using namespace cnoid;
 namespace ra = cnoid::robot_assembler;
-
+using namespace ra;
 #if 0
 #include <cnoid/YAMLReader>
 
@@ -203,6 +203,23 @@ void print(ra::Parts &in)
     }
 }
 
+void print_lst(coordsList &lst)
+{
+    for(int i = 0; i < lst.size(); i++) {
+        std::cout << i << " : " << lst[i]->name() << " / ";
+        print(lst[i]->worldcoords());
+        std::cout << std::endl;
+    }
+}
+void print_lst(coordsPtrList &lst)
+{
+    for(int i = 0; i < lst.size(); i++) {
+        std::cout << i << " : " << lst[i]->name() << " / ";
+        print(lst[i]->worldcoords());
+        std::cout << std::endl;
+    }
+}
+
 int main(int argc, char **argv) {
 
     ra::RobotAssemblerConfiguration conf;
@@ -245,5 +262,110 @@ int main(int argc, char **argv) {
                 print(it->second);
             }
         }
+
+        std::cout << "a0" << std::endl;
+        ra::RoboasmPartsPtr p = conf.makeParts("s3301", "s3301_00");
+        std::cout << "a1" << std::endl;
+        ra::RoboasmRobotPtr r = std::make_shared<ra::RoboasmRobot>("AS_ROBOT", p);
+        std::cout << "a2" << std::endl;
+        coordsList lst;
+        std::cout << "a3" << std::endl;
+        r->allDescendants(lst);
+        std::cout << "a4" << std::endl;
+        r->updateDescendants();
+        std::cout << "lst : " << lst.size() << std::endl;
+        print_lst(lst);
+        coordsList lst2;
+        for(int i = 0; i < lst.size(); i++) {
+            RoboasmConnectingPoint * p = dynamic_cast<RoboasmConnectingPoint *>(lst[i]);
+            if (!!p) {
+                lst2.push_back(p);
+            }
+        }
+        std::cout << "lst2 : " << lst2.size() << std::endl;
+        print_lst(lst2);
+        coordsList lst3;
+        for(int i = 0; i < lst.size(); i++) {
+            RoboasmParts * p = dynamic_cast<RoboasmParts *>(lst[i]);
+            if (!!p) {
+                lst3.push_back(p);
+            }
+        }
+        std::cout << "lst3 : " << lst3.size() << std::endl;
+        print_lst(lst3);
+        coordsList lst4;
+        for(int i = 0; i < lst.size(); i++) {
+            RoboasmRobot * p = dynamic_cast<RoboasmRobot *>(lst[i]);
+            if (!!p) {
+                lst4.push_back(p);
+            }
+        }
+        std::cout << "lst4 : " << lst4.size() << std::endl;
+        print_lst(lst4);
+
+        coordsPtrList lstp;
+        r->allDescendants(lstp);
+        std::cout << "lstp : " << lstp.size() << std::endl;
+        print_lst(lstp);
+        coordsPtrList lstp2;
+        for(int i = 0; i < lstp.size(); i++) {
+            RoboasmConnectingPointPtr p = std::dynamic_pointer_cast<RoboasmConnectingPoint>(lstp[i]);
+            if (!!p) {
+                lstp2.push_back(p);
+            }
+        }
+        std::cout << "lstp2 : " << lstp2.size() << std::endl;
+        print_lst(lstp2);
+
+        coordsPtrList lstp3;
+        r->allDescendants<RoboasmParts>(lstp3);
+        std::cout << "lstp3 : " << lstp3.size() << std::endl;
+        print_lst(lstp3);
+#if 0
+        ra::RoboasmCoordsPtr p0 = std::make_shared<ra::RoboasmCoords>("p0");
+        ra::RoboasmCoordsPtr p1 = std::make_shared<ra::RoboasmCoords>("p1");
+        coordinates c0(Vector3(1.0, 0, 0));
+        coordinates c1(Vector3(0, 0, 1.0));
+        p0->set(c0);
+        p1->set(c1);
+        p0->update();
+        p1->update();
+        std::cout << "p0 " ;
+        print(p0->worldcoords()); std::cout << std::endl;
+        std::cout << "p1 " ;
+        print(p1->worldcoords()); std::cout << std::endl;
+
+        p0->assoc(p1);
+        p0->updateDescendants();
+
+        std::cout << "p0 " << p0.get() << std::endl;
+        std::cout << "p0 w:" ;
+        print(p0->worldcoords()); std::cout << std::endl;
+        std::cout << "p0 l:" ;
+        print(*dynamic_cast<coordinates *>(p0.get()));  std::cout << std::endl;
+        std::cout << "p1 " << p1.get() << std::endl;
+        std::cout << "p1 p:" << p1->parent() << std::endl;
+        std::cout << "p1 w:" ;
+        print(p1->worldcoords()); std::cout << std::endl;
+        std::cout << "p1 l:" ;
+        print(*dynamic_cast<coordinates *>(p1.get()));  std::cout << std::endl;
+
+        p1->update();
+
+        std::cout << "p1 " << p1.get() << std::endl;
+        std::cout << "p1 p:" << p1->parent() << std::endl;
+        std::cout << "p1 w:" ;
+        print(p1->worldcoords()); std::cout << std::endl;
+        std::cout << "p1 l:" ;
+        print(*dynamic_cast<coordinates *>(p1.get()));  std::cout << std::endl;
+
+        p0->translate(Vector3(0, 1, 0));
+        p0->update();
+        p0->updateDescendants();
+        std::cout << "p0 w:" ;
+        print(p0->worldcoords()); std::cout << std::endl;
+        std::cout << "p1 w:" ;
+        print(p1->worldcoords()); std::cout << std::endl;
+#endif
     }
 }
