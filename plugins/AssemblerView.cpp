@@ -54,9 +54,9 @@ public:
     void partsButtonClicked(int index);
     std::vector<PushButton *> partsButtons;
 
-    void createButtons(ra::RobotAssemblerConfigurationPtr &conf);
+    void createButtons(ra::SettingsPtr &_ra_settings);
 
-    ra::RobotAssemblerConfigurationPtr asm_conf;
+    ra::SettingsPtr ra_settings;
 };
 
 }
@@ -156,9 +156,9 @@ bool AssemblerView::restoreState(const Archive& archive)
     return true;
 }
 
-void AssemblerView::createButtons(ra::RobotAssemblerConfigurationPtr &conf)
+void AssemblerView::createButtons(ra::SettingsPtr &ra_settings)
 {
-    impl->createButtons(conf);
+    impl->createButtons(ra_settings);
 }
 
 //// Impl
@@ -202,15 +202,15 @@ void AssemblerView::Impl::initialize(bool config)
 }
 
 //void AssemblerView::Impl::addTabs(bool config)
-void AssemblerView::Impl::createButtons(ra::RobotAssemblerConfigurationPtr &conf)
+void AssemblerView::Impl::createButtons(ra::SettingsPtr &_ra_settings)
 {
     if (!!partsTab) {
         partsButtons.clear();
         delete partsTab;
     }
-    asm_conf = conf;
+    ra_settings = _ra_settings;
 
-    int parts_num = conf->mapParts.size();
+    int parts_num = ra_settings->mapParts.size();
     int tab_num = ((parts_num - 1) / 10) + 1;
 
     targetLabel.setText("---initialized---");
@@ -220,13 +220,13 @@ void AssemblerView::Impl::createButtons(ra::RobotAssemblerConfigurationPtr &conf
     //auto hbox = new QHBoxLayout;
 
     int parts_index = 0;
-    auto parts = conf->mapParts.begin();
+    auto parts = ra_settings->mapParts.begin();
     for(int tab_idx = 0; tab_idx < tab_num; tab_idx++) {
         Widget *wd = new Widget(partsTab);
         QVBoxLayout *qvbox = new QVBoxLayout(wd);
         //
         for(int j = 0; j < 10; j++) {
-            if (parts != conf->mapParts.end()) {
+            if (parts != ra_settings->mapParts.end()) {
                 std::string name = parts->first;
                 PushButton *bp = new PushButton(name.c_str(), partsTab);
                 bp->sigClicked().connect( [=]() { partsButtonClicked(parts_index); } );
@@ -252,7 +252,7 @@ void AssemblerView::Impl::partsButtonClicked(int index)
 
     std::string name = bp->text().toStdString();
 
-    AssemblerBodyItem *itm = AssemblerBodyItem::createItemFromAssemblerConf(name, *asm_conf);
+    AssemblerBodyItem *itm = AssemblerBodyItem::createItemFromAssemblerConf(name, *ra_settings);
 
     if (!!itm) {
         itm->setChecked(true);

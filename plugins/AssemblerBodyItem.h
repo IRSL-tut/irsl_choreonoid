@@ -29,7 +29,7 @@ public:
     static ItemFileIO* meshFileIO();
 
     static AssemblerBodyItem *createItemFromAssemblerConf
-      (const std::string &name, cnoid::robot_assembler::RobotAssemblerConfiguration &conf);
+      (const std::string &name, cnoid::robot_assembler::Settings &ra_settings);
 
     AssemblerBodyItem();
     AssemblerBodyItem(const std::string& name);

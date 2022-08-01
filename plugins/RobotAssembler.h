@@ -4,15 +4,14 @@
 #include <set>
 #include <map>
 #include <memory>
-#include <algorithm>
 
 #pragma once
 
 namespace cnoid {
 namespace robot_assembler {
 
-typedef long ConnectingType;
-typedef long ConnectingConfigurationType;
+typedef long ConnectingTypeID;
+typedef long ConnectingConfigurationID;
 struct ConnectingConfiguration;
 struct ConnectingTypeMatch;
 class PointBase;
@@ -23,7 +22,7 @@ struct Geometry;
 class Parts;
 typedef std::shared_ptr<Parts> PartsPtr;
 
-// roboasm classes
+// [Roboasm] classes
 class RoboasmCoords;
 class RoboasmConnectingPoint;
 class RoboasmParts;
@@ -33,17 +32,71 @@ typedef std::shared_ptr<RoboasmParts> RoboasmPartsPtr;
 typedef std::shared_ptr<RoboasmConnectingPoint> RoboasmConnectingPointPtr;
 typedef std::shared_ptr<RoboasmRobot> RoboasmRobotPtr;
 
+#if 0
+struct ConnectingConstraint
+{
+    enum Type {
+        None,
+        Rotational_X = 1 << 0, // param(0), limit(2), dof(1)
+        Rotational_Y = 1 << 1, // param(0), limit(2), dof(1)
+        Rotational_Z = 1 << 2, // param(0), limit(2), dof(1)
+        Rotational   = 1 << 3, // param(3), limit(2), dof(1) ? angle_axis
+        Rotational_XY = 1 << 4, // param(0), limit(4), dof(2)
+        Rotational_YZ = 1 << 5, // param(0), limit(4), dof(2)
+        Rotational_ZX = 1 << 6, // param(0), limit(4), dof(2)
+        Rotational_2D = 1 << 7, // param(6), limit(4), dof(2) ? angle_axis * angle_axis ??
+        Free_Rotate   = 1 << 8, // param(0), limit(6), dof(3)
+        Linear_X = 1 << 9,  // param(0), limit(2), dof(1)
+        Linear_Y = 1 << 10, // param(0), limit(2), dof(1)
+        Linear_Z = 1 << 11, // param(0), limit(2), dof(1)
+        Linear   = 1 << 12, // param(6), limit(2), dof(1)
+        Plane_XY = 1 << 13, // param(0), limit(4), dof(2)
+        Plane_YZ = 1 << 14, // param(0), limit(4), dof(2)
+        Plane_ZX = 1 << 15, // param(0), limit(4), dof(2)
+        Plane    = 1 << 16, // param(6), limit(4), dof(2)
+        Free_Translate = 1 << 17, // param(0), limit(6), dof(3)
+        ParemetricLine,
+        ParametricSurface,
+        ParametricVolume,
+    };
+  std::string name;
+  std::string description
+  Type type;
+  //type // plane
+  std::vector<double> parameter;
+};
+struct ConstraintTypeMatch
+{
+    ConnectingTypeID pair[2];
+    ConnectingConstraint constraint;
+};
+struct ConstraintConfiguration
+{
+    coordinates coords;
+    std::vector<double> parameter;
+};
+#endif
+struct ConnectingType
+{
+    std::string name;
+    //
+    ConnectingTypeID index;
+};
 struct ConnectingConfiguration
 {
     std::string name;
     std::string description;
     coordinates coords;
+    //
+    ConnectingConfigurationID index;
 };
 
 struct ConnectingTypeMatch
 {
-    ConnectingType pair[2];
-    std::vector<ConnectingConfigurationType> allowed_configuration;
+    ConnectingTypeID pair[2];
+    std::vector<ConnectingConfigurationID> allowed_configuration;
+    //
+    int index;
 };
 
 class PointBase
@@ -73,8 +126,10 @@ public:
 
     ConnectingPoint() : type(Parts) {}
     virtual PartsType getType() { return type; }
-
-    std::vector<ConnectingType> type_list;
+    //[TODO]
+    // reverse configuration
+    // reverse-search coords->configuration
+    std::vector<ConnectingTypeID> type_list;
 protected:
     PartsType type;
 };
@@ -129,6 +184,7 @@ struct Geometry
     double scale;
     Type type;
     std::vector<double> parameter;
+    Parts *parent_parts;
 };
 
 class Parts
@@ -151,11 +207,11 @@ public:
 };
 
 ////
-class RobotAssemblerConfiguration
+class Settings
 {
 public:
-    RobotAssemblerConfiguration();
-    ~RobotAssemblerConfiguration();
+    Settings();
+    ~Settings();
 
     std::vector<std::string> listConnectingTypeNames;
     std::vector<ConnectingConfiguration> listConnectingConfiguration;
@@ -165,12 +221,32 @@ public:
 
     bool parseYaml(const std::string &filename);
     RoboasmPartsPtr makeParts(const std::string &parts_key);
-    RoboasmPartsPtr makeParts(const std::string &parts_key, const std::string &name);
+    RoboasmPartsPtr makeParts(const std::string &parts_key, const std::string &_name);
+
+    RoboasmRobotPtr makeRobot(const std::string &_name, RoboasmPartsPtr parts);
+
+    ConnectingTypeMatch *searchMatch(ConnectingTypeID _a, ConnectingTypeID _b);
+    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
+                                          ConnectingConfigurationID _tp);
+    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
+                                          const std::string &config_name);
+    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
+                                          ConnectingConfigurationID _tp,
+                                          ConnectingConfiguration *_res);
+    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
+                                          const std::string &config_name,
+                                          ConnectingConfiguration *_res);
+    //int searchMatch(ConnectingTypeID a, ConnectingTypeID b);
+    // match / invert?
+    // A, A => parent/child <-
+    // B, C => parent/child <-
 private:
+    RoboasmRobotPtr current_robot;
     class Impl;
     Impl *impl;
+    // speedup search-match
 };
-typedef std::shared_ptr<RobotAssemblerConfiguration> RobotAssemblerConfigurationPtr;
+typedef std::shared_ptr<Settings> SettingsPtr;
 
 typedef std::vector<RoboasmCoords *> coordsList;
 typedef std::vector<RoboasmCoordsPtr> coordsPtrList;
@@ -188,7 +264,7 @@ public:
     const coordinates &worldcoords() const;
     void copyWorldcoords(coordinates &w);
 
-    void set(coordinates &c);
+    void newcoords(coordinates &c);
     RoboasmCoords *parent();
     bool hasParent();
     bool hasDescendants();
@@ -198,6 +274,7 @@ public:
     void assoc(RoboasmCoordsPtr c);
     bool dissoc(RoboasmCoordsPtr c);
     bool dissocParent();
+    bool isDirectDescendant(RoboasmCoordsPtr c);
 
     // ???
     void toRootList(coordsList &lst);
@@ -229,10 +306,10 @@ public:
 protected:
     std::string name_str;
     //RoboasmCoordsPtr parent;
-    RoboasmCoords *_parent;
+    RoboasmCoords *parent_ptr;
     std::set<RoboasmCoordsPtr> descendants;
     //bool updated;
-    coordinates _worldcoords;
+    coordinates buf_worldcoords;
     //void _replaceParent(RoboasmCoords *p);
     bool _dissoc(RoboasmCoords *c);
     bool _existing_descendant(RoboasmCoordsPtr c);
@@ -244,11 +321,26 @@ class RoboasmConnectingPoint : public RoboasmCoords
 {
 public:
     RoboasmConnectingPoint(const std::string &_name, ConnectingPoint *_info);
+
+    bool isActuator();
+    bool hasConfiguration();
+    const std::string &currentConfiguration();
+    bool definedConfiguration();
+    ConnectingConfigurationID configurationType();
+    void configurationCoords(coordinates &_coords);
+
 protected:
     ConnectingPoint *info;
     //void createFromInfo(ConnectingPoint *_info);
     //connecting point info
     //virtual ClassIDType classID() override;
+
+    ConnectingConfigurationID current_configuration;
+    std::string configuration_str;
+    coordinates configuration_coords;
+    ConnectingTypeMatch *current_type_match;
+    ConnectingConfiguration *current_configuration_ptr;
+
     friend RoboasmCoords;
     friend RoboasmParts;
     friend RoboasmRobot;
@@ -262,7 +354,10 @@ public:
 
 protected:
     Parts *info;
-    void createConnectingPoints();
+    void createConnectingPoints(const std::string &_namespace);
+    void createConnectingPoints(bool use_name_as_namespace = true);
+
+    void assocConnectingPoint(ConnectingPoint* cp, const std::string &_namespace);
     // parts info
     //virtual ClassIDType classID() override;
     friend RoboasmCoords;
@@ -274,9 +369,23 @@ class RoboasmRobot : public RoboasmCoords
 {
 public:
     //RoboasmRobot(const std::string &_name);
-    RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts);
+    RoboasmRobot(const std::string &_name,
+                 RoboasmPartsPtr parts,
+                 Settings* _settings);
     // robot info
     //virtual ClassIDType classID() override;
+    bool reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld);
+    bool checkAttachByName(RoboasmCoordsPtr robot_or_parts,
+                              const std::string &name_parts_point,
+                              const std::string &name_robot_point,
+                              RoboasmConnectingPointPtr &_parts_point,
+                              RoboasmConnectingPointPtr &_robot_point,
+                              const std::string &name_configuration);
+#if 0
+    bool attachXX(RoboasmRobotPtr robot,
+                RoboasmConnectingPointPtr parts_point, //
+                RoboasmConnectingPointPtr robot_point, //
+                int configuration = 0, bool just_align = false);
 
     bool attach(RoboasmRobotPtr robot,
                 RoboasmConnectingPointPtr parts_point, //
@@ -304,10 +413,14 @@ public:
                 RoboasmConnectingPointPtr parts_point, //
                 RoboasmConnectingPointPtr robot_point, //
                 coordinates &coords, bool just_align = false);
-
+#endif
+protected:
+    Settings* settings;
     friend RoboasmCoords;
     friend RoboasmParts;
     friend RoboasmConnectingPoint;
+
+    friend Settings;
 };
 
 }; };

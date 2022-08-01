@@ -222,7 +222,7 @@ void print_lst(coordsPtrList &lst)
 
 int main(int argc, char **argv) {
 
-    ra::RobotAssemblerConfiguration conf;
+    ra::Settings conf;
 
     bool ret = false;
     if (argc > 1) {
@@ -264,9 +264,9 @@ int main(int argc, char **argv) {
         }
 
         std::cout << "a0" << std::endl;
-        ra::RoboasmPartsPtr p = conf.makeParts("s3301", "s3301_00");
+        ra::RoboasmPartsPtr p = conf.makeParts("s3301");
         std::cout << "a1" << std::endl;
-        ra::RoboasmRobotPtr r = std::make_shared<ra::RoboasmRobot>("AS_ROBOT", p);
+        ra::RoboasmRobotPtr r = std::make_shared<ra::RoboasmRobot>("AS_ROBOT", p, &conf);
         std::cout << "a2" << std::endl;
         coordsList lst;
         std::cout << "a3" << std::endl;

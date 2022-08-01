@@ -1,3 +1,9 @@
+
+## TODO
+ Body loaderを使わずにbodyを作る
+ merge links with connected with fixed-joint
+
+
 p <= (make-parts-from-key p-type p-name) create configuretion -> roboasm-parts
 
 arobot <= (make-robot-assembler-robot p :name "")

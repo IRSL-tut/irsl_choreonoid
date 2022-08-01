@@ -29,7 +29,7 @@ public:
     Impl(RobotAssemblerPlugin *_self) { self = _self; }
 
     RobotAssemblerPlugin *self;
-    ra::RobotAssemblerConfigurationPtr asm_conf;
+    ra::SettingsPtr ra_settings;
 
     void onSigOptionsParsed(po::variables_map& variables);
 };
@@ -42,12 +42,12 @@ void RobotAssemblerPlugin::Impl::onSigOptionsParsed(po::variables_map& variables
         std::string fname_ = variables["assembler"].as<std::string>();
         DEBUG_STREAM("robot_assembler config file: " << fname_ << std::endl);
 
-        asm_conf = std::make_shared<ra::RobotAssemblerConfiguration> ();
-        bool ret = asm_conf->parseYaml(fname_);
+        ra_settings = std::make_shared<ra::Settings> ();
+        bool ret = ra_settings->parseYaml(fname_);
 
         if (ret) {
             AssemblerView *ptr = AssemblerView::instance();
-            ptr->createButtons(asm_conf);
+            ptr->createButtons(ra_settings);
         }
     }
 }

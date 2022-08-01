@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include <sstream>
+#include <algorithm>
+
 // get pid
 #include <sys/types.h>
 #include <unistd.h>
@@ -10,10 +12,10 @@ using namespace cnoid;
 
 static void print(coordinates &cds)
 {
-    std::cout << "((" << cds.pos(0) << ", "
-              << cds.pos(1) << ", " << cds.pos(2);
+    std::cout << "((" << cds.pos(0) << " "
+              << cds.pos(1) << " " << cds.pos(2);
     Vector3 rpy; cds.getRPY(rpy);
-    std::cout << ") (" << rpy(0)  << ", " << rpy(1)  << ", "
+    std::cout << ") (" << rpy(0)  << " " << rpy(1)  << " "
               << rpy(2) << "))";
 }
 
@@ -226,14 +228,14 @@ bool mapVector(Mapping *mp, const std::string &key, std::vector<double> &vec,
 namespace cnoid {
 namespace robot_assembler {
 
-class RobotAssemblerConfiguration::Impl
+class Settings::Impl
 {
 public:
-    RobotAssemblerConfiguration *self;
+    Settings *self;
 
     ::UnitConfig uc;
 
-    Impl(RobotAssemblerConfiguration *self_);
+    Impl(Settings *self_);
 
     bool parseYaml(const std::string &filename);
     bool parseGeneralSettings(ValueNode *vn);
@@ -261,49 +263,106 @@ public:
     int parts_counter;
 };
 
-RobotAssemblerConfiguration::RobotAssemblerConfiguration()
+Settings::Settings()
 {
     impl = new Impl(this);
 }
-RobotAssemblerConfiguration::~RobotAssemblerConfiguration()
+Settings::~Settings()
 {
     delete impl;
 }
 
-RobotAssemblerConfiguration::Impl::Impl(RobotAssemblerConfiguration *self_)
+Settings::Impl::Impl(Settings *self_)
     : parts_counter(0)
 {
     self = self_;
     pid = getpid();
 }
 
-bool RobotAssemblerConfiguration::parseYaml(const std::string &filename)
+bool Settings::parseYaml(const std::string &filename)
 {
     return impl->parseYaml(filename);
 }
 
-RoboasmPartsPtr RobotAssemblerConfiguration::makeParts(const std::string &parts_key)
+RoboasmPartsPtr Settings::makeParts(const std::string &parts_key)
 {
     std::ostringstream os;
     os << parts_key << "_" << impl->pid << "_" << impl->parts_counter;
     impl->parts_counter++;
-    makeParts(parts_key, os.str());
+    return makeParts(parts_key, os.str());
 }
 
-RoboasmPartsPtr RobotAssemblerConfiguration::makeParts(const std::string &parts_key, const std::string &name)
+RoboasmPartsPtr Settings::makeParts(const std::string &parts_key, const std::string &_name)
 {
-    std::cerr << "mk0" << std::endl;
     auto res = mapParts.find(parts_key);
     if (res == mapParts.end()) {
-        std::cerr << "mk1" << std::endl;
         return nullptr;
     }
-    std::cerr << "mk2" << std::endl;
-    RoboasmPartsPtr ret = std::make_shared<RoboasmParts> (name, &(res->second));
+    RoboasmPartsPtr ret = std::make_shared<RoboasmParts> (_name, &(res->second));
     return ret;
 }
 
-bool RobotAssemblerConfiguration::Impl::parseYaml(const std::string &filename)
+RoboasmRobotPtr Settings::makeRobot(const std::string &_name, RoboasmPartsPtr parts)
+{
+    RoboasmRobotPtr ret = std::make_shared<RoboasmRobot>(_name, parts, this);
+    return ret;
+}
+ConnectingTypeMatch *Settings::searchMatch(ConnectingTypeID _a, ConnectingTypeID _b)
+{
+    //brute force search
+    for(int i = 0; i < listConnectingTypeMatch.size(); i++) {
+        ConnectingTypeMatch &mt = listConnectingTypeMatch[i];
+        if(mt.pair[0] == _a && mt.pair[1] == _b) {
+            return &mt;
+        } else if(mt.pair[0] == _b && mt.pair[1] == _a) {
+            return &mt;
+        }
+    }
+    return nullptr;
+}
+ConnectingTypeMatch *Settings::searchConnection
+(ConnectingTypeID _a, ConnectingTypeID _b, ConnectingConfigurationID _tp)
+{
+    ConnectingConfiguration *_res;
+    return searchConnection(_a, _b, _tp, _res);
+}
+ConnectingTypeMatch *Settings::searchConnection
+(ConnectingTypeID _a, ConnectingTypeID _b,
+ ConnectingConfigurationID _tp, ConnectingConfiguration *_res)
+{
+    ConnectingTypeMatch *mt_ = searchMatch(_a, _b);
+    std::vector<ConnectingConfigurationID> &ac_ = mt_->allowed_configuration;
+    for(int i = 0; i < ac_.size(); i++) {
+        if (ac_[i] == _tp) {
+            _res = &(listConnectingConfiguration[_tp]);
+            return mt_;
+        }
+    }
+}
+ConnectingTypeMatch *Settings::searchConnection
+(ConnectingTypeID _a, ConnectingTypeID _b, const std::string &config_name)
+{
+    ConnectingConfiguration *_res;
+    return searchConnection(_a, _b, config_name, _res);
+}
+ConnectingTypeMatch *Settings::searchConnection
+(ConnectingTypeID _a, ConnectingTypeID _b,
+ const std::string &config_name, ConnectingConfiguration *_res)
+{
+    ConnectingConfigurationID tp_ = -1;
+    for(int i = 0; i < listConnectingConfiguration.size(); i++) {
+        if (listConnectingConfiguration[i].name == config_name) {
+            tp_ = i;
+            break;
+        }
+    }
+    if (tp_ < 0) {
+        _res = nullptr;
+        return nullptr;
+    }
+    return searchConnection(_a, _b, tp_, _res);
+}
+bool Settings::Impl::parseYaml(const std::string &filename)
 {
     YAMLReader yaml_reader;
     if (! yaml_reader.load(filename)) {
@@ -368,7 +427,7 @@ bool RobotAssemblerConfiguration::Impl::parseYaml(const std::string &filename)
     return true;
 }
 
-bool RobotAssemblerConfiguration::Impl::parseGeneralSettings(ValueNode *vn)
+bool Settings::Impl::parseGeneralSettings(ValueNode *vn)
 {
     if ( !vn->isMapping() ) {
         //
@@ -407,7 +466,7 @@ bool RobotAssemblerConfiguration::Impl::parseGeneralSettings(ValueNode *vn)
     uc.setScale(_a_unit, _l_unit, _m_unit);
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueNode *vn)
+bool Settings::Impl::parseConnectingConstraintSettings(ValueNode *vn)
 {
     if ( !vn->isMapping() ) {
         // [todo]
@@ -487,7 +546,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConstraintSettings(ValueN
     }
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseCoords(Mapping *map_, coordinates &cds)
+bool Settings::Impl::parseCoords(Mapping *map_, coordinates &cds)
 {
     bool all_res = true;
     {
@@ -537,7 +596,7 @@ bool RobotAssemblerConfiguration::Impl::parseCoords(Mapping *map_, coordinates &
     return all_res;
 }
 
-bool RobotAssemblerConfiguration::Impl::parseConnectingConf(ValueNode *vn, ConnectingConfiguration &out) {
+bool Settings::Impl::parseConnectingConf(ValueNode *vn, ConnectingConfiguration &out) {
     if ( !vn->isMapping() ) {
         // [todo] error message
         return false;
@@ -559,7 +618,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingConf(ValueNode *vn, Conne
     return parseCoords(val, out.coords);
 }
 
-bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, ConnectingTypeMatch &out) {
+bool Settings::Impl::parseConnectingTypeMatch(ValueNode *vn, ConnectingTypeMatch &out) {
     if ( !vn->isMapping() ) {
         // [todo] error message
         return false;
@@ -612,7 +671,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingTypeMatch(ValueNode *vn, 
     }
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parsePartsSettings(ValueNode *vn)
+bool Settings::Impl::parsePartsSettings(ValueNode *vn)
 {
     if ( !vn->isListing() ) {
         // [todo]
@@ -631,7 +690,7 @@ bool RobotAssemblerConfiguration::Impl::parsePartsSettings(ValueNode *vn)
     }
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
+bool Settings::Impl::parseParts(ValueNode *vn, Parts &out)
 {
     if( !vn->isMapping() ) {
         // [todo]
@@ -761,7 +820,7 @@ bool RobotAssemblerConfiguration::Impl::parseParts(ValueNode *vn, Parts &out)
     return true;
 }
 
-bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &geom)
+bool Settings::Impl::parseGeometry(ValueNode *vn, Geometry &geom)
 {
     if ( ! vn->isMapping() ) {
         // [todo]
@@ -892,7 +951,7 @@ bool RobotAssemblerConfiguration::Impl::parseGeometry(ValueNode *vn, Geometry &g
     }
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseConnectingPoint(ValueNode *vn, ConnectingPoint &cpt)
+bool Settings::Impl::parseConnectingPoint(ValueNode *vn, ConnectingPoint &cpt)
 {
     if ( ! vn->isMapping() ) {
         return false;
@@ -930,7 +989,7 @@ bool RobotAssemblerConfiguration::Impl::parseConnectingPoint(ValueNode *vn, Conn
 
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseActuator(ValueNode *vn, Actuator &act)
+bool Settings::Impl::parseActuator(ValueNode *vn, Actuator &act)
 {
     if (! vn->isMapping() ) {
         return false;
@@ -1006,15 +1065,15 @@ bool RobotAssemblerConfiguration::Impl::parseActuator(ValueNode *vn, Actuator &a
 
     return true;
 }
-bool RobotAssemblerConfiguration::Impl::parseExtraInfo(ValueNode *vn, ExtraInfo &einfo)
+bool Settings::Impl::parseExtraInfo(ValueNode *vn, ExtraInfo &einfo)
 {
     // TODO
     return true;
 }
 
-//// Roboasm ////
+//// [Roboasm] ////
 RoboasmCoords::RoboasmCoords(const std::string &_name)
-    : _parent(nullptr)
+    : parent_ptr(nullptr)
 {
     name_str = _name;
 }
@@ -1025,17 +1084,17 @@ const std::string &RoboasmCoords::name() const
 }
 coordinates &RoboasmCoords::worldcoords()
 {
-    return _worldcoords;
+    return buf_worldcoords;
 }
 const coordinates &RoboasmCoords::worldcoords() const {
-    return _worldcoords;
+    return buf_worldcoords;
 }
 void RoboasmCoords::copyWorldcoords(coordinates &w)
 {
-    w = _worldcoords;
+    w = buf_worldcoords;
 }
 
-void RoboasmCoords::set(coordinates &c)
+void RoboasmCoords::newcoords(coordinates &c)
 {
     pos = c.pos;
     rot = c.rot;
@@ -1043,11 +1102,11 @@ void RoboasmCoords::set(coordinates &c)
 }
 RoboasmCoords *RoboasmCoords::parent()
 {
-    return _parent;
+    return parent_ptr;
 }
 bool RoboasmCoords::hasParent()
 {
-    return (!!_parent);
+    return (!!parent_ptr);
 }
 bool RoboasmCoords::hasDescendants()
 {
@@ -1056,26 +1115,26 @@ bool RoboasmCoords::hasDescendants()
 // virtual ??
 void RoboasmCoords::update()
 {
-    if(!!_parent) {
+    if(!!parent_ptr) {
 #if 0
-        std::cout << "pp : " << _parent << std::endl;
+        std::cout << "pp : " << parent_ptr << std::endl;
         std::cout << "w0 ";
-        print(_worldcoords); std::cout << std::endl;
+        print(buf_worldcoords); std::cout << std::endl;
 #endif
-        _parent->copyWorldcoords(_worldcoords);
+        parent_ptr->copyWorldcoords(buf_worldcoords);
 #if 0
         std::cout << "w1 ";
-        print(_worldcoords); std::cout << std::endl;
+        print(buf_worldcoords); std::cout << std::endl;
         std::cout << "this ";
         print(*dynamic_cast<coordinates *>(this)); std::cout << std::endl;
 #endif
-        _worldcoords.transform(*this);
+        buf_worldcoords.transform(*this);
 #if 0
         std::cout << "w2 ";
-        print(_worldcoords); std::cout << std::endl;
+        print(buf_worldcoords); std::cout << std::endl;
 #endif
     } else {
-        _worldcoords = *this;
+        buf_worldcoords = *this;
     }
 }
 void RoboasmCoords::updateDescendants()
@@ -1088,13 +1147,13 @@ void RoboasmCoords::assoc(RoboasmCoordsPtr c)
 {
     if ( ! _existing_descendant(c) ) {
         //c->_replaceParent(this);
-        if (!!(c->_parent)) {
-            c->_parent->_dissoc(c.get());
+        if (!!(c->parent_ptr)) {
+            c->parent_ptr->_dissoc(c.get());
         }
-        c->_parent = this;
+        c->parent_ptr = this;
         coordinates newcoords;
-        _worldcoords.transformation(newcoords, c->_worldcoords);
-        c->set(newcoords);
+        buf_worldcoords.transformation(newcoords, c->buf_worldcoords);
+        c->newcoords(newcoords);
         descendants.insert(c);
     }
 }
@@ -1104,27 +1163,31 @@ bool RoboasmCoords::dissoc(RoboasmCoordsPtr c)
 }
 bool RoboasmCoords::_dissoc(RoboasmCoords *c)
 {
-    if (c->_parent == this) {
+    if (c->parent_ptr == this) {
         _erase_descendant(c);
-        c->_parent = nullptr;
-        c->set(c->_worldcoords);
+        c->parent_ptr = nullptr;
+        c->newcoords(c->buf_worldcoords);
         return true;
     }
     return false;
 }
 bool RoboasmCoords::dissocParent()
 {
-    if (!!_parent) {
-        return _parent->_dissoc(this);
+    if (!!parent_ptr) {
+        return parent_ptr->_dissoc(this);
     }
     return false;
 }
-
+bool RoboasmCoords::isDirectDescendant(RoboasmCoordsPtr c)
+{
+    auto it = std::find(descendants.begin(), descendants.end(), c);
+    return (it != descendants.end());
+}
 void RoboasmCoords::toRootList(coordsList &lst)
 {
     lst.push_back(this);
-    if (!!_parent) {
-        _parent->toRootList(lst);
+    if (!!parent_ptr) {
+        parent_ptr->toRootList(lst);
     }
 }
 void RoboasmCoords::allDescendants(coordsList &lst)
@@ -1219,7 +1282,7 @@ void RoboasmCoords::actuators(coordsPtrList &lst)
     connectingPointPtrList tmp;
     allDescendants<RoboasmConnectingPoint> (tmp);
     for(auto it = tmp.begin(); it != tmp.end(); it++) {
-        if ((*it)->info->getType() != ConnectingPoint::Parts) {
+        if ((*it)->isActuator()) {
             lst.push_back(*it);
         }
     }
@@ -1230,7 +1293,7 @@ void RoboasmCoords::actuators(coordsPtrList &activelst,
     connectingPointPtrList tmp;
     allDescendants<RoboasmConnectingPoint> (tmp);
     for(auto it = tmp.begin(); it != tmp.end(); it++) {
-        if ((*it)->info->getType() != ConnectingPoint::Parts) {
+        if ((*it)->isActuator()) {
             if(!(*it)->hasDescendants()) {
                 activelst.push_back(*it);
             } else {
@@ -1244,7 +1307,7 @@ void RoboasmCoords::activeActuators(coordsPtrList &lst)
     connectingPointPtrList tmp;
     allDescendants<RoboasmConnectingPoint> (tmp);
     for(auto it = tmp.begin(); it != tmp.end(); it++) {
-        if ((*it)->info->getType() != ConnectingPoint::Parts &&
+        if ((*it)->isActuator() &&
             !(*it)->hasDescendants()) {
             lst.push_back(*it);
         }
@@ -1255,7 +1318,7 @@ void RoboasmCoords::inactiveActuators(coordsPtrList &lst)
     connectingPointPtrList tmp;
     allDescendants<RoboasmConnectingPoint> (tmp);
     for(auto it = tmp.begin(); it != tmp.end(); it++) {
-        if ((*it)->info->getType() != ConnectingPoint::Parts &&
+        if ((*it)->isActuator() &&
             (*it)->hasDescendants()) {
             lst.push_back(*it);
         }
@@ -1300,11 +1363,11 @@ template RoboasmCoordsPtr RoboasmCoords::find<RoboasmConnectingPoint>(const std:
 #if 0
 void RoboasmCoords::_replaceParent(RoboasmCoords *p)
 {
-    if (!!_parent) {
-        _parent->dissoc(this);
-        _parent = p;
+    if (!!parent_ptr) {
+        parent_ptr->dissoc(this);
+        parent_ptr = p;
     } else {
-        _parent = p;
+        parent_ptr = p;
     }
 }
 #endif
@@ -1346,54 +1409,178 @@ bool RoboasmCoords::_erase_descendant(RoboasmCoords *c)
     return false;
 }
 
-// connecting point
+// roboasm connecting point
 RoboasmConnectingPoint::RoboasmConnectingPoint(const std::string &_name,
                                                ConnectingPoint *_info)
-    : RoboasmCoords(_name)
+    : RoboasmCoords(_name), current_type_match(nullptr), current_configuration(-1)
 {
-    std::cerr << "c0" << std::endl;
     info = _info;
 }
+bool RoboasmConnectingPoint::isActuator()
+{
+    if (info->getType() != ConnectingPoint::Parts) {
+        return true;
+    }
+    return false;
+}
+bool RoboasmConnectingPoint::hasConfiguration()
+{
+    return (current_configuration >= 0 || configuration_str.size() > 0);
+}
+const std::string &RoboasmConnectingPoint::currentConfiguration()
+{
+    return configuration_str;
+}
+bool RoboasmConnectingPoint::definedConfiguration()
+{
+    return (current_configuration >= 0);
+}
+ConnectingConfigurationID RoboasmConnectingPoint::configurationType()
+{
+    return current_configuration;
+}
+void RoboasmConnectingPoint::configurationCoords(coordinates &_coords)
+{
+    _coords = configuration_coords;
+}
 
-// parts
+// roboasm parts
 RoboasmParts::RoboasmParts(const std::string &_name, Parts *_info)
     : RoboasmCoords(_name)
 {
     info = _info;
     createConnectingPoints();
 }
-
-void RoboasmParts::createConnectingPoints()
+void RoboasmParts::createConnectingPoints(bool use_name_as_namespace)
 {
-    std::cerr << "ccp0" << std::endl;
-    for(int i = 0; i < info->connecting_points.size(); i++) {
-        std::cerr << "ccp1" << std::endl;
-        RoboasmCoordsPtr ptr = std::make_shared<RoboasmConnectingPoint>
-        (info->connecting_points[i].name, &info->connecting_points[i]);
-        std::cerr << "ccp1_1" << std::endl;
-        ptr->set(info->connecting_points[i].coords);
-
-        std::cerr << "ccp1_2" << std::endl;
-        this->assoc(ptr);
+    std::string namespace_;
+    if(use_name_as_namespace) {
+        namespace_ = name();
     }
-    for(int i = 0; i < info->actuators.size(); i++) {
-        std::cerr << "ccp2" << std::endl;
-        RoboasmCoordsPtr ptr = std::make_shared<RoboasmConnectingPoint>
-        (info->actuators[i].name, &info->actuators[i]);
-        ptr->set(info->actuators[i].coords);
-        this->assoc(ptr);
+    createConnectingPoints(namespace_);
+}
+void RoboasmParts::createConnectingPoints(const std::string &_namespace)
+{
+    for(auto it = info->connecting_points.begin();
+        it != info->connecting_points.end(); it++) {
+        assocConnectingPoint(&(*it), _namespace);
     }
-    std::cerr << "ccp3" << std::endl;
+    for(auto it = info->actuators.begin();
+        it != info->actuators.end(); it++) {
+        assocConnectingPoint(&(*it), _namespace);
+    }
     updateDescendants();
 }
-
-// robot
-RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts)
-    : RoboasmCoords(_name)
+void RoboasmParts::assocConnectingPoint(ConnectingPoint* cp, const std::string &_namespace)
+{
+    std::string nm;
+    if (_namespace.size() > 0) {
+        nm = _namespace + "/" + cp->name;
+    } else {
+        nm = cp->name;
+    }
+    RoboasmCoordsPtr ptr = std::make_shared<RoboasmConnectingPoint> (nm, cp);
+    ptr->newcoords(cp->coords);
+    this->assoc(ptr);
+}
+// roboasm robot
+RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
+                           Settings* _settings)
+    : RoboasmCoords(_name), settings(_settings)
 {
     assoc(parts);
     updateDescendants();
 }
+
+bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld)
+{
+    // check _chld is descendants of _parent
+    if(!_parent->isDirectDescendant(_chld)) {
+        // [todo]
+        return false;
+    }
+    // check _chld has no descendants
+    if(_chld->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+    // check _parent has no parent
+    if(_parent->hasParent()) {
+        // [todo]
+        return false;
+    }
+    _chld->dissocParent();
+    _chld->assoc(_parent);
+    return true;
+}
+#if 0
+bool RoboasmRobot::checkAttachByName(RoboasmCoordsPtr robot_or_parts,
+                                     const std::string &name_parts_point,
+                                     const std::string &name_robot_point,
+                                     const std::string &name_config,
+                                     RoboasmConnectingPointPtr &_res_parts_point,
+                                     RoboasmConnectingPointPtr &_res_robot_point,
+                                     *_res_config);
+                                     //configuration);
+{
+    _res_robot_point = std::dynamic_pointer_cast<RoboasmConnectingPoint> (
+        find<RoboasmConnectingPoint>(name_robot_point));
+    if(_res_robot_point->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+    _res_parts_point = std::dynamic_pointer_cast<RoboasmConnectingPoint> (
+        robot_or_parts->find<RoboasmConnectingPoint>(name_parts_point));
+    if(_res_parts_point->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+    // search configuration
+    std::vector<ConnectingTypeID> &rtp = _res_robot_point->info->type_list;
+    std::vector<ConnectingTypeID> &ptp = _res_parts_point->info->type_list;
+
+    ConnectingTypeMatch *tm_ = nullptr;
+    ConnectingConfiguration *cc_ = nullptr;
+    bool match_ = false;
+    for(int i = 0; i < rtp.size(); i++) {
+        for(int j = 0; j < ptp.size(); j++) {
+            tm_ = conf->searchConnection(rtp[i], ptp[j], name_config, cc_);
+            if (!!tm_ && !!cc_) {
+                match_ = true;
+                break;
+            }
+        }
+    }
+    if (!match_) {
+        // [todo]
+        return false;
+    }
+
+    return true;
+}
+#endif
+#if 0
+bool RoboasmRobot::attachXX(RoboasmCoordsPtr robot_or_parts,
+                            RoboasmConnectingPointPtr parts_point, //
+                            RoboasmConnectingPointPtr robot_point, //
+                            int configuration = 0, bool just_align = false)
+{
+    coordsPtrList plst;
+    robot_or_parts.activeConnectingPoints(plst);
+    auto resp = std::find(plst.begin(), plst.end(), parts_point);
+    if (resp == plst.end()) {
+        // [todo]
+        return false;
+    }
+    coordsPtrList rlst;
+    activeConnectingPoints(rlst);
+    auto resr = std::find(rlst.begin(), rlst.end(), robot_point);
+    if( resr == rlst.end()) {
+        // [todo]
+        return false;
+    }
+}
+#endif
 #if 0
     bool attach(RoboasmRobotPtr robot,
                 RoboasmConnectingPointPtr parts_point, //

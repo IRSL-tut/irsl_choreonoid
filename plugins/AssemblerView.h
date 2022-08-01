@@ -18,7 +18,7 @@ public:
     AssemblerView();
     virtual ~AssemblerView();
 
-    void createButtons(ra::RobotAssemblerConfigurationPtr &conf);
+    void createButtons(ra::SettingsPtr &ra_settings);
 protected:
     virtual void onActivated() override;
     virtual void onDeactivated() override;

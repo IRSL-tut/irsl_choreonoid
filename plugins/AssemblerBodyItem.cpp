@@ -128,12 +128,12 @@ void AssemblerBodyItem::initializeClass(ExtensionManager* ext)
 }
 
 AssemblerBodyItem *AssemblerBodyItem::createItemFromAssemblerConf
-(const std::string &name, cnoid::robot_assembler::RobotAssemblerConfiguration &conf)
+(const std::string &name, cnoid::robot_assembler::Settings &ra_settings)
 {
     AssemblerBodyItem *itm = new AssemblerBodyItem();
 
-    auto it = conf.mapParts.find(name);
-    if (it == conf.mapParts.end()) {
+    auto it = ra_settings.mapParts.find(name);
+    if (it == ra_settings.mapParts.end()) {
         std::cerr << "designated parts: " << name << " was not found!"<< std::endl;
     }
 
