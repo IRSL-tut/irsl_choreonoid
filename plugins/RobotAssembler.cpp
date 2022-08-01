@@ -425,7 +425,7 @@ void RoboasmParts::assocConnectingPoint(ConnectingPoint* cp, const std::string &
     this->assoc(ptr);
 }
 
-//// [roboasm connecting robot] ////
+//// [roboasm robot] ////
 RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
                            SettingsPtr _settings)
     : RoboasmCoords(_name), settings(_settings)
@@ -433,7 +433,6 @@ RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
     assoc(parts);
     updateDescendants();
 }
-
 bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld)
 {
     // check _chld is descendants of _parent

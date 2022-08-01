@@ -81,28 +81,22 @@ struct ConnectingConfiguration
     //
     ConnectingConfigurationID index;
 };
-
 struct ConnectingTypeMatch
 {
     ConnectingTypeID pair[2];
     std::vector<ConnectingConfigurationID> allowed_configuration;
     //
-    int index;
+    long index;
 };
-
 class PointBase
 {
 public:
     std::string name;
     coordinates coords;
 };
-
 class ConnectingPoint : public PointBase
 {
 public:
-    //using PointBase::name;
-    //using PointBase::coords;
-
     enum PartsType {
         Parts = 0, // Parts
         Rotational = 1 << 0, // Actuator
@@ -124,24 +118,17 @@ public:
 protected:
     PartsType type;
 };
-
 class Actuator : public ConnectingPoint
 {
 public:
-    //using ConnectingPoint::name;
-    //using ConnectingPoint::coords;
-    //using ConnectingPoint::type_list;
-
     Actuator() { type = UNDEFINED; }
-    //Actuator(const ConnectingPoint &cpt, PartsType _tp) { *this = cpt; type = _tp; }
     Actuator(PartsType _tp) { type = _tp; }
-    //ActuatorType type;
+
     Vector3 axis;
     double limit[2];
     double vlimit[2];
     double tqlimit[2];
 };
-
 struct ExtraInfo
 {
     enum Type {
@@ -155,7 +142,6 @@ struct ExtraInfo
     coordinates coords;
     // parameters Mapping
 };
-
 struct Geometry
 {
     enum Type {
@@ -177,7 +163,6 @@ struct Geometry
     std::vector<double> parameter;
     Parts *parent_parts;
 };
-
 class Parts
 {
 public:
@@ -196,7 +181,6 @@ public:
     std::vector<Actuator> actuators;
     std::vector<ExtraInfo> extra_data;
 };
-
 ////
 class Settings
 {
@@ -204,16 +188,13 @@ public:
     Settings();
     ~Settings();
 
-    std::vector<std::string> listConnectingTypeNames;
+    std::vector<ConnectingType> listConnectingType;
     std::vector<ConnectingConfiguration> listConnectingConfiguration;
     std::vector<ConnectingTypeMatch> listConnectingTypeMatch;
 
     std::map<std::string, Parts> mapParts;
 
     bool parseYaml(const std::string &filename);
-    //RoboasmPartsPtr makeParts(const std::string &parts_key);
-    //RoboasmPartsPtr makeParts(const std::string &parts_key, const std::string &_name);
-    //RoboasmRobotPtr makeRobot(const std::string &_name, RoboasmPartsPtr parts);
 
     ConnectingTypeMatch *searchMatch(ConnectingTypeID _a, ConnectingTypeID _b);
     ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
@@ -226,15 +207,16 @@ public:
     ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
                                           const std::string &config_name,
                                           ConnectingConfiguration *_res);
+
+    ConnectingType *searchConnectingType(const std::string &_name);
+    ConnectingConfiguration *searchConnectingConfiguration(const std::string &_name);
     //int searchMatch(ConnectingTypeID a, ConnectingTypeID b);
     // match / invert?
     // A, A => parent/child <-
     // B, C => parent/child <-
 private:
-    //RoboasmRobotPtr current_robot;
     class Impl;
     Impl *impl;
-    // speedup search-match
 };
 typedef std::shared_ptr<Settings> SettingsPtr;
 

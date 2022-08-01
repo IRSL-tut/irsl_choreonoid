@@ -1,9 +1,40 @@
 
 ## TODO
- Body loaderを使わずにbodyを作る
- merge links with connected with fixed-joint
+ - attach できるか
 
+ - eusと同じ位置にあるか
+ 
+ - roboasm.l を書き出せるか？ -> eusで読めるか
+ // roboasm (yaml形式/)
+   -> .roboasm (c++)
+   <- .roboasm (c++)
+   .roboasm.old.l -> .roboasm (eus) only test
+  --->  ここまでできたらいい
+   .roboasm -> .roboasm.new.l (eus) 
+   <- .roboasm.new.l (eus)
+   -> .roboasm.new.l (eus)
+   .roboasm.new.l -> .roboasm (eus)
 
+   not required / .roboasm -> .roboasm.old.l (eus)
+
+ - Body loaderを使わずにbodyを作る(shape?)
+
+ - Body fixed-joint込みで全体を作る
+ 
+ - merge links connected with fixed-joint
+
+===> CUIバージョン完成
+
+ - partsの表示
+
+ - connecting-pointの表示
+
+ - robotの表示
+
+ - clickして結合
+
+ --- options
+ 
 p <= (make-parts-from-key p-type p-name) create configuretion -> roboasm-parts
 
 arobot <= (make-robot-assembler-robot p :name "")

@@ -238,8 +238,8 @@ public:
     bool parseCoords(Mapping *map_, coordinates &cds);
 
     // reverse map (name -> index)
-    std::map<std::string, int> reverseTypeNames; // listConnectingTypeNames
-    std::map<std::string, int> reverseConfNames; // list...
+    std::map<std::string, long> reverseTypeNames; // listConnectingType
+    std::map<std::string, long> reverseConfNames; // listConnectingConfiguration
 };
 ////
 Settings::Settings()
@@ -299,6 +299,7 @@ ConnectingTypeMatch *Settings::searchConnection
 ConnectingTypeMatch *Settings::searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
  const std::string &config_name, ConnectingConfiguration *_res)
 {
+#if 0
     ConnectingConfigurationID tp_ = -1;
     for(int i = 0; i < listConnectingConfiguration.size(); i++) {
         if (listConnectingConfiguration[i].name == config_name) {
@@ -310,7 +311,31 @@ ConnectingTypeMatch *Settings::searchConnection(ConnectingTypeID _a, ConnectingT
         _res = nullptr;
         return nullptr;
     }
-    return searchConnection(_a, _b, tp_, _res);
+#endif
+    ConnectingType *tp_ = searchConnectingType(config_name);
+    if (!tp_) {
+        _res = nullptr;
+        return nullptr;
+    }
+    return searchConnection(_a, _b, tp_->index, _res);
+}
+ConnectingType *Settings::searchConnectingType(const std::string &_name)
+{
+    auto it = impl->reverseTypeNames.find(_name);
+    if(it != impl->reverseTypeNames.end()) {
+        long index = it->second;
+        return &(listConnectingType[index]);
+    }
+    return nullptr;
+}
+ConnectingConfiguration *Settings::searchConnectingConfiguration(const std::string &_name)
+{
+    auto it = impl->reverseConfNames.find(_name);
+    if(it != impl->reverseConfNames.end()) {
+        long index = it->second;
+        return &(listConnectingConfiguration[index]);
+    }
+    return nullptr;
 }
 //// [settings impl]
 bool Settings::Impl::parseYaml(const std::string &filename)
@@ -433,7 +458,10 @@ bool Settings::Impl::parseConnectingConstraintSettings(ValueNode *vn)
                     break;
                 }
                 std::string str = lst->at(i)->toString();
-                self->listConnectingTypeNames.push_back(str);
+                ConnectingType tp_;
+                tp_.name = str;
+                tp_.index = i;
+                self->listConnectingType.push_back(tp_);
                 reverseTypeNames.insert(std::make_pair(str, i));
             }
             if (!strlist) {
@@ -456,6 +484,7 @@ bool Settings::Impl::parseConnectingConstraintSettings(ValueNode *vn)
                     maplist = false;
                     continue;
                 }
+                _conf.index = i;
                 self->listConnectingConfiguration.push_back(_conf);
                 reverseConfNames.insert(std::make_pair(_conf.name, i));
             }
@@ -482,6 +511,7 @@ bool Settings::Impl::parseConnectingConstraintSettings(ValueNode *vn)
                     maplist = false;
                     break;
                 }
+                _match.index = i;
                 self->listConnectingTypeMatch.push_back(_match);
             }
             if (!maplist) {
