@@ -80,10 +80,10 @@ int main(int argc, char **argv) {
 #endif
 void print(coordinates &cds)
 {
-    std::cout << "((" << cds.pos(0) << ", "
-              << cds.pos(1) << ", " << cds.pos(2);
+    std::cout << "((" << cds.pos(0) << " "
+              << cds.pos(1) << " " << cds.pos(2);
     Vector3 rpy; cds.getRPY(rpy);
-    std::cout << ") (" << rpy(0)  << ", " << rpy(1)  << ", "
+    std::cout << ") (" << rpy(0)  << " " << rpy(1)  << " "
               << rpy(2) << "))";
 }
 void print(ra::ConnectingConfiguration &in, int i)

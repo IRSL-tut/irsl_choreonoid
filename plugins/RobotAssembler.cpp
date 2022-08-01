@@ -14,6 +14,15 @@ using namespace cnoid;
 namespace cnoid {
 namespace robot_assembler {
 
+void static print(coordinates &cds)
+{
+    std::cout << "((" << cds.pos(0) << " "
+              << cds.pos(1) << " " << cds.pos(2);
+    Vector3 rpy; cds.getRPY(rpy);
+    std::cout << ") (" << rpy(0)  << " " << rpy(1)  << " "
+              << rpy(2) << "))";
+}
+
 //// [roboasm coords] ////
 RoboasmCoords::RoboasmCoords(const std::string &_name)
     : parent_ptr(nullptr)
@@ -123,6 +132,15 @@ bool RoboasmCoords::isDirectDescendant(RoboasmCoordsPtr c)
 {
     auto it = std::find(descendants.begin(), descendants.end(), c);
     return (it != descendants.end());
+}
+bool RoboasmCoords::isDescendant(RoboasmCoordsPtr c)
+{
+    if(this == c.get()) return false;
+    for(auto it = descendants.begin(); it != descendants.end(); it++) {
+        if(*it == c) return true;
+        if((*it)->isDescendant(c)) return true;
+    }
+    return false;
 }
 void RoboasmCoords::toRootList(coordsList &lst)
 {
@@ -376,7 +394,7 @@ bool RoboasmConnectingPoint::definedConfiguration()
 {
     return (current_configuration >= 0);
 }
-ConnectingConfigurationID RoboasmConnectingPoint::configurationType()
+ConnectingConfigurationID RoboasmConnectingPoint::configurationID()
 {
     return current_configuration;
 }
@@ -454,52 +472,154 @@ bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnecting
     _chld->assoc(_parent);
     return true;
 }
-#if 0
+bool RoboasmRobot::checkCorrectPoint(RoboasmCoordsPtr robot_or_parts,
+                                     RoboasmConnectingPointPtr _parts_point,
+                                     RoboasmConnectingPointPtr _robot_point)
+{
+    if(!!_parts_point && _parts_point->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+    if(!!_robot_point && _robot_point->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+    if(!robot_or_parts->isDescendant(_parts_point)) {
+        // [todo]
+        return false;
+    }
+    if(!isDescendant(_robot_point)) {
+        // [todo]
+        return false;
+    }
+    return true;
+}
 bool RoboasmRobot::checkAttachByName(RoboasmCoordsPtr robot_or_parts,
                                      const std::string &name_parts_point,
                                      const std::string &name_robot_point,
                                      const std::string &name_config,
                                      RoboasmConnectingPointPtr &_res_parts_point,
                                      RoboasmConnectingPointPtr &_res_robot_point,
-                                     *_res_config);
-                                     //configuration);
+                                     ConnectingTypeMatch *_res_match,
+                                     ConnectingConfiguration *_res_config)
 {
-    _res_robot_point = std::dynamic_pointer_cast<RoboasmConnectingPoint> (
-        find<RoboasmConnectingPoint>(name_robot_point));
-    if(_res_robot_point->hasDescendants()) {
-        // [todo]
+    // search configuration
+    ConnectingConfiguration *cc_ = settings->searchConnectingConfiguration(name_config);
+    if (!cc_) {
         return false;
     }
+    _res_config = cc_;
+
     _res_parts_point = std::dynamic_pointer_cast<RoboasmConnectingPoint> (
         robot_or_parts->find<RoboasmConnectingPoint>(name_parts_point));
-    if(_res_parts_point->hasDescendants()) {
+    if(!!_res_parts_point && _res_parts_point->hasDescendants()) {
         // [todo]
         return false;
     }
-    // search configuration
-    std::vector<ConnectingTypeID> &rtp = _res_robot_point->info->type_list;
-    std::vector<ConnectingTypeID> &ptp = _res_parts_point->info->type_list;
+    _res_robot_point = std::dynamic_pointer_cast<RoboasmConnectingPoint> (
+        find<RoboasmConnectingPoint>(name_robot_point));
+    if(!!_res_robot_point && _res_robot_point->hasDescendants()) {
+        // [todo]
+        return false;
+    }
+
+    return checkAttach(robot_or_parts, _res_parts_point, _res_robot_point,
+                       _res_config, _res_match, false);
+}
+bool RoboasmRobot::checkAttach(RoboasmCoordsPtr robot_or_parts,
+                               RoboasmConnectingPointPtr _parts_point,
+                               RoboasmConnectingPointPtr _robot_point,
+                               ConnectingConfiguration *_config,
+                               ConnectingTypeMatch *_res_match, bool check)
+{
+    if (!check || !checkCorrectPoint(robot_or_parts, _parts_point, _robot_point)) {
+        // [todo]
+        return false;
+    }
+    std::vector<ConnectingTypeID> &rtp = _robot_point->info->type_list;
+    std::vector<ConnectingTypeID> &ptp = _parts_point->info->type_list;
 
     ConnectingTypeMatch *tm_ = nullptr;
-    ConnectingConfiguration *cc_ = nullptr;
-    bool match_ = false;
     for(int i = 0; i < rtp.size(); i++) {
         for(int j = 0; j < ptp.size(); j++) {
-            tm_ = conf->searchConnection(rtp[i], ptp[j], name_config, cc_);
-            if (!!tm_ && !!cc_) {
-                match_ = true;
-                break;
-            }
+            tm_ = settings->searchConnection(rtp[i], ptp[j], _config->index);
+            if (!!tm_) break;
         }
     }
-    if (!match_) {
+    if (!tm_) {
         // [todo]
         return false;
     }
-
+    _res_match = tm_;
     return true;
 }
-#endif
+bool RoboasmRobot::searchMatch(RoboasmCoordsPtr robot_or_parts,
+                               RoboasmConnectingPointPtr _parts_point, RoboasmConnectingPointPtr _robot_point,
+                               std::vector<ConnectingTypeMatch*> &_res_match_lst, bool check)
+{
+    if (!check || !checkCorrectPoint(robot_or_parts, _parts_point, _robot_point)) {
+        // [todo]
+        return false;
+    }
+    std::vector<ConnectingTypeID> &rtp = _robot_point->info->type_list;
+    std::vector<ConnectingTypeID> &ptp = _parts_point->info->type_list;
+    _res_match_lst.clear();
+    for(int i = 0; i < rtp.size(); i++) {
+        for(int j = 0; j < ptp.size(); j++) {
+            ConnectingTypeMatch *tm_ = settings->searchMatch(rtp[i], ptp[j]);
+            if (!!tm_) _res_match_lst.push_back(tm_);
+        }
+    }
+    if (_res_match_lst.size() < 1) {
+        // [todo]
+        return false;
+    }
+    return true;
+}
+bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
+                          RoboasmConnectingPointPtr _parts_point,
+                          RoboasmConnectingPointPtr _robot_point,
+                          ConnectingTypeMatch *_match,
+                          ConnectingConfiguration *_config, bool just_align)
+{
+    RoboasmPartsPtr _parts = std::dynamic_pointer_cast<RoboasmParts> (robot_or_parts);
+    // RoboasmRobotPtr _robot = std::dynamic_pointer_cast<RoboasmRobot> (robot_or_parts);
+    if (!_parts) {
+        return false;
+    }
+    coordinates config_coords;
+
+    coordinates r_point_w = _robot_point->worldcoords();
+    coordinates p_base_w = _parts->worldcoords();
+    coordinates p_point_w = _parts_point->worldcoords();
+    std::cout << "r_point_w: " ;  print(r_point_w); std::cout << std::endl;
+    std::cout << "p_base_w: " ;  print(p_base_w); std::cout << std::endl;
+    std::cout << "p_point_w: " ;  print(p_point_w); std::cout << std::endl;
+
+    coordinates p_base_to_point;
+    p_base_w.transformation(p_base_to_point, p_point_w);
+    r_point_w.transform(p_base_to_point.inverse());
+
+    _parts->newcoords(r_point_w);
+    _parts_point->update();
+    // _parts_point->worldcoords() == _robot_point->worldcoords()
+    std::cout << "_robot_point->worldcoords(): " ;
+    print(_robot_point->worldcoords()); std::cout << std::endl;
+
+    std::cout << "_parts_point->worldcoords(): " ;
+    print(_parts_point->worldcoords()); std::cout << std::endl;
+
+    // swap connecting-point on parts
+    //
+    // _robot_point->assoc(_parts_point);
+    // _robot_point->current_configuration
+    // _robot_point->configuration_str
+    // _robot_point->configuration_coords
+    // _robot_point->current_type_match
+    // _robot_point->current_configuration_ptr
+    //
+    return true;
+}
 #if 0
 bool RoboasmRobot::attachXX(RoboasmCoordsPtr robot_or_parts,
                             RoboasmConnectingPointPtr parts_point, //

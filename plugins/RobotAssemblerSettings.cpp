@@ -264,9 +264,8 @@ ConnectingTypeMatch *Settings::searchMatch(ConnectingTypeID _a, ConnectingTypeID
     //brute force search
     for(int i = 0; i < listConnectingTypeMatch.size(); i++) {
         ConnectingTypeMatch &mt = listConnectingTypeMatch[i];
-        if(mt.pair[0] == _a && mt.pair[1] == _b) {
-            return &mt;
-        } else if(mt.pair[0] == _b && mt.pair[1] == _a) {
+        if((mt.pair[0] == _a && mt.pair[1] == _b) ||
+           (mt.pair[0] == _b && mt.pair[1] == _a)) {
             return &mt;
         }
     }
@@ -275,49 +274,18 @@ ConnectingTypeMatch *Settings::searchMatch(ConnectingTypeID _a, ConnectingTypeID
 ConnectingTypeMatch *Settings::searchConnection
 (ConnectingTypeID _a, ConnectingTypeID _b, ConnectingConfigurationID _tp)
 {
-    ConnectingConfiguration *_res;
-    return searchConnection(_a, _b, _tp, _res);
-}
-ConnectingTypeMatch *Settings::searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
- ConnectingConfigurationID _tp, ConnectingConfiguration *_res)
-{
     ConnectingTypeMatch *mt_ = searchMatch(_a, _b);
+    if (!mt_) { // no match
+        return nullptr;
+    }
     std::vector<ConnectingConfigurationID> &ac_ = mt_->allowed_configuration;
     for(int i = 0; i < ac_.size(); i++) {
         if (ac_[i] == _tp) {
-            _res = &(listConnectingConfiguration[_tp]);
             return mt_;
         }
     }
-}
-ConnectingTypeMatch *Settings::searchConnection
-(ConnectingTypeID _a, ConnectingTypeID _b, const std::string &config_name)
-{
-    ConnectingConfiguration *_res;
-    return searchConnection(_a, _b, config_name, _res);
-}
-ConnectingTypeMatch *Settings::searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
- const std::string &config_name, ConnectingConfiguration *_res)
-{
-#if 0
-    ConnectingConfigurationID tp_ = -1;
-    for(int i = 0; i < listConnectingConfiguration.size(); i++) {
-        if (listConnectingConfiguration[i].name == config_name) {
-            tp_ = i;
-            break;
-        }
-    }
-    if (tp_ < 0) {
-        _res = nullptr;
-        return nullptr;
-    }
-#endif
-    ConnectingType *tp_ = searchConnectingType(config_name);
-    if (!tp_) {
-        _res = nullptr;
-        return nullptr;
-    }
-    return searchConnection(_a, _b, tp_->index, _res);
+    // configuration is not in searched match
+    return nullptr;
 }
 ConnectingType *Settings::searchConnectingType(const std::string &_name)
 {

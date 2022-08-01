@@ -199,15 +199,6 @@ public:
     ConnectingTypeMatch *searchMatch(ConnectingTypeID _a, ConnectingTypeID _b);
     ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
                                           ConnectingConfigurationID _tp);
-    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
-                                          const std::string &config_name);
-    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
-                                          ConnectingConfigurationID _tp,
-                                          ConnectingConfiguration *_res);
-    ConnectingTypeMatch *searchConnection(ConnectingTypeID _a, ConnectingTypeID _b,
-                                          const std::string &config_name,
-                                          ConnectingConfiguration *_res);
-
     ConnectingType *searchConnectingType(const std::string &_name);
     ConnectingConfiguration *searchConnectingConfiguration(const std::string &_name);
     //int searchMatch(ConnectingTypeID a, ConnectingTypeID b);

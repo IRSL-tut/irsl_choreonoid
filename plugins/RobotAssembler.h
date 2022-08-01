@@ -49,7 +49,7 @@ public:
     bool dissoc(RoboasmCoordsPtr c);
     bool dissocParent();
     bool isDirectDescendant(RoboasmCoordsPtr c);
-
+    bool isDescendant(RoboasmCoordsPtr c);
     // ???
     void toRootList(coordsList &lst);
     void allDescendants(coordsList &lst);
@@ -100,7 +100,7 @@ public:
     bool hasConfiguration();
     const std::string &currentConfiguration();
     bool definedConfiguration();
-    ConnectingConfigurationID configurationType();
+    ConnectingConfigurationID configurationID();
     void configurationCoords(coordinates &_coords);
 
 protected:
@@ -151,12 +151,32 @@ public:
     // robot info
     //virtual ClassIDType classID() override;
     bool reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld);
+    bool checkCorrectPoint(RoboasmCoordsPtr robot_or_parts,
+                           RoboasmConnectingPointPtr _parts_point, RoboasmConnectingPointPtr _robot_point);
     bool checkAttachByName(RoboasmCoordsPtr robot_or_parts,
-                              const std::string &name_parts_point,
-                              const std::string &name_robot_point,
-                              RoboasmConnectingPointPtr &_parts_point,
-                              RoboasmConnectingPointPtr &_robot_point,
-                              const std::string &name_configuration);
+                           const std::string &name_parts_point,
+                           const std::string &name_robot_point,
+                           const std::string &name_config,
+                           RoboasmConnectingPointPtr &_res_parts_point,
+                           RoboasmConnectingPointPtr &_res_robot_point,
+                           ConnectingTypeMatch *_res_match,
+                           ConnectingConfiguration *_res_config);
+    bool checkAttach(RoboasmCoordsPtr robot_or_parts,
+                     RoboasmConnectingPointPtr _parts_point,
+                     RoboasmConnectingPointPtr _robot_point,
+                     ConnectingConfiguration *_config,
+                     ConnectingTypeMatch *_res_match, bool check = true);
+    bool searchMatch(RoboasmCoordsPtr robot_or_parts,
+                     RoboasmConnectingPointPtr _parts_point,
+                     RoboasmConnectingPointPtr _robot_point,
+                     std::vector<ConnectingTypeMatch*> &_res_match_lst, bool check = true);
+
+    bool attach(RoboasmCoordsPtr robot_or_parts,
+                RoboasmConnectingPointPtr _parts_point,
+                RoboasmConnectingPointPtr _robot_point,
+                ConnectingTypeMatch *_match,
+                ConnectingConfiguration *_config, bool just_align = false);
+
 #if 0
     bool attachXX(RoboasmRobotPtr robot,
                 RoboasmConnectingPointPtr parts_point, //
