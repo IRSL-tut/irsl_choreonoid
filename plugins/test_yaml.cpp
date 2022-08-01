@@ -222,51 +222,53 @@ void print_lst(coordsPtrList &lst)
 
 int main(int argc, char **argv) {
 
-    ra::Settings conf;
-
+    //ra::SettingsPtr ra_settings;
+    std::shared_ptr<Roboasm> roboasm;
     bool ret = false;
     if (argc > 1) {
         std::cerr << "argc > 1" << std::endl;
-        ret = conf.parseYaml(argv[1]);
+        //ret = ra_settings->parseYaml(argv[1]);
+        roboasm = std::make_shared<Roboasm>(argv[1]);
+        ret = roboasm->isReady();
     }
     if (ret) {
         std::cerr << "success" << std::endl;
-
+#if 0
         {
-            std::vector<std::string> &lst = conf.listConnectingTypeNames;
+            std::vector<std::string> &lst = ra_settings->listConnectingTypeNames;
             std::cout << "listConnectingTypeNames: " << lst.size() << std::endl;
             for(int i = 0; i < lst.size(); i++) {
                 std::cout << "  " << i << " " << lst[i] << std::endl;
             }
         }
         {
-            std::vector<ra::ConnectingConfiguration> &lst = conf.listConnectingConfiguration;
+            std::vector<ra::ConnectingConfiguration> &lst = ra_settings->listConnectingConfiguration;
             std::cout << "listConnectingConfiguration: " << lst.size() << std::endl;
             for(int i = 0; i < lst.size(); i++) {
                 print(lst[i], i);
             }
         }
         {
-            std::vector<ra::ConnectingTypeMatch> &lst = conf.listConnectingTypeMatch;
+            std::vector<ra::ConnectingTypeMatch> &lst = ra_settings->listConnectingTypeMatch;
             std::cout << "listConnectingTypeMatch: " << lst.size() << std::endl;
             for(int i = 0; i < lst.size(); i++) {
                 print(lst[i]);
             }
         }
         {
-            std::cout << "mapParts: " << conf.mapParts.size() << std::endl;
-            for (auto it = conf.mapParts.begin(); it != conf.mapParts.end(); it++) {
+            std::cout << "mapParts: " << ra_settings->mapParts.size() << std::endl;
+            for (auto it = ra_settings->mapParts.begin(); it != ra_settings->mapParts.end(); it++) {
                 // it->first;
                 //ra::Parts &pt = it->second;
                 //print(pt);
                 print(it->second);
             }
         }
-
+#endif
         std::cout << "a0" << std::endl;
-        ra::RoboasmPartsPtr p = conf.makeParts("s3301");
+        ra::RoboasmPartsPtr p = roboasm->makeParts("s3301");
         std::cout << "a1" << std::endl;
-        ra::RoboasmRobotPtr r = std::make_shared<ra::RoboasmRobot>("AS_ROBOT", p, &conf);
+        ra::RoboasmRobotPtr r = roboasm->makeRobot("R(s3301)", p);
         std::cout << "a2" << std::endl;
         coordsList lst;
         std::cout << "a3" << std::endl;

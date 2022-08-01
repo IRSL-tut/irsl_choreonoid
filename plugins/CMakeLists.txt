@@ -6,6 +6,7 @@ set(sources
   AssemblerSceneBody.cpp
   AssemblerView.cpp
   AssemblerBar.cpp
+  RobotAssemblerSettings.cpp
   RobotAssembler.cpp
   RobotAssemblerHelper.cpp
   )
@@ -17,6 +18,7 @@ set(headers
   AssemblerSceneBody.h
   AssemblerView.h
   AssemblerBar.h
+  RobotAssemblerSettings.h
   RobotAssembler.h
   RobotAssemblerHelper.h
   )
@@ -30,15 +32,15 @@ choreonoid_add_plugin(${target} ${sources} HEADERS ${headers})
 #<#set(boost_libraries ${Boost_IOSTREAMS_LIBRARY})
 
 #<#target_link_libraries(${target} CnoidBody ${boost_libraries})
-target_link_libraries(${target} CnoidBody CnoidUtil)
+target_link_libraries(${target} CnoidBody CnoidUtil) ## RobotAssembler
 
 set_target_properties(${target}
   PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${choreonoid_PLUGINDIR})
 
 # add_subdirectory(pybind11)
-
+#add_library(libRobotAssembler RobotAssemblerSettings.cpp RobotAssembler.cpp)
 ### test
-add_executable(test_yaml test_yaml.cpp RobotAssembler.cpp)
+add_executable(test_yaml test_yaml.cpp RobotAssemblerSettings.cpp RobotAssembler.cpp)
 target_link_libraries(test_yaml CnoidUtil)
 target_include_directories(test_yaml PUBLIC
   include
