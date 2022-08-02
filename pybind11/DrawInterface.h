@@ -69,6 +69,10 @@ namespace cnoid {
         void remove_object(SgShapePtr &obj, bool update) {
             sw->sceneRoot()->removeChild(obj, update);
         }
+        void render() {
+            // sw->sceneRoot() or sw->scene()
+            sw->renderScene();
+        }
         // original settings
         DrawInterface(Vector3f colorVec){
             sv = SceneView::instance();

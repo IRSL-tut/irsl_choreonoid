@@ -53,6 +53,8 @@ PYBIND11_MODULE(DrawInterface, m)
              py::arg("object"), py::arg("update") = false)
         .def("remove_object", (void (DrawInterface::*)(SgShapePtr &, bool)) &DrawInterface::remove_object,
              py::arg("object"), py::arg("update") = false)
+        //
+        .def("render", &DrawInterface::render)
         ;
     //SgPlot
     //SgPointSet
