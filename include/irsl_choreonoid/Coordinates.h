@@ -345,7 +345,7 @@ namespace cnoid {
         coordinates &inverse_transformation(coordinates& inv) const
         {
             inv.rot = rot.transpose();
-            inv.pos = inv.rot * (-1 * pos);
+            inv.pos = - (inv.rot * pos);
             return inv;
         }
         //void transformation(coordinates& tc, coordinates c, const wrt wrt = local ) const
@@ -527,8 +527,9 @@ namespace cnoid {
             rot = rotFromRpy(r,p,y);
         }
         coordinates &inverse() {
-            rot = rot.transpose();
-            pos = rot * (-1 * pos);
+            Matrix3 rot_t = rot.transpose();
+            pos = -1 * (rot_t * pos);
+            rot = rot_t;
             return *this;
         }
         coordinates &mid_coords(coordinates &mid_coords, const double p, const coordinates &c2, const double eps = 0.00001) const
