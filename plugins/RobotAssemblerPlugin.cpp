@@ -1,7 +1,7 @@
 #include <cnoid/OptionManager> //??
 
 #include "RobotAssemblerPlugin.h"
-#include "AssemblerBodyItem.h"
+#include "AssemblerItem.h"
 #include "AssemblerView.h"
 #include "AssemblerBar.h"
 
@@ -81,7 +81,7 @@ bool RobotAssemblerPlugin::initialize()
         [&](po::variables_map& _v) { impl->onSigOptionsParsed(_v); } );
 
     // classes
-    AssemblerBodyItem::initializeClass(this);
+    AssemblerItem::initializeClass(this);
 
     //View
     AssemblerView::initializeClass(this);

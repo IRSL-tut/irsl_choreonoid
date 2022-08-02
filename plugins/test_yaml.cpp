@@ -206,7 +206,7 @@ void print(ra::Parts &in)
 void print_lst(coordsList &lst)
 {
     for(int i = 0; i < lst.size(); i++) {
-        std::cout << i << " : " << lst[i]->name() << " / ";
+        std::cout << i << " : [" << lst[i] << "] " << lst[i]->name() << " : ";
         print(lst[i]->worldcoords());
         std::cout << std::endl;
     }
@@ -214,7 +214,7 @@ void print_lst(coordsList &lst)
 void print_lst(coordsPtrList &lst)
 {
     for(int i = 0; i < lst.size(); i++) {
-        std::cout << i << " : " << lst[i]->name() << " / ";
+        std::cout << i << " : [" << lst[i].get() << "] " << lst[i]->name() << " : ";
         print(lst[i]->worldcoords());
         std::cout << std::endl;
     }
@@ -265,6 +265,8 @@ int main(int argc, char **argv) {
             }
         }
 #endif
+
+#if 0
         std::cout << "a0" << std::endl;
         ra::RoboasmPartsPtr p = roboasm->makeParts("s3301");
         std::cout << "a1" << std::endl;
@@ -368,6 +370,153 @@ int main(int argc, char **argv) {
         print(p0->worldcoords()); std::cout << std::endl;
         std::cout << "p1 w:" ;
         print(p1->worldcoords()); std::cout << std::endl;
+#endif
+#endif
+        ra::RoboasmPartsPtr p0 = roboasm->makeParts("s3301", "s3301");
+        if(!p0) {
+            std::cout << "fail make p0" << std::endl;
+            return 0;
+        }
+        ra::RoboasmRobotPtr r = roboasm->makeRobot("R(s3301)", p0);
+
+        coordsPtrList lst;
+        std::cout << "A0" << std::endl;
+        r->allDescendants(lst);
+
+        coordsPtrList lst2;
+        std::cout << "A1" << std::endl;
+        r->allDescendants<RoboasmConnectingPoint>(lst2);
+
+        std::cout << "AA" << std::endl;
+        ra::RoboasmPartsPtr p1 = roboasm->makeParts("upper-arm20", "upper-arm20");
+        if(!p1) {
+            std::cout << "fail make p1" << std::endl;
+            return 0;
+        }
+        ra::RoboasmPartsPtr p2 = roboasm->makeParts("joint-base", "joint-base");
+        if(!p2) {
+            std::cout << "fail make p2" << std::endl;
+            return 0;
+        }
+        ra::RoboasmPartsPtr p3 = roboasm->makeParts("bottom-arm20", "bottom-arm20");
+        if(!p3) {
+            std::cout << "fail make p3" << std::endl;
+            return 0;
+        }
+        {
+            RoboasmConnectingPointPtr parts_point;
+            RoboasmConnectingPointPtr robot_point;
+            ConnectingTypeMatch *_res_match;
+            ConnectingConfiguration *_res_config;
+            bool ret;
+            std::cerr << "p1" << std::endl;
+            ret = r->checkAttachByName(p1,
+                                       "upper-arm20/horn-hole",
+                                       "s3301/horn",
+                                       "fixed",
+                                       parts_point,
+                                       robot_point,
+                                       _res_config,
+                                       _res_match);
+            std::cout << "ret = " << ret << std::endl;
+            if (ret) {
+                std::cout << "attach" << std::endl;
+                coordinates conf_coords;
+                r->attach(p1, parts_point, robot_point, _res_config);
+            }
+        }
+        {
+            RoboasmConnectingPointPtr parts_point;
+            RoboasmConnectingPointPtr robot_point;
+            ConnectingTypeMatch *_res_match;
+            ConnectingConfiguration *_res_config;
+            bool ret;
+            std::cerr << "p2" << std::endl;
+            ret = r->checkAttachByName(p2,
+                                       "joint-base/side-hole0",
+                                       "upper-arm20/single-hole",
+                                       "fixed",
+                                       parts_point,
+                                       robot_point,
+                                       _res_config,
+                                       _res_match);
+            std::cout << "ret = " << ret << std::endl;
+            if (ret) {
+                std::cout << "attach" << std::endl;
+                coordinates conf_coords;
+                r->attach(p2, parts_point, robot_point, _res_config);
+            }
+        }
+        {
+            RoboasmConnectingPointPtr parts_point;
+            RoboasmConnectingPointPtr robot_point;
+            ConnectingTypeMatch *_res_match;
+            ConnectingConfiguration *_res_config;
+            bool ret;
+            std::cerr << "p3" << std::endl;
+            ret = r->checkAttachByName(p3,
+                                       "bottom-arm20/single-hole",
+                                       "joint-base/side-hole1",
+                                       "fixed",
+                                       parts_point,
+                                       robot_point,
+                                       _res_config,
+                                       _res_match);
+            std::cout << "ret = " << ret << std::endl;
+            if (ret) {
+                std::cout << "attach" << std::endl;
+                coordinates conf_coords;
+                r->attach(p3, parts_point, robot_point, _res_config);
+            }
+        }
+
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << ";;; orig ;;;" << std::endl;
+        {
+            coordsPtrList lstp;
+            r->allDescendants<RoboasmParts>(lstp);
+            std::cout << "parts : " << lstp.size() << std::endl;
+            print_lst(lstp);
+        }
+        {
+            coordsPtrList lstp;
+            r->allDescendants<RoboasmConnectingPoint>(lstp);
+            std::cout << "connecting-points : " << lstp.size() << std::endl;
+            print_lst(lstp);
+        }
+
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << ";;; moved ;;;" << std::endl;
+        coordinates base(Vector3(0.1, 0.2, 1.0), 0.0, 0.8, 0.0);
+        r->newcoords(base);
+        r->updateDescendants();
+        {
+            coordsPtrList lstp;
+            r->allDescendants<RoboasmParts>(lstp);
+            std::cout << "parts : " << lstp.size() << std::endl;
+            print_lst(lstp);
+        }
+        {
+            coordsPtrList lstp;
+            r->allDescendants<RoboasmConnectingPoint>(lstp);
+            std::cout << "connecting-points : " << lstp.size() << std::endl;
+            print_lst(lstp);
+        }
+#if 0
+        coordinates cds(Vector3 (123, 55, 321), 0, M_PI/2, 0);
+        coordinates inv;
+        std::cout << "cds: "; print(cds); std::cout << std::endl;
+        std::cout << "mat: " << cds.rot << std::endl;
+        cds.inverse_transformation(inv);
+        std::cout << "inv: "; print(inv); std::cout << std::endl;
+        std::cout << "mat: " << inv.rot << std::endl;
+        cds.inverse();
+        std::cout << "(inv)cds: "; print(cds); std::cout << std::endl;
+        std::cout << "mat: " << cds.rot << std::endl;
 #endif
     }
 }

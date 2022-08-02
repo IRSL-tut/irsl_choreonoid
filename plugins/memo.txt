@@ -34,7 +34,19 @@
  - clickして結合
 
  --- options
- 
+
+viewAll
+SceneWidget.cpp
+---
+    if(!hasActiveInteractiveCamera()){
+        return;
+    }
+    const BoundingBox& bbox = renderer->scene()->boundingBox();
+    if(bbox.empty()){
+        return;
+    }
+---
+
 p <= (make-parts-from-key p-type p-name) create configuretion -> roboasm-parts
 
 arobot <= (make-robot-assembler-robot p :name "")

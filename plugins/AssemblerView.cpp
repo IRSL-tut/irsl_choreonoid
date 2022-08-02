@@ -1,6 +1,7 @@
 #include "AssemblerView.h"
-//#include "AssemblerWidget.h"
-#include "AssemblerBodyItem.h"
+#include "AssemblerItem.h"
+#include "RobotAssemblerHelper.h"
+
 #include <cnoid/ViewManager>
 #include <cnoid/MenuManager>
 //#include <cnoid/ItemTreeView>
@@ -38,8 +39,7 @@ class AssemblerView::Impl
 public:
     AssemblerView* self;
     QLabel targetLabel;
-    //AssemblerWidget* positionWidget;
-    //ScopedConnection activeStateConnection;
+
     QVBoxLayout *topLayout;
     QTabWidget *partsTab;
 
@@ -252,12 +252,21 @@ void AssemblerView::Impl::partsButtonClicked(int index)
 
     std::string name = bp->text().toStdString();
 
-    AssemblerBodyItem *itm = AssemblerBodyItem::createItemFromAssemblerConf(name, *ra_settings);
+#if 0
+    AssemblerBodyItemPtr itm = AssemblerBodyItem::createItemFromAssemblerConf(name, *ra_settings);
 
+    std::cerr << "itm0: " << itm->refCount_ << std::endl;
     if (!!itm) {
         itm->setChecked(true);
+        std::cerr << "itm1.1: " << itm->refCount_ << std::endl;
         RootItem::instance()->addChildItem(itm);
+        std::cerr << "itm1.2: " << itm->refCount_ << std::endl;
+        itm->removeFromParentItem();
+        std::cerr << "itm1.3: " << itm->refCount_ << std::endl;
+        RootItem::instance()->clearChildren();
+        std::cerr << "itm1.4: " << itm->refCount_ << std::endl;
     }
+    std::cerr << "itm2: " << itm->refCount_ << std::endl;
 #if 0
     //ItemTreeView::instance()
     ItemFileIO *ptr = AssemblerBodyItem::meshFileIO();
@@ -270,6 +279,7 @@ void AssemblerView::Impl::partsButtonClicked(int index)
     if (!!item) {
         RootItem::instance()->addChildItem(item);
     }
+#endif
 #endif
 }
 

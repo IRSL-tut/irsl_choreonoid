@@ -14,7 +14,9 @@ namespace cnoid {
 class ItemManager;
 class ItemFileIO;
 class AssemblerSceneBody;
+class AssemblerBodyItem;
 
+typedef ref_ptr<AssemblerBodyItem> AssemblerBodyItemPtr;
 //class CNOID_EXPORT AssemblerBodyItem : public Item, public LocatableItem, public RenderableItem
 //class CNOID_EXPORT AssemblerBodyItem : public Item, public LocatableItem, public RenderableItem
 class CNOID_EXPORT AssemblerBodyItem : public Item, public RenderableItem
@@ -28,7 +30,7 @@ public:
     //static ItemFileIO* bodyFileIO();
     static ItemFileIO* meshFileIO();
 
-    static AssemblerBodyItem *createItemFromAssemblerConf
+    static AssemblerBodyItemPtr createItemFromAssemblerConf
       (const std::string &name, cnoid::robot_assembler::Settings &ra_settings);
 
     AssemblerBodyItem();
@@ -106,7 +108,6 @@ private:
     Impl* impl;
 };
 
-typedef ref_ptr<AssemblerBodyItem> AssemblerBodyItemPtr;
 
 }
 

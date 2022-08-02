@@ -1,9 +1,10 @@
 
 set(sources
   RobotAssemblerPlugin.cpp
-  AssemblerBodyItem.cpp
-  AssemblerFileIO.cpp
-  AssemblerSceneBody.cpp
+  #AssemblerBodyItem.cpp
+  #AssemblerFileIO.cpp
+  #AssemblerSceneBody.cpp
+  AssemblerItem.cpp
   AssemblerView.cpp
   AssemblerBar.cpp
   RobotAssemblerSettings.cpp
@@ -13,9 +14,10 @@ set(sources
 
 set(headers
   RobotAssemblerPlugin.h
-  AssemblerBodyItem.h
-  AssemblerFileIO.h
-  AssemblerSceneBody.h
+  #AssemblerBodyItem.h
+  #AssemblerFileIO.h
+  #AssemblerSceneBody.h
+  AssemblerItem.h
   AssemblerView.h
   AssemblerBar.h
   RobotAssemblerSettings.h

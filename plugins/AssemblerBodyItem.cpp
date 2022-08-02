@@ -127,10 +127,10 @@ void AssemblerBodyItem::initializeClass(ExtensionManager* ext)
     om.sigOptionsParsed(1).connect(onSigOptionsParsed);
 }
 
-AssemblerBodyItem *AssemblerBodyItem::createItemFromAssemblerConf
+AssemblerBodyItemPtr AssemblerBodyItem::createItemFromAssemblerConf
 (const std::string &name, cnoid::robot_assembler::Settings &ra_settings)
 {
-    AssemblerBodyItem *itm = new AssemblerBodyItem();
+    AssemblerBodyItemPtr itm(new AssemblerBodyItem());
 
     auto it = ra_settings.mapParts.find(name);
     if (it == ra_settings.mapParts.end()) {
@@ -173,6 +173,7 @@ AssemblerBodyItem::AssemblerBodyItem(const AssemblerBodyItem& org)
 
 AssemblerBodyItem::~AssemblerBodyItem()
 {
+    std::cerr << "delete AssemblerBodyItem: " << name() << std::endl;
     delete impl;
 }
 
