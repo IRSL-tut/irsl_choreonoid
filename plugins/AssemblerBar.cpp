@@ -2,7 +2,9 @@
 //#include "AssemblerBodyItem.h"
 
 #include <vector>
-#include <iostream>
+
+#define IRSL_DEBUG
+#include "irsl_debug.h"
 
 using namespace cnoid;
 
@@ -59,5 +61,5 @@ void AssemblerBar::Impl::addButton(const char *icon, const char *tooltip, std::f
 
 void AssemblerBar::Impl::buttonClicked(int n)
 {
-    std::cerr << "buttonClicked:" << n << std::endl;
+    DEBUG_STREAM_FUNC(" buttonClicked:" << n << std::endl);
 }

@@ -19,6 +19,7 @@ public:
     virtual ~AssemblerView();
 
     void createButtons(ra::SettingsPtr &ra_settings);
+
 protected:
     virtual void onActivated() override;
     virtual void onDeactivated() override;

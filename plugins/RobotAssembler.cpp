@@ -3,7 +3,6 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm> //std::find
-#include <sstream>
 
 // get pid
 #include <sys/types.h>
@@ -66,21 +65,21 @@ bool RoboasmCoords::hasDescendants()
 void RoboasmCoords::update()
 {
     if(!!parent_ptr) {
-#if 1
+#if 0
         std::cout << "this  : " << this << std::endl;
         std::cout << "parent: " << parent_ptr << std::endl;
         std::cout << "world(org_this) :";
         print(buf_worldcoords); std::cout << std::endl;
 #endif
         parent_ptr->copyWorldcoords(buf_worldcoords);
-#if 1
+#if 0
         std::cout << "world(parent)   :";
         print(buf_worldcoords); std::cout << std::endl;
         std::cout << "this (coords)   :";
         print(*dynamic_cast<coordinates *>(this)); std::cout << std::endl;
 #endif
         buf_worldcoords.transform(*this);
-#if 1
+#if 0
         std::cout << "world(new_this) :";
         print(buf_worldcoords); std::cout << std::endl;
 #endif
@@ -700,6 +699,14 @@ Roboasm::Roboasm(const std::string &filename)
         current_settings = nullptr;
     }
 }
+Roboasm::Roboasm(SettingsPtr settings)
+{
+    if(!!settings) {
+        parts_counter = 0;
+        pid = getpid();
+    }
+    current_settings = settings;
+}
 bool Roboasm::isReady()
 {
     return (!!current_settings);
@@ -737,6 +744,23 @@ RoboasmRobotPtr Roboasm::makeRobot(const std::string &_name, const std::string &
 RoboasmRobotPtr Roboasm::makeRobot(const std::string &_name, RoboasmPartsPtr _parts)
 {
     return std::make_shared<RoboasmRobot>(_name, _parts, current_settings);
+}
+
+bool Roboasm::canMatch(RoboasmConnectingPointPtr _a, RoboasmConnectingPointPtr _b)
+{
+    std::vector<ConnectingTypeID> &rtp = _a->info->type_list;
+    std::vector<ConnectingTypeID> &ptp = _b->info->type_list;
+    bool match = false;
+    for(int i = 0; i < rtp.size(); i++) {
+        for(int j = 0; j < ptp.size(); j++) {
+            ConnectingTypeMatch *tm_ = current_settings->searchMatch(rtp[i], ptp[j]);
+            if (!!tm_) {
+                match = true;
+                break;
+            }
+        }
+    }
+    return match;
 }
 
 } }

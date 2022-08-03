@@ -4,6 +4,8 @@
 #ifdef IRSL_DEBUG
 #include <iostream>
 #define DEBUG_STREAM(args) std::cerr << args
+#define DEBUG_STREAM_FUNC(args) \
+    std::cerr << "[" << __PRETTY_FUNCTION__ << "]" << args
 #define DEBUG_STREAM_INFO(_cls,_mtd,args) \
     std::cerr << "[" #_cls "::" #_mtd "]" << args
 #else

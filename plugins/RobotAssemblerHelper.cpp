@@ -1,8 +1,10 @@
-
 #include "RobotAssemblerHelper.h"
 
+// shape
 #include <cnoid/SceneLoader>
 #include <cnoid/MeshGenerator>
+// context menu
+#include <cnoid/MenuManager>
 
 #include <iostream>
 
@@ -12,38 +14,57 @@
 namespace cnoid {
 namespace robot_assembler {
 
+static const Vector3f color_default(0.3f, 0.3f, 0.6f);
+static const Vector3f color_good0(0.0f, 1.0f, 0.0f);
+static const Vector3f color_good1(0.0f, 1.0f, 0.0f);
+static const Vector3f color_bad0(1.0f, 0.0f, 0.0f);
+static const Vector3f color_bad1(1.0f, 0.0f, 0.0f);
+static const Vector3f color_can_connect0(0.0f, 1.0f, 1.0f);
+static const Vector3f color_can_connect1(0.0f, 1.0f, 1.0f);
+static const Vector3f color_selected(0.5f, 0.0f, 0.5f);
+static const Vector3f color_not_selected(0.0f, 0.0f, 0.8f);
+
 static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_res_material,
                                        SgSwitchableGroupPtr &_res_switch)
 {
     // create shape
-    SgShapePtr shape(new SgShape());
-    MeshGenerator mg;
-    {
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.02, 0.005, 0.005));
-        shape->setMesh(mesh);
-    }
-    {
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.02, 0.005));
-        shape->setMesh(mesh);
-    }
-    {
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.005, 0.02));
-        shape->setMesh(mesh);
-    }
+    const std::string &name_ = _root->name();
     // material ???
     SgMaterialPtr material(new SgMaterial());
-    material->setName("material");
-    //Vector3f color(0.1f, 0.1f, 0.7f);
-    material->setDiffuseColor(Vector3f(0.05f, 0.05f, 0.3f));
-    material->setEmissiveColor(Vector3f(0.05f, 0.05f, 0.4f));
-    material->setAmbientIntensity(0.0f);
-    shape->setMaterial(material);
+    material->setName(name_ + "/common_material");
 
-    // switch
+    material->setDiffuseColor(color_default);
+    material->setEmissiveColor(Vector3f(0.0f, 0.0f, 0.0f));
+    material->setSpecularColor(Vector3f(0.0f, 0.0f, 0.0f));
+    material->setAmbientIntensity(0.7f);
+
     SgSwitchableGroupPtr sw_g(new SgSwitchableGroup());
-    //shape->addChild(sw_node);//
-    //_root->addChild(sw_node);//
-    sw_g->addChild(shape);
+    sw_g->setName(name_ + "/switch");
+    MeshGenerator mg;
+    {
+        SgShapePtr shape(new SgShape());
+        shape->setName(name_ + "/x");
+        SgMeshPtr mesh = mg.generateBox(Vector3(0.02, 0.005, 0.005));
+        shape->setMesh(mesh);
+        shape->setMaterial(material);
+        sw_g->addChild(shape);
+    }
+    {
+        SgShapePtr shape(new SgShape());
+        shape->setName(name_ + "/y");
+        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.02, 0.005));
+        shape->setMesh(mesh);
+        shape->setMaterial(material);
+        sw_g->addChild(shape);
+    }
+    {
+        SgShapePtr shape(new SgShape());
+        shape->setName(name_ + "/z");
+        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.005, 0.02));
+        shape->setMesh(mesh);
+        shape->setMaterial(material);
+        sw_g->addChild(shape);
+    }
     _root->addChild(sw_g);
 
     _res_material = material;
@@ -51,24 +72,26 @@ static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_re
 }
 static void createSceneFromGeometry(SgPosTransform *sg_main, std::vector<Geometry> &geom_list)
 {
-    DEBUG_STREAM("createSceneFromGeomatry" << std::endl);
+    DEBUG_STREAM_FUNC(std::endl);
     if (geom_list.size() <= 0) {
         //
         return;
     }
+    const std::string &name_ = sg_main->name();
     for(int i = 0; i < geom_list.size(); i++) {
         Geometry &geom = geom_list[i];
 
         if (geom.type == Geometry::Mesh) {
             SceneLoader sceneLoader;
             sceneLoader.setMessageSink(std::cerr);
-            DEBUG_STREAM("createSceneFromGeomatry: mesh load: " << geom.url << std::endl);
+            DEBUG_STREAM_FUNC(" mesh load: " << geom.url << std::endl);
             SgNodePtr shape = sceneLoader.load(geom.url);
             if (!!shape) {
-                DEBUG_STREAM("createSceneFromGeomatry: mesh loaded" << std::endl);
+                shape->setName(name_ + "/geom");
+                DEBUG_STREAM_FUNC(" mesh loaded!" << std::endl);
                 Position p; geom.coords.toPosition(p);
                 SgPosTransformPtr trs(new SgPosTransform(p));
-                trs->setName("sg_trs");
+                trs->setName(name_ + "/geom_postrans");
                 trs->addChild(shape);
                 sg_main->addChild(trs);
             }
@@ -82,43 +105,28 @@ static void createSceneFromGeometry(SgPosTransform *sg_main, std::vector<Geometr
             //shape->setName("box");
             // material
             if (!!shape) {
+                shape->setName(name_ + "/box");
                 SgMaterialPtr material(new SgMaterial());
-                material->setName("material");
+                material->setName(name_ + "material");
                 //Vector3f color(0.1f, 0.1f, 0.7f);
-                material->setDiffuseColor(Vector3f(0.05f, 0.05f, 0.3f));
-                material->setEmissiveColor(Vector3f(0.05f, 0.05f, 0.4f));
-                material->setAmbientIntensity(0.0f);
+                material->setDiffuseColor(color_not_selected);
+                material->setEmissiveColor(Vector3f(0.0f, 0.0f, 0.0f));
+                material->setAmbientIntensity(0.7f);
                 shape->setMaterial(material);
 
                 Position p; geom.coords.toPosition(p);
                 SgPosTransformPtr trs(new SgPosTransform(p));
-                trs->setName("sg_trs");
+                trs->setName(name_ + "/geom_postrans");
                 trs->addChild(shape);
                 sg_main->addChild(trs);
             }
         }
     }
 }
-RASceneParts::RASceneParts(RoboasmPartsPtr _p)
-    : SgPosTransform(), self(_p), partsScene(nullptr)
+RASceneConnectingPoint::RASceneConnectingPoint(RoboasmConnectingPointPtr _c)
+    : SgPosTransform(), self(_c), current_state(DEFAULT)
 {
-    createSceneFromGeometry(this, self->info->visual);
-    //partsScene = node;
-
-    coordsPtrList lst;
-    _p->directDescendants(lst);
-    for(auto it = lst.begin(); it != lst.end(); it++) {
-        RoboasmConnectingPointPtr ptr = dynamic_pointer_cast<RoboasmConnectingPoint>(*it);
-        if(!!ptr) {
-            RASceneConnectingPoint *cp = new RASceneConnectingPoint(ptr);
-            this->addChild(cp);
-            point_list.push_back(cp);
-        }
-    }
-}
-RASceneParts::RASceneConnectingPoint::RASceneConnectingPoint(RoboasmConnectingPointPtr _c)
-    : SgPosTransform(), self(_c)
-{
+    setName("CP:" + self->name());
     SgMaterialPtr mat_;//todo
     SgSwitchableGroupPtr sw_;//todo
     createShapeConnectingPoint(this, mat_, sw_);
@@ -131,16 +139,231 @@ RASceneParts::RASceneConnectingPoint::RASceneConnectingPoint(RoboasmConnectingPo
     material = mat_;
     switch_node = sw_;
 }
+RASceneConnectingPoint::~RASceneConnectingPoint()
+{
+    DEBUG_STREAM_FUNC(self->name() << std::endl);
+}
+void RASceneConnectingPoint::changeState(RASceneConnectingPoint::Clicked _clk)
+{
+    if (current_state == _clk) return;
+    current_state = _clk;
+    switch(_clk) {
+    case DEFAULT:
+    {
+        material->setDiffuseColor(color_default);
+    }
+    break;
+    case SELECT_GOOD0:
+    {
+        material->setDiffuseColor(color_good0);
+    }
+    break;
+    case SELECT_GOOD1:
+    {
+        material->setDiffuseColor(color_good1);
+    }
+    break;
+    case SELECT_BAD0:
+    {
+        material->setDiffuseColor(color_bad0);
+    }
+    break;
+    case SELECT_BAD1:
+    {
+        material->setDiffuseColor(color_bad1);
+    }
+    break;
+    case CAN_CONNECT0:
+    {
+        material->setDiffuseColor(color_can_connect0);
+    }
+    break;
+    case CAN_CONNECT1:
+    {
+        material->setDiffuseColor(color_can_connect1);
+    }
+    break;
+    }
+}
+RASceneParts::RASceneParts(RoboasmPartsPtr _p)
+    : SgPosTransform(), self(_p), partsScene(nullptr)
+{
+    setName("PT:" + self->name());
+    createSceneFromGeometry(this, self->info->visual);
+    //partsScene = node;
+
+    coordsPtrList lst;
+    _p->directDescendants(lst);
+    for(auto it = lst.begin(); it != lst.end(); it++) {
+        RoboasmConnectingPointPtr ptr = dynamic_pointer_cast<RoboasmConnectingPoint>(*it);
+        if(!!ptr) {
+            RASceneConnectingPoint *cp = new RASceneConnectingPoint(ptr);
+            this->addChild(cp);
+            spoint_list.push_back(cp);
+        }
+    }
+}
+RASceneParts::~RASceneParts()
+{
+    DEBUG_STREAM_FUNC(self->name() << std::endl);
+}
 RASceneRobot::RASceneRobot(RoboasmRobotPtr _r)
     : SgPosTransform(), self(_r)
 {
+    setName("RB:" + self->name());
     partsPtrList lst;
     self->allParts(lst);
     for(auto it = lst.begin(); it != lst.end(); it++) {
         RASceneParts *pt = new RASceneParts(*it);
-        parts_list.push_back(pt);
+        pt->robot_ptr = this;
+        sparts_set.insert(pt);
         this->addChild(pt);
+        for(int i = 0; i < pt->spoint_list.size(); i++) {
+            pt->spoint_list[i]->robot_ptr = this;
+            spoint_set.insert(pt->spoint_list[i]);
+        }
     }
+}
+RASceneRobot::~RASceneRobot()
+{
+    DEBUG_STREAM_FUNC(self->name() << std::endl);
+}
+//// overrides : SceneWidgetEventHandler
+void RASceneRobot::onSceneModeChanged(SceneWidgetEvent* event)
+{
+    // SgNode should have Operable
+    DEBUG_STREAM_FUNC(std::endl);
+}
+bool RASceneRobot::onButtonPressEvent(SceneWidgetEvent* event)
+{
+    SceneWidgetEvent::EventType tp = event->type();
+    DEBUG_STREAM_FUNC(" Type: " << tp << std::endl);
+#if 0
+    switch(tp) {
+    case SceneWidgetEvent::ButtonPress:
+        int bt = event->button();
+        switch(bt) {
+        case Qt::LeftButton:
+            DEBUG_STREAM_FUNC(" Left" << std::endl);
+            break;
+        case Qt::RightButton:
+            DEBUG_STREAM_FUNC(" Right" << std::endl);
+            break;
+        case Qt::MiddleButton:
+            DEBUG_STREAM_FUNC(" Middle" << std::endl);
+            break;
+        }
+        break;
+    }
+#endif
+    SgNodePath pt = event->nodePath();
+#if 0
+    DEBUG_STREAM_FUNC(" event->nodePath() : " << pt.size() << std::endl);
+    for (int i = 0 ; i < pt.size(); i++) {
+        SgNode *ptr = pt[i];
+        DEBUG_STREAM_FUNC(" ---" << std::endl);
+        DEBUG_STREAM_FUNC(" " << static_cast<void *> (ptr) << std::endl);
+        DEBUG_STREAM_FUNC(" name: " << ptr->name() << std::endl);
+        DEBUG_STREAM_FUNC(" class: " << ptr->className() << std::endl);
+        DEBUG_STREAM_FUNC(" attr: " << ptr->attributes() << std::endl);
+        if (ptr->hasUri()) {
+            DEBUG_STREAM_FUNC( " uri: " << ptr->uri() << std::endl);
+        }
+        if (ptr->hasAbsoluteUri()) {
+            DEBUG_STREAM_FUNC( " abs_uri: " << ptr->absoluteUri() << std::endl);
+        }
+        if (ptr->hasParents()) {
+            int j = 0;
+            for(auto it = ptr->parentBegin(); it != ptr->parentEnd(); it++, j++) {
+                DEBUG_STREAM_FUNC(" p" << j << " : " << static_cast<void *>(*it) << std::endl);
+            }
+        }
+    }
+#endif
+    RASceneParts *pt_ = nullptr;
+    RASceneConnectingPoint *cp_ = nullptr;
+    for (int i = 0 ; i < pt.size(); i++) {
+        SgNode *ptr = pt[i];
+        if(!pt_) pt_ = dynamic_cast<RASceneParts *>(ptr);
+        if(!cp_) cp_ = dynamic_cast<RASceneConnectingPoint *>(ptr);
+        if(!!pt_ && !!cp_) break;
+    }
+    if(!!cp_) {
+        DEBUG_STREAM_FUNC( " ConnectingPointClicked : " << cp_->name() << std::endl);
+        sigPointClickedFunc(cp_);
+    } else if (!!pt_) {
+        DEBUG_STREAM_FUNC( " PartsClicked : " << pt_->name() << std::endl);
+        sigPartsClickedFunc(pt_);
+    } else {
+        DEBUG_STREAM_FUNC( " ---unknown state---" << std::endl);
+    }
+    return false;
+    //if return true, handling events after this function may not occurred
+}
+bool RASceneRobot::onDoubleClickEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    // disable default behavior / default: double click -> toggle edit-mode
+    return true;
+}
+#if 0
+bool RASceneRobot::onButtonReleaseEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    return false;
+}
+bool RASceneRobot::onPointerMoveEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    return false;
+}
+void RASceneRobot::onPointerLeaveEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+}
+bool RASceneRobot::onKeyPressEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    return false;
+}
+bool RASceneRobot::onKeyReleaseEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    return false;
+}
+bool RASceneRobot::onScrollEvent(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+    return false;
+}
+#endif
+void RASceneRobot::onFocusChanged(SceneWidgetEvent* event, bool on)
+{
+    // may call when mode was changed
+    DEBUG_STREAM_FUNC(std::endl);
+}
+bool RASceneRobot::onContextMenuRequest(SceneWidgetEvent* event)
+{
+    DEBUG_STREAM_FUNC(std::endl);
+
+    auto menu = event->contextMenu();
+
+    menu->addItem("Move")->sigTriggered().connect(
+        [this](){ } );
+
+    menu->addSeparator();
+
+    std::string label_ = "Delete This: ";
+    label_ += this->name();
+    menu->addItem(label_)->sigTriggered().connect(
+        [this](){ sigDeleteRobotFunc(this); });
+
+    menu->addSeparator();
+
+    menu->addItem("Attach")->sigTriggered().connect(
+        [this](){ sigAttachFunc(); } );
+
+    return false; //??
 }
 
 } }

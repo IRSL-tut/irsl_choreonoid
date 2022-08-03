@@ -60,7 +60,7 @@ RobotAssemblerPlugin* RobotAssemblerPlugin::instance()
 RobotAssemblerPlugin::RobotAssemblerPlugin()
     : Plugin("RobotAssembler")
 {
-    DEBUG_STREAM_INFO(RobotAssemblerPlugin,RobotAssemblerPlugin, std::endl);
+    DEBUG_STREAM_FUNC(std::endl);
     setActivationPriority(0);
     instance_ = this;
 
@@ -73,7 +73,7 @@ RobotAssemblerPlugin::~RobotAssemblerPlugin()
 
 bool RobotAssemblerPlugin::initialize()
 {
-    DEBUG_STREAM_INFO(RobotAssemblerPlugin,initialize(), std::endl);
+    DEBUG_STREAM_FUNC(std::endl);
     OptionManager& om = this->optionManager();
     om.addOption("assembler", po::value<std::string>(), "load robot_assembler config file");
     //om.sigOptionsParsed(1).connect(onSigOptionsParsed);
@@ -94,7 +94,7 @@ bool RobotAssemblerPlugin::initialize()
 
 bool RobotAssemblerPlugin::finalize()
 {
-    DEBUG_STREAM_INFO(RobotAssemblerPlugin,finalize, std::endl);
+    DEBUG_STREAM_FUNC(std::endl);
     instance_ = nullptr;
     return true;
 }

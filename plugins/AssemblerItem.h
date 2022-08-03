@@ -4,13 +4,15 @@
 #include <cnoid/Item>
 // #include <cnoid/LocatableItem>
 #include <cnoid/RenderableItem>
+#include "RobotAssembler.h"
+//#include "RobotAssemblerHelper.h"
+
 #include "exportdecl.h"
 
-#include "RobotAssembler.h"
+namespace ra = cnoid::robot_assembler;
 
 namespace cnoid {
 class ItemManager;
-
 class AssemblerItem;
 
 typedef ref_ptr<AssemblerItem> AssemblerItemPtr;
@@ -28,6 +30,7 @@ public:
 
     virtual bool setName(const std::string& name) override;
 
+    static AssemblerItemPtr createItem(const std::string &robot_name, const std::string &parts_key, ra::RoboasmPtr roboasm);
     // API for a composite body
     // The following body and link pair is basically determined by
     // the parent-child relationship in the item tree
@@ -53,7 +56,6 @@ private:
     class Impl;
     Impl* impl;
 };
-
 
 }
 

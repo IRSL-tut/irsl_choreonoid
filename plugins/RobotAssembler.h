@@ -195,10 +195,32 @@ public:
     bool attach(RoboasmCoordsPtr robot_or_parts,
                 RoboasmConnectingPointPtr _parts_point,
                 RoboasmConnectingPointPtr _robot_point,
+                ConnectingConfigurationID _config_id,
+                bool just_align = false) {
+        ConnectingConfiguration &_config = settings->listConnectingConfiguration[_config_id];
+        coordinates tmp;
+        return attach(robot_or_parts, _parts_point, _robot_point,
+                      tmp, &_config, nullptr, just_align);
+    }
+    bool attach(RoboasmCoordsPtr robot_or_parts,
+                RoboasmConnectingPointPtr _parts_point,
+                RoboasmConnectingPointPtr _robot_point,
                 coordinates &_conf_coords,
                 ConnectingConfiguration *_config = nullptr,
                 ConnectingTypeMatch *_match = nullptr,
                 bool just_align = false);
+
+    size_t partsNum() {
+        partsPtrList lst;
+        allParts(lst);
+        return lst.size();
+    }
+    size_t connectingPointNum() {
+        connectingPointPtrList lst;
+        connectingPoints(lst);
+        return lst.size();
+    }
+
     // attch by name
 protected:
 
@@ -213,6 +235,8 @@ class Roboasm
 public:
     Roboasm() = delete;
     Roboasm(const std::string &filename);
+    Roboasm(SettingsPtr settings);
+
     bool isReady();
 
     RoboasmPartsPtr makeParts(const std::string &_parts_key);
@@ -222,6 +246,7 @@ public:
     RoboasmRobotPtr makeRobot(const std::string &_name, const std::string &_parts_key, const std::string &_parts_name);
     RoboasmRobotPtr makeRobot(const std::string &_name, RoboasmPartsPtr _parts);
 
+    bool canMatch(RoboasmConnectingPointPtr _a, RoboasmConnectingPointPtr _b);
 private:
     //class Impl;
     //static Impl *impl;
@@ -230,5 +255,5 @@ private:
     int pid;
     int parts_counter;
 };
-
+typedef std::shared_ptr<Roboasm> RoboasmPtr;
 } }

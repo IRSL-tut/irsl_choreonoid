@@ -9,13 +9,14 @@
 #include <fmt/format.h>
 #include <bitset>
 #include <algorithm>
-#include <iostream>
 
 #define IRSL_DEBUG
 #include "irsl_debug.h"
 
 using namespace std;
 using namespace cnoid;
+using namespace cnoid::robot_assembler;
+
 using fmt::format;
 
 namespace cnoid {
@@ -42,6 +43,17 @@ public:
 
 }
 
+AssemblerItemPtr AssemblerItem::createItem(const std::string &robot_name, const std::string &parts_key, RoboasmPtr roboasm)
+{
+    RoboasmRobotPtr rb = roboasm->makeRobot(robot_name, parts_key);
+
+    AssemblerItemPtr ret(new AssemblerItem(robot_name));
+    RASceneRobotPtr rb_scene(new RASceneRobot(rb));
+
+    ret->impl->scene = dynamic_pointer_cast<SgNode>(rb_scene);
+
+    return ret;
+}
 void AssemblerItem::initializeClass(ExtensionManager* ext)
 {
     ItemManager* im = &ext->itemManager();
@@ -70,7 +82,7 @@ AssemblerItem::AssemblerItem(const AssemblerItem& org)
 
 AssemblerItem::~AssemblerItem()
 {
-    std::cerr << "delete AssemblerItem: " << name() << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
     delete impl;
 }
 
@@ -92,31 +104,32 @@ AssemblerItem::Impl::~Impl()
 //// protected / override Item Class
 Item* AssemblerItem::doDuplicate() const
 {
-    std::cerr << "doDuplicate(AssemblerItem)" << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
     return new AssemblerItem(*this);
 }
 bool AssemblerItem::doAssign(const Item* srcItem)
 {
-    std::cerr << "doAssign(AssemblerItem)" << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
     return false;
     //??
     //return impl->doAssign(srcItem);
 }
 void AssemblerItem::onTreePathChanged()
 {
-    std::cerr << "doTreePathChanged(AssemblerItem)" << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
 }
 void AssemblerItem::onConnectedToRoot()
 {
-    std::cerr << "doTreePathChanged(AssemblerItem)" << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
 }
 void AssemblerItem::doPutProperties(PutPropertyFunction& putProperty)
 {
-    std::cerr << "doPutProperties(AssemblerItem)" << std::endl;
+    DEBUG_STREAM_FUNC(std::endl);
 }
 #if 0
 void AssemblerItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 {
+    DEBUG_STREAM_FUNC(std::endl);
     putProperty(_("Model name"), body->modelName());
     putProperty(_("Num links"), body->numLinks());
     putProperty(_("Num joints"), body->numJoints());
@@ -151,15 +164,14 @@ void AssemblerItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 // override
 bool AssemblerItem::setName(const std::string& name)
 {
-#if 0
-    auto body = impl->body;
-    if(body){
-        body->setName(name);
-        if(body->modelName().empty()){
-            body->setModelName(name);
+    DEBUG_STREAM_FUNC(" name: " << name << std::endl);
+    if(!!(impl->scene)) {
+        RASceneRobotPtr p = dynamic_pointer_cast<RASceneRobot>(impl->scene);
+        if(!!p) {
+            p->setName(name);
+            // p->robot->name = 
         }
     }
-#endif
     return Item::setName(name);
 }
 
