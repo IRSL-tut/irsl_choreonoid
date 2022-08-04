@@ -211,4 +211,40 @@ private:
 };
 typedef std::shared_ptr<Settings> SettingsPtr;
 
+class AttachHistoryItem
+{
+public:
+    std::string robot_parts_point;
+    std::string parts_name;
+    std::string parts_type;
+    std::string parts_point;
+    std::string configuration;
+};
+typedef std::vector<AttachHistoryItem> AttachHistory;
+struct AssembleConfig
+{
+    std::string robot_name;
+    coordinates initial_coords;
+    std::map<std::string, std::string> actuator_name;
+    std::map<std::string, std::string> actuator_axis_name;
+    std::map<std::string, Vector3> actuator_axis_vector;
+};
+class RoboasmFile
+{
+public:
+    RoboasmFile(const std::string &_filename)
+    {
+        valid_ = this->parseRoboasm(_filename);
+    }
+
+    bool isValid() { return valid_; }
+    AttachHistory history;
+    AssembleConfig config;
+
+    bool parseRoboasm(const std::string &_filename);
+    bool dumpRoboasm(const std::string &_filename);
+private:
+    bool valid_;
+};
+
 } }

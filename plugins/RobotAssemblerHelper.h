@@ -6,6 +6,10 @@
 
 #pragma once
 
+// temp
+#define IRSL_DEBUG
+#include "irsl_debug.h"
+
 namespace cnoid {
 namespace robot_assembler {
 
@@ -79,7 +83,24 @@ public:
 
     RoboasmRobotPtr robot() { return self; }
     //bool addParts(RASceneParts *pt) {};
-    bool attach(RASceneRobot *_rb) {};
+    bool mergeRobot(RASceneRobot *_rb) {
+        coordinates base_coords = self->worldcoords();
+        coordinates trans;
+        Position p;
+        _rb->clearChildren();
+        for(auto pt_it = _rb->sparts_set.begin(); pt_it != _rb->sparts_set.end(); pt_it++) {
+            this->addChild(*pt_it);
+            base_coords.transformation(trans, (*pt_it)->parts()->worldcoords());
+            trans.toPosition(p);
+            (*pt_it)->position() = p;
+            sparts_set.insert(*pt_it);
+            (*pt_it)->robot_ptr = this;
+            for(auto pit = (*pt_it)->spoint_list.begin(); pit != (*pt_it)->spoint_list.end(); pit++) {
+                (*pit)->robot_ptr = this;
+                spoint_set.insert(*pit);
+            }
+        }
+    }
 
     void setCoords(coordinates &_coords) {
         self->newcoords(_coords);
@@ -91,12 +112,48 @@ public:
         Position p; self->toPosition(p);
         this->position() = p;
     }
-    // removeParts
-    // ---
-    // update(selected_point, can_match);
-    //
-    // test
-    //void initialCreate(RoboasmRobotPtr _r);
+
+    void debug() {
+        partsPtrList plst;
+        self->allParts(plst);
+        if(plst.size() != sparts_set.size()) {
+            DEBUG_STREAM_FUNC(" Roboasm: " << plst.size() << " != Scene: " << sparts_set.size() << std::endl);
+        }
+        for(auto it = plst.begin(); it != plst.end(); it++) {
+            bool exist = false;
+            coordinates scoords;
+            for(auto sit = sparts_set.begin(); sit != sparts_set.end(); sit++) {
+                if((*it) == (*sit)->parts()) {
+                    scoords = (*sit)->position();
+                    exist = true;
+                    break;
+                }
+            }
+            if(!exist) {
+                DEBUG_STREAM_FUNC(" Roboasm: " << (*it)->name() << " not in scene" << std::endl);
+            } else {
+                coordinates rcoords;
+                self->worldcoords().transformation(rcoords, (*it)->worldcoords());
+                if(!rcoords.equal(scoords)) {
+                    DEBUG_STREAM_FUNC(" coords not equal r: " << (*it)->name() << std::endl);
+                    //std::cout << "r: " << rcoords << ", s: " << scoords << std::endl;
+                }
+            }
+        }
+        for(auto sit = sparts_set.begin(); sit != sparts_set.end(); sit++) {
+            bool exist = false;
+            for(auto it = plst.begin(); it != plst.end(); it++) {
+                if((*it) == (*sit)->parts()) {
+                    exist = true;
+                    break;
+                }
+            }
+            if(!exist) {
+                DEBUG_STREAM_FUNC(" Scene: " << (*sit)->name() << " not in roboasm" << std::endl);
+            }
+        }
+    }
+    // removeParts [TODO]
 
     //// Signals
     SignalProxy<int(RASceneConnectingPoint *_cp)> sigPointClicked() { return sigPointClickedFunc; }

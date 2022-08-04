@@ -48,3 +48,10 @@ target_include_directories(test_yaml PUBLIC
   include
   ${catkin_INCLUDE_DIRS}
   ${CHOREONOID_INCLUDE_DIRS})
+
+add_executable(test_robot test_robot.cpp)
+target_link_libraries(test_robot CnoidUtil CnoidBody)
+target_include_directories(test_robot PUBLIC
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${CHOREONOID_INCLUDE_DIRS})

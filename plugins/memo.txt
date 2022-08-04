@@ -25,14 +25,26 @@
 
 ===> CUIバージョン完成
 
- - partsの表示
+ DONE - partsの表示 
 
- - connecting-pointの表示
+ DONE - connecting-pointの表示
 
- - robotの表示
+ DONE - robotの表示
 
- - clickして結合
+ DONE - clickして結合
 
+ - attach history
+ 
+ - align -> attach
+
+ - un align
+
+--- bar ボタン配置
+
+[todo]
+ - アイテムビューの変更禁止
+ - ツリーの表示 ( TreeWidget )
+ 
  --- options
 
 viewAll

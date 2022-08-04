@@ -3,6 +3,9 @@
 #include <iostream>
 #include <cmath>
 
+#define IRSL_DEBUG
+#include "irsl_debug.h"
+
 using namespace cnoid;
 
 namespace {
@@ -1012,6 +1015,72 @@ bool Settings::Impl::parseExtraInfo(ValueNode *vn, ExtraInfo &einfo)
 {
     // TODO
     return true;
+}
+
+static bool parse(ValueNode *_vn, AttachHistoryItem& hist)
+{
+    if(! _vn->isMapping()) return false;
+    Mapping *mp_ = _vn->toMapping();
+    mapString(mp_, "parts-name", hist.parts_name, std::cerr, false);
+    mapString(mp_, "parts-type", hist.parts_type, std::cerr, false);
+    mapString(mp_, "parts-point", hist.parts_point, std::cerr, false);
+    mapString(mp_, "robot-parts-point", hist.robot_parts_point, std::cerr, false);
+    mapString(mp_, "configuration", hist.configuration, std::cerr, false);
+}
+static bool parse(ValueNode *_vn, AssembleConfig& config)
+{
+    if(! _vn->isMapping()) return false;
+    Mapping *mp_ = _vn->toMapping();
+    mapString(mp_, "robot-name", config.robot_name, std::cerr, false);
+    // initial-coords
+    // actuator-name
+    // actuator-axis
+}
+bool RoboasmFile::parseRoboasm(const std::string &_filename)
+{
+    YAMLReader yaml_reader;
+    if (! yaml_reader.load(_filename)) {
+        std::cerr << "File Loading error : " << _filename << std::endl;
+        return false;
+    }
+    bool ret = false;
+    history.clear();
+    for(int i = 0; i < yaml_reader.numDocuments(); i++) {
+        ValueNode *val = yaml_reader.document(i);
+        if ( !val->isMapping() ) continue;
+        std::string key = "history";
+        ValueNode *target = val->toMapping()->find(key);
+        if( ! target->isValid() ) continue;
+        std::cout << "--- target " << key << " found ---" << std::endl;
+        if( ! target->isListing() ) continue;
+        Listing *lst = target->toListing();
+        for(int i = 0; i < lst->size(); i++) {
+            AttachHistoryItem hist;
+            DEBUG_STREAM_FUNC(" hist : " << i << std::endl);
+            if (! parse(lst->at(i), hist) ) {
+                history.push_back(hist);
+            }
+        }
+    }
+    if ( history.size() < 1 ) {
+        std::cerr << "failed parse roboasm" << std::endl;
+        return false;
+    }
+    for(int i = 0; i < yaml_reader.numDocuments(); i++) {
+        ValueNode *val = yaml_reader.document(i);
+        if ( !val->isMapping() ) continue;
+        std::string key = "assemble-config";
+        ValueNode *target = val->toMapping()->find(key);
+        if( ! target->isValid() ) continue;
+        std::cout << "--- target " << key << " found ---" << std::endl;
+        if( ! target->isMapping() ) continue;
+        parse(target, config);
+    }
+    return true;
+}
+bool RoboasmFile::dumpRoboasm(const std::string &_filename)
+{
+    return false;
 }
 
 } }

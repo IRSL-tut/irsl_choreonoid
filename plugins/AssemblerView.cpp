@@ -36,6 +36,54 @@ namespace ra = cnoid::robot_assembler;
 
 namespace cnoid {
 
+class AssemblerSeneEvent : public SceneWidgetEventHandler
+{
+public:
+    int uniq_id;
+
+    // signals
+
+    //// overrides : SceneWidgetEventHandler
+    virtual void onSceneModeChanged(SceneWidgetEvent* event) override
+    {
+        DEBUG_STREAM_FUNC(std::endl);
+    }
+    //virtual bool onButtonPressEvent(SceneWidgetEvent* event) override;
+    virtual bool onDoubleClickEvent(SceneWidgetEvent* event) override
+    {
+        DEBUG_STREAM_FUNC(std::endl);
+        // override double-click default behavior(change mode)
+        return true;
+    }
+    //virtual bool onButtonReleaseEvent(SceneWidgetEvent* event) override;
+    //virtual bool onPointerMoveEvent(SceneWidgetEvent* event) override;
+    //virtual void onPointerLeaveEvent(SceneWidgetEvent* event) override;
+    //virtual bool onKeyPressEvent(SceneWidgetEvent* event) override;
+    //virtual bool onKeyReleaseEvent(SceneWidgetEvent* event) override;
+    //virtual bool onScrollEvent(SceneWidgetEvent* event) override;
+    //virtual void onFocusChanged(SceneWidgetEvent* event, bool on) override;
+    virtual bool onContextMenuRequest(SceneWidgetEvent* event) override
+    {
+        DEBUG_STREAM_FUNC(std::endl);
+        auto menu = event->contextMenu();
+
+        menu->addSeparator();
+        menu->addItem("Align");
+        menu->addItem("UnAlign");
+        menu->addSeparator();
+        menu->addItem("Attach");
+        menu->addSeparator();
+        menu->addItem("Undo");
+        menu->addSeparator();
+        menu->addItem("Write body");
+        menu->addItem("Write urdf");
+        menu->addSeparator();
+        menu->addItem("Delete All");
+
+        return true;
+    }
+};
+
 // view manager
 class AssemblerView::Impl
 {
@@ -69,6 +117,9 @@ public:
     }
     void deleteRobot(ra::RASceneRobot *_rb);
     void attach();
+
+    // attach history
+    // align_
     ra::RASceneConnectingPoint *clickedPoint0;
     ra::RASceneConnectingPoint *clickedPoint1;
     std::set<ra::RASceneConnectingPoint *> selectable_spoint_set;
@@ -83,6 +134,8 @@ public:
             (*it)->notifyUpdate(SgUpdate::Added | SgUpdate::Removed | SgUpdate::Modified);
         }
     }
+
+    AssemblerSeneEvent *self_event;
 };
 
 }
@@ -110,39 +163,14 @@ AssemblerView::~AssemblerView()
 void AssemblerView::onActivated()
 {
     DEBUG_STREAM_FUNC(std::endl);
-    //auto bsm = BodySelectionManager::instance();
-#if 0
-    impl->activeStateConnection =
-        bsm->sigCurrentSpecified().connect(
-            [this, bsm](BodyItem* bodyItem, Link* link){
-                if(!link) link = bsm->currentLink();
-                impl->setTargetBodyAndLink(bodyItem, link);
-            });
-#endif
 }
 void AssemblerView::onDeactivated()
 {
     DEBUG_STREAM_FUNC(std::endl);
-    //impl->activeStateConnection.disconnect();
 }
 void AssemblerView::onAttachedMenuRequest(MenuManager& menu)
 {
     DEBUG_STREAM_FUNC(std::endl);
-#if 0
-    menu.setPath("/").setPath(_("Target link type"));
-
-    auto checkGroup = new ActionGroup(menu.topMenu());
-    menu.addRadioItem(checkGroup, _("Any links"));
-    menu.addRadioItem(checkGroup, _("IK priority link and root link"));
-    menu.addRadioItem(checkGroup, _("IK priority link"));
-    checkGroup->actions()[impl->positionWidget->targetLinkType()]->setChecked(true);
-    checkGroup->sigTriggered().connect(
-        [=](QAction* check){
-            impl->positionWidget->setTargetLinkType(checkGroup->actions().indexOf(check)); });
-    menu.setPath("/");
-    menu.addSeparator();
-    impl->positionWidget->setOptionMenuTo(menu);
-#endif
 }
 
 bool AssemblerView::storeState(Archive& archive)
@@ -192,6 +220,10 @@ AssemblerView::Impl::Impl(AssemblerView* self)
     : self(self), partsTab(nullptr), clickedPoint0(nullptr), clickedPoint1(nullptr)
 {
     initialize(false);
+    //
+    int id_ = SceneWidget::issueUniqueCustomModeId();
+    self_event = new AssemblerSeneEvent();
+    SceneView::instance()->sceneWidget()->activateCustomMode(self_event, id_);
 }
 
 void AssemblerView::Impl::initialize(bool config)
@@ -497,7 +529,7 @@ void AssemblerView::Impl::updateRobots()
 }
 void AssemblerView::Impl::deleteRobot(ra::RASceneRobot *_rb)
 {
-    DEBUG_STREAM_FUNC(" robot : " << _rb->name() << std::endl);
+    DEBUG_STREAM_FUNC(" delete robot : " << _rb->name() << std::endl);
     ItemList<AssemblerItem> lst =  RootItem::instance()->checkedItems<AssemblerItem>();
     srobot_set.clear();
     for(auto it = lst.begin(); it != lst.end(); it++) {
@@ -530,16 +562,18 @@ void AssemblerView::Impl::attach()
 
     ra::RASceneConnectingPoint *cp0 = clickedPoint0;
     ra::RASceneConnectingPoint *cp1 = clickedPoint1;
-    //clickedPoint0->rbt
+    if(cp1->scene_robot()->robot()->partsNum() >
+       cp0->scene_robot()->robot()->partsNum() ) { // swap 0 and 1
+        ra::RASceneConnectingPoint *tmp = cp0;
+        cp0 = cp1; cp1 = cp0;
+    }
+
     ra::RoboasmRobotPtr rb0 = cp0->scene_robot()->robot();
     ra::RoboasmRobotPtr rb1 = cp1->scene_robot()->robot();
 
-    if(rb1->partsNum() > rb0->partsNum()) { // swap
-        { ra::RoboasmRobotPtr tmp = rb0;
-            rb0 = rb1; rb1 = tmp; }
-        { ra::RASceneConnectingPoint *tmp = cp0;
-            cp0 = cp1; cp1 = cp0; }
-    }
+    DEBUG_STREAM_FUNC(" rb0: " << rb0->name() << " <=(attach) rb1:" << rb1->name() << std::endl);
+    DEBUG_STREAM_FUNC(" cp0-point(): " << cp0->point()->name() << " cp1-point()" << cp1->point()->name() << std::endl);
+
     bool res;
     std::vector<ra::ConnectingTypeMatch*> res_match_lst;
     res = rb0->searchMatch(rb1, cp1->point(), cp0->point(),
@@ -559,8 +593,23 @@ void AssemblerView::Impl::attach()
     }
 
     DEBUG_STREAM_FUNC(" attached !! " << std::endl);
-    ////
+    {
+        ra::coordsPtrList lst;
+        rb0->allDescendants(lst);
+        int cntr = 0;
+        for(auto it = lst.begin(); it != lst.end(); it++) {
+            std::cerr << cntr++ << " : " << *(*it) << std::endl;
+        }
+    }
+    // erase(rb1)
+    // update position of cp0,cp1 <- worldcoords
+    cp0->scene_robot()->updateFromSelf();
     cp1->scene_robot()->updateFromSelf();
-    notifyUpdate();
-    //marge cp0->scene_robot() <- cp1->scene_robot
+
+    //marge cp0->scene_robot() <=: cp1->scene_robot()
+    ra::RASceneRobot *to_delete = cp1->scene_robot(); // after merged robots, all connecting point should be
+    cp0->scene_robot()->mergeRobot(cp1->scene_robot());
+    DEBUG_STREAM_FUNC(" scene_robot0: " << cp0->scene_robot()->name() << " / scene_robot1: " << to_delete->name() << std::endl);
+    deleteRobot(to_delete);
+    //notifyUpdate(); // update at delete robot
 }

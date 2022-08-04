@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <iostream>
 
 #pragma once
 
@@ -32,7 +33,7 @@ class RoboasmCoords : public coordinates
 
 public:
     RoboasmCoords(const std::string &_name);
-
+    ~RoboasmCoords();
     const std::string &name() const;
     coordinates &worldcoords();
     const coordinates &worldcoords() const;
@@ -47,12 +48,16 @@ public:
     void updateDescendants();
     void assoc(RoboasmCoordsPtr c);
     bool dissoc(RoboasmCoordsPtr c);
-    bool dissocParent();
+    bool dissocFromParent();
     bool isDirectDescendant(RoboasmCoordsPtr c);
+    RoboasmCoordsPtr isDirectDescendant(RoboasmCoords* c);
     bool isDescendant(RoboasmCoordsPtr c);
+    RoboasmCoordsPtr isDescendant(RoboasmCoords *c);
     // ???
     void toRootList(coordsList &lst);
+    void toRootList(coordsPtrList &lst);
     void directDescendants(coordsPtrList &lst);
+    template <typename T> void directDescendants(std::vector< std::shared_ptr < T > >&lst);
     void allDescendants(coordsList &lst);
     void allDescendants(coordsPtrList &lst);
     template <typename T> void allDescendants(coordsPtrList &lst);
@@ -79,6 +84,7 @@ public:
         ID_Parts,
         ID_Robot
     };
+
     //virtual ClassIDType classID();
 protected:
     std::string name_str;
@@ -92,13 +98,15 @@ protected:
     bool _existing_descendant(RoboasmCoordsPtr c);
     bool _existing_descendant(RoboasmCoords *c);
     bool _erase_descendant(RoboasmCoords *c);
+
+    friend std::ostream& operator<< (std::ostream& ostr, const RoboasmCoords &output);
 };
 
 class RoboasmConnectingPoint : public RoboasmCoords
 {
 public:
     RoboasmConnectingPoint(const std::string &_name, ConnectingPoint *_info);
-
+    ~RoboasmConnectingPoint();
     // inline??
     bool isActuator();
     bool hasConfiguration();
@@ -107,7 +115,7 @@ public:
     ConnectingConfigurationID configurationID();
     void configurationCoords(coordinates &_coords);
 
-    //bool isActive();
+    bool isActive() { return (descendants.size() < 1); }
     ConnectingPoint *info;
 protected:
     //void createFromInfo(ConnectingPoint *_info);
@@ -130,7 +138,7 @@ class RoboasmParts : public RoboasmCoords
 public:
     //RoboasmParts(const std::string &_name);
     RoboasmParts(const std::string &_name, Parts *_info);
-
+    ~RoboasmParts();
     Parts *info;
 protected:
     void createConnectingPoints(const std::string &_namespace);
@@ -152,10 +160,11 @@ public:
     RoboasmRobot(const std::string &_name,
                  RoboasmPartsPtr parts,
                  SettingsPtr _settings);
-
+    ~RoboasmRobot();
     // robot info
     //virtual ClassIDType classID() override;
-    bool reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld);
+    bool reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld); // static method
+    bool changeRoot(RoboasmConnectingPointPtr _chld); // static method
     bool checkCorrectPoint(RoboasmCoordsPtr robot_or_parts,
                            RoboasmConnectingPointPtr _parts_point, RoboasmConnectingPointPtr _robot_point);
     bool checkAttachByName(RoboasmCoordsPtr robot_or_parts,
@@ -203,6 +212,24 @@ public:
                       tmp, &_config, nullptr, just_align);
     }
     bool attach(RoboasmCoordsPtr robot_or_parts,
+                const std::string &name_parts_point,
+                const std::string &name_robot_point,
+                const std::string &name_config, bool just_align = false) {
+        RoboasmConnectingPointPtr _res_parts_point;
+        RoboasmConnectingPointPtr _res_robot_point;
+        ConnectingConfiguration *_res_config;
+        ConnectingTypeMatch * _res_match;
+        if (! checkAttachByName(robot_or_parts,
+                                name_parts_point, name_robot_point,
+                                name_config,
+                                _res_parts_point, _res_robot_point,
+                                _res_config, _res_match) )
+        {
+            return false;
+        }
+        return attach(robot_or_parts, _res_parts_point, _res_robot_point, _res_config, just_align);
+    }
+    bool attach(RoboasmCoordsPtr robot_or_parts,
                 RoboasmConnectingPointPtr _parts_point,
                 RoboasmConnectingPointPtr _robot_point,
                 coordinates &_conf_coords,
@@ -221,10 +248,10 @@ public:
         return lst.size();
     }
 
-    // attch by name
+    bool createRoboasm(RoboasmFile &_roboasm);
 protected:
-
     SettingsPtr settings;
+    AssembleConfig asm_config;
     friend RoboasmCoords;
     friend RoboasmParts;
     friend RoboasmConnectingPoint;
@@ -236,7 +263,7 @@ public:
     Roboasm() = delete;
     Roboasm(const std::string &filename);
     Roboasm(SettingsPtr settings);
-
+    ~Roboasm();
     bool isReady();
 
     RoboasmPartsPtr makeParts(const std::string &_parts_key);
@@ -245,6 +272,13 @@ public:
     RoboasmRobotPtr makeRobot(const std::string &_name, const std::string &_parts_key);
     RoboasmRobotPtr makeRobot(const std::string &_name, const std::string &_parts_key, const std::string &_parts_name);
     RoboasmRobotPtr makeRobot(const std::string &_name, RoboasmPartsPtr _parts);
+
+    RoboasmRobotPtr makeRobot(RoboasmFile &_roboasm_file);
+    RoboasmRobotPtr makeRobotFromFile(const std::string &_filename) {
+        RoboasmFile roboasm(_filename);
+        if(roboasm.isValid()) return makeRobot(roboasm);
+        return nullptr;
+    }
 
     bool canMatch(RoboasmConnectingPointPtr _a, RoboasmConnectingPointPtr _b);
 private:
@@ -257,3 +291,6 @@ private:
 };
 typedef std::shared_ptr<Roboasm> RoboasmPtr;
 } }
+
+std::ostream& operator<< (std::ostream& ostr, const cnoid::coordinates &output);
+std::ostream& operator<< (std::ostream& ostr, const cnoid::robot_assembler::RoboasmCoords &output);

@@ -506,6 +506,33 @@ int main(int argc, char **argv) {
             std::cout << "connecting-points : " << lstp.size() << std::endl;
             print_lst(lstp);
         }
+
+        {
+            RoboasmCoordsPtr pp = r->find("bottom-arm20/single-hole-dummy");
+            if(!!pp) {
+                coordsList lst;
+                pp->toRootList(lst);
+                std::cout << "lst : " << lst.size() << std::endl;
+                print_lst(lst);
+            }
+            if(!!pp) {
+                coordsPtrList lst;
+                pp->toRootList(lst);
+                std::cout << "plst : " << lst.size() << std::endl;
+                print_lst(lst);
+            }
+            RoboasmConnectingPointPtr rcp = std::dynamic_pointer_cast<RoboasmConnectingPoint>(pp);
+            if(!!rcp) {
+                r->changeRoot(rcp);
+                coordsPtrList lst;
+                rcp->updateDescendants();
+                rcp->allDescendants(lst);
+                std::cout << "lst : " << lst.size() << std::endl;
+                print_lst(lst);
+            } else {
+                std::cout << "failed" << std::endl;
+            }
+        }
 #if 0
         coordinates cds(Vector3 (123, 55, 321), 0, M_PI/2, 0);
         coordinates inv;
@@ -518,5 +545,18 @@ int main(int argc, char **argv) {
         std::cout << "(inv)cds: "; print(cds); std::cout << std::endl;
         std::cout << "mat: " << cds.rot << std::endl;
 #endif
+        std::cout << "SCOPE END" << std::endl;
     }
+    std::cout << "SCOPE ENDED" << std::endl;
+    //
+
+    RoboasmRobotPtr roboasm_rb = roboasm->makeRobotFromFile("assembled_robot.roboasm");
+    if(!!roboasm_rb) {
+        coordsPtrList lstp;
+        roboasm_rb->allDescendants(lstp);
+        std::cout << "roboasm_rb : " << lstp.size() << std::endl;
+        print_lst(lstp);
+    }
+
+    std::cout << "SCOPE FINISH" << std::endl;
 }
