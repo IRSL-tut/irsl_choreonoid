@@ -6,9 +6,9 @@
  
  - roboasm.l を書き出せるか？ -> eusで読めるか
  // roboasm (yaml形式/)
-   -> .roboasm (c++)
-   <- .roboasm (c++)
-   .roboasm.old.l -> .roboasm (eus) only test
+   -> .roboasm (c++) <<< 書き出し
+   DONE <- .roboasm (c++)
+   DONE .roboasm.old.l -> .roboasm (eus) only test
   --->  ここまでできたらいい
    .roboasm -> .roboasm.new.l (eus) 
    <- .roboasm.new.l (eus)
@@ -21,7 +21,7 @@
 
  - Body fixed-joint込みで全体を作る
  
- - merge links connected with fixed-joint
+ DONE - merge links connected with fixed-joint
 
 ===> CUIバージョン完成
 
@@ -39,10 +39,13 @@
 
  - un align
 
+dump coords(c++, eus) { translation: [0,0,0], rotation: [0,0,0,0] }
+read coords(c++, eus)
+
 --- bar ボタン配置
 
 [todo]
- - アイテムビューの変更禁止
+ - アイテムビューの変更禁止 ->
  - ツリーの表示 ( TreeWidget )
  
  --- options

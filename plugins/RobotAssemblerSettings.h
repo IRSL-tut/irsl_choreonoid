@@ -214,11 +214,16 @@ typedef std::shared_ptr<Settings> SettingsPtr;
 class AttachHistoryItem
 {
 public:
+    AttachHistoryItem() : inverse(false), initial_parts(false) {}
     std::string robot_parts_point;
     std::string parts_name;
     std::string parts_type;
     std::string parts_point;
-    std::string configuration;
+    std::string configuration; // configuration and config_coords are exclusive
+    coordinates config_coords; //
+    std::string parent;
+    bool inverse;
+    bool initial_parts;
 };
 typedef std::vector<AttachHistoryItem> AttachHistory;
 struct AssembleConfig
@@ -228,10 +233,20 @@ struct AssembleConfig
     std::map<std::string, std::string> actuator_name;
     std::map<std::string, std::string> actuator_axis_name;
     std::map<std::string, Vector3> actuator_axis_vector;
+
+    bool isValid() {
+        if(robot_name.size() > 0) return true;
+        if(!initial_coords.isInitial()) return true;
+        if(actuator_name.size() > 0) return true;
+        if(actuator_axis_name.size() > 0) return true;
+        if(actuator_axis_vector.size() > 0) return true;
+        return false;
+    }
 };
 class RoboasmFile
 {
 public:
+    RoboasmFile() {}
     RoboasmFile(const std::string &_filename)
     {
         valid_ = this->parseRoboasm(_filename);

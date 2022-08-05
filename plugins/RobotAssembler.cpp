@@ -4,8 +4,6 @@
 #include <sstream>
 #include <algorithm> //std::find
 
-#include <cnoid/YAMLReader>
-
 // get pid
 #include <sys/types.h>
 #include <unistd.h>
@@ -35,7 +33,7 @@ RoboasmCoords::RoboasmCoords(const std::string &_name)
 }
 RoboasmCoords::~RoboasmCoords()
 {
-    DEBUG_STREAM(" [" << this << "] " << name_str);
+    //DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 // virtual ??
 void RoboasmCoords::update()
@@ -360,37 +358,48 @@ RoboasmConnectingPoint::RoboasmConnectingPoint(const std::string &_name,
 }
 RoboasmConnectingPoint::~RoboasmConnectingPoint()
 {
-    DEBUG_STREAM(" [" << this << "] " << name_str);
+    //DEBUG_STREAM(" [" << this << "] " << name_str);
 }
-bool RoboasmConnectingPoint::isActuator()
+bool RoboasmConnectingPoint::checkValidity()
 {
-    if (info->getType() != ConnectingPoint::Parts) {
-        return true;
+    if(!parent_ptr) {
+        ERROR_STREAM(" A connecting point should have a parent : " << *this);
+        return false;
     }
-    return false;
+    if(parent_ptr->isRobot()) {
+        ERROR_STREAM(" A parent of a connecting point should not be a robot : " << *this);
+        return false;
+    }
+    // parts -> con
+    // parts -> con -> con -> parts
+    coordsPtrList lst;
+    directDescendants(lst);
+    if(parent_ptr->isConnectingPoint()) {
+        if (lst.size() != 1) {
+            ERROR_STREAM(" Size of descendants should be 1, when a parent is a connecting point : " << lst.size());
+            return false;
+        }
+        if( !(lst[0]->isParts()) ) {
+            ERROR_STREAM(" A descendant should be a parts , when a parent is a connecting point : " << lst[0]);
+            return false;
+        }
+    } else if(parent_ptr->isParts()) {
+        if (lst.size() > 1) {
+            ERROR_STREAM(" Size of descendants should not be more than 1, when a parent is a parts : " << lst.size());
+            return false;
+        } else if (lst.size() == 1) {
+            if ( !(lst[0]->isConnectingPoint()) ) {
+                ERROR_STREAM(" A descendant should be a connecting point , when a parent is a parts : " << lst[0]);
+                return false;
+            }
+        }
+    } else {
+        ERROR_STREAM(" unkown parent's type : " << *this);
+        return false;
+    }
+    return true;
 }
-bool RoboasmConnectingPoint::hasConfiguration()
-{
-    return (current_configuration_id >= 0 || configuration_str.size() > 0);
-}
-const std::string &RoboasmConnectingPoint::currentConfiguration()
-{
-    return configuration_str;
-}
-bool RoboasmConnectingPoint::definedConfiguration()
-{
-    return (current_configuration_id >= 0);
-}
-ConnectingConfigurationID RoboasmConnectingPoint::configurationID()
-{
-    return current_configuration_id;
-}
-void RoboasmConnectingPoint::configurationCoords(coordinates &_coords)
-{
-    _coords = configuration_coords;
-}
-
-//// [roboasm connecting parts] ////
+//// [roboasm parts] ////
 RoboasmParts::RoboasmParts(const std::string &_name, Parts *_info)
     : RoboasmCoords(_name)
 {
@@ -399,7 +408,88 @@ RoboasmParts::RoboasmParts(const std::string &_name, Parts *_info)
 }
 RoboasmParts::~RoboasmParts()
 {
-    DEBUG_STREAM(" [" << this << "] " << name_str << std::endl);
+    //DEBUG_STREAM(" [" << this << "] " << name_str);
+}
+bool RoboasmParts::checkValidity()
+{
+    if (!!parent_ptr) { // check parent
+        if(!parent_ptr->isRobot() && !parent_ptr->isConnectingPoint()) {
+            ERROR_STREAM(" A parent of a parts is a robot or a connecting-point / self: "  << *this << " / parent: " << *parent_ptr );
+            return false;
+        }
+    }
+    coordsPtrList lst;
+    directDescendants(lst);
+    for(auto it = lst.begin(); it != lst.end(); it++) {
+        if((*it)->isParts() || (*it)->isRobot()) {
+            ERROR_STREAM(" A descendant of a parts is not a parts nor a robot / self: "  << *this << " / parent: " << (*it) );
+            return false;
+        }
+    }
+    return true;
+}
+bool RoboasmParts::dumpConnectFromParent(AttachHistory &history)
+{
+    DEBUG_STREAM(" [" << history.size() << "] : " << name());
+    AttachHistoryItem itm;
+
+    if(!parent_ptr) return false;
+    if(!parent_ptr->isRobot() &&
+       !(!!parent_ptr->parent() && !!parent_ptr->parent()->parent()))
+        return false;
+    if(!info) return false;
+    DEBUG_STREAM(" [" << history.size() << "]  0");
+    if(!parent_ptr->isRobot()) {
+        itm.parent = parent_ptr->parent()->parent()->name();
+        itm.parts_name = name();
+        itm.parts_type = info->type;
+        itm.robot_parts_point = parent_ptr->parent()->name();
+        itm.parts_point = parent_ptr->name();
+        RoboasmConnectingPoint *pp = parent_ptr->parent()->toConnectingPoint();
+        if(pp->hasConfiguration()) {
+            if(pp->definedConfiguration()) {
+                itm.configuration = pp->currentConfiguration();
+            } else {
+                pp->configurationCoords(itm.config_coords);
+            }
+        }
+    } else {
+        itm.initial_parts = true;
+        itm.parts_name = name();
+        itm.parts_type = info->type;
+    }
+    history.push_back(itm);
+    partsPtrList lst;
+    childParts(lst);
+    DEBUG_STREAM(" " << lst.size());
+    for(auto it = lst.begin(); it != lst.end(); it++) {
+        if(!(*it)->dumpConnectFromParent(history)) {
+            return false;
+        }
+    }
+    return true;
+}
+void RoboasmParts::childParts(partsPtrList &lst)
+{
+    for(auto it = descendants.begin(); it != descendants.end(); it++) {
+        //DEBUG_STREAM(" : " << (*it)->name());
+        RoboasmConnectingPointPtr ptr = std::dynamic_pointer_cast<RoboasmConnectingPoint>(*it);
+        if(ptr->isConnected()) {
+            coordsPtrList l0;
+            ptr->directDescendants(l0);
+            //DEBUG_STREAM(" 0 : " << l0.size());
+            if(l0.size() > 0) {
+                coordsPtrList l1;
+                l0[0]->directDescendants(l1);
+                //DEBUG_STREAM(" 10 : " << l1.size());
+                if(l1.size() > 0) {
+                    //DEBUG_STREAM(" 11 : " << (l1[0])->name());
+                    RoboasmPartsPtr pp = std::dynamic_pointer_cast<RoboasmParts>(l1[0]);
+                    if(!!pp) lst.push_back(pp);
+                }
+            }
+        }
+    }
 }
 void RoboasmParts::createConnectingPoints(bool use_name_as_namespace)
 {
@@ -444,7 +534,7 @@ RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
 }
 RoboasmRobot::~RoboasmRobot()
 {
-    DEBUG_STREAM(" [" << this << "] " << name_str);
+    //DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld)
 {
@@ -687,17 +777,47 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
 
     return true;
 }
-bool RoboasmRobot::checkValid()
+bool RoboasmRobot::checkValidity()
 {
+    if (!!parent_ptr) {
+        ERROR_STREAM(" A robot should not have p parent : " << *parent_ptr);
+        return false;
+    }
+    RoboasmPartsPtr pp;
     {
         coordsPtrList lst;
         directDescendants(lst);
         if(lst.size() != 1) {
-
+            ERROR_STREAM(" Size of robot's direct descendants is 1 : " << lst.size());
             return false;
         }
-        //dynamic_pointer_cast<Robolst[0]>
+        pp = std::dynamic_pointer_cast<RoboasmParts>(lst[0]);
+        if (!pp) {
+            ERROR_STREAM(" Robot's direct descendant is only a parts : " << *(lst[0]));
+            return false;
+        }
     }
+    {
+        partsPtrList lst;
+        allParts(lst);
+        for(auto it = lst.begin(); it != lst.end(); it++) {
+            if(!((*it)->checkValidity())) {
+                ERROR_STREAM(" not valid(parts) : " << *(*it));
+                return false;
+            }
+        }
+    }
+    {
+        connectingPointPtrList lst;
+        connectingPoints(lst);
+        for(auto it = lst.begin(); it != lst.end(); it++) {
+            if(!((*it)->checkValidity())) {
+                ERROR_STREAM(" not valid(connecting point) : " << *(*it));
+                return false;
+            }
+        }
+    }
+    return true;
 }
 bool RoboasmRobot::createRoboasm(RoboasmFile &_roboasm)
 {
@@ -709,12 +829,28 @@ bool RoboasmRobot::createRoboasm(RoboasmFile &_roboasm)
             init_pt_ = plst[0];
         }
     }
-    partsPtrList lst;
-    allParts(lst);
-    
+    if(!init_pt_) {
+        return false;
+    }
+    init_pt_->dumpConnectFromParent(_roboasm.history);
+    return writeConfig(_roboasm.config);
+}
+bool RoboasmRobot::writeConfig(AssembleConfig &_config)
+{
     return true;
 }
-
+void RoboasmRobot::connectedPoints(connectingPointPtrList &lst)
+{
+    // extract con0, where parts0 -> con0 -> con1 -> parts1
+    connectingPointPtrList tmp;
+    connectingPoints(tmp);
+    for(auto it = tmp.begin(); it != tmp.end(); it++) {
+        if(!(*it)->hasParent()) continue; // not valid
+        if((*it)->parent()->isParts() && (*it)->hasDescendants()) {
+            lst.push_back(*it);
+        }
+    }
+}
 //// [Roboasm] ////
 Roboasm::Roboasm(const std::string &filename)
 {
@@ -737,7 +873,7 @@ Roboasm::Roboasm(SettingsPtr settings)
 }
 Roboasm::~Roboasm()
 {
-    DEBUG_STREAM(" [" << this << "] ");
+    //DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 bool Roboasm::isReady()
 {

@@ -4,6 +4,8 @@
 #include <irsl_choreonoid/Coordinates.h>
 #include <cnoid/YAMLReader> // ValueNode
 #include <cnoid/SceneGraph>
+#include <cnoid/CloneMap>
+#include <cnoid/StdBodyWriter>
 
 using namespace cnoid;
 
@@ -90,7 +92,83 @@ void traverseBody(Body *bd)
     }
     traverseLink(bd->rootLink());
 }
+bool mergeLink(Link *plink, Link *clink)
+{
+    if(!plink) {
+        std::cerr << "plink does not exist" << std::endl;
+        return false;
+    }
+    if(!clink) {
+        std::cerr << "clink does not exist" << std::endl;
+        return false;
+    }
+    LinkPtr link_protect(clink);
+    std::vector<LinkPtr> all_child;
+    {
+        Link *cur = clink->child();
+        while(!!cur) {
+            all_child.push_back(cur);
+            cur = cur->sibling();
+        }
+    }
+    std::cout << "child : " << all_child.size() << std::endl;
+    // remove child
+    if(!plink->removeChild(clink)) {
+        std::cerr << "not a child2" << std::endl;
+        return false;
+    }
+    std::cout << "removed" << std::endl;
+    // update mass paramter of plink
+    {
+        double new_mass = plink->mass() + clink->mass();
+        coordinates cds_Tb(clink->Tb());
+        Vector3 p_c_c = clink->c();
+        cds_Tb.transform_vector(p_c_c);
+        Vector3 new_c = ((clink->mass() * p_c_c) + (plink->mass() * plink->c()))/new_mass;
 
+        Matrix3 pIc = cds_Tb.rot * clink->I() * cds_Tb.rot.transpose();
+        Matrix3 h_c = hat(new_c - p_c_c);
+        Matrix3 h_p = hat(new_c - plink->c());
+
+        Matrix3 newI = (pIc - clink->mass() * (h_c * h_c)) +
+                       (plink->I() - plink->mass() * (h_p * h_p));
+        plink->setInertia(newI);
+        plink->setMass(new_mass);
+        plink->setCenterOfMass(new_c);
+    }
+    const Position cTb = clink->Tb();
+    {// update visual shape of plink
+        SgGroup *vsp = clink->visualShape();
+        if(!!vsp) {
+            CloneMap cmp;
+            vsp = new SgGroup(*vsp, &cmp);
+        }
+        SgPosTransform *posT = new SgPosTransform();
+        posT->addChild(vsp);
+        posT->setPosition(cTb);
+        plink->addVisualShapeNode(posT);
+    }
+    {// update collision shape of plink
+        SgGroup *csp = clink->collisionShape();
+        if(!!csp) {
+            CloneMap cmp;
+            csp = new SgGroup(*csp, &cmp);
+        }
+        SgPosTransform *posT = new SgPosTransform();
+        posT->addChild(csp);
+        posT->setPosition(cTb);
+        plink->addCollisionShapeNode(posT);
+    }
+    // append children of clink
+    for(int i = 0; i < all_child.size(); i++) {
+        // update offset of children of clink
+        Position newTb = cTb * all_child[i]->Tb();
+        all_child[i]->setOffsetPosition(newTb);
+        // append children of clink to plink
+        plink->appendChild(all_child[i]);
+    }
+    return true;
+}
 int main(int argc, char **argv)
 {
     Body *body = nullptr;
@@ -102,10 +180,35 @@ int main(int argc, char **argv)
 
     if(!body) {
         std::cout << "body not loaded" << std::endl;
-        return 0;
+        return -1;
     }
 
+    std::cout << "Original" << std::endl;
     traverseBody(body);
+    {
+        StdBodyWriter writer;
+        writer.writeBody(body, "/tmp/sr.org.body");
+    }
+    //
+    //Link *plink = body->link("WAIST");
+    //Link *clink = body->link("WAIST_P");
+    //Link *plink = body->link("LLEG_ANKLE_P");
+    //Link *clink = body->link("LLEG_ANKLE_R");
+    Link *plink = body->link("LLEG_KNEE");
+    Link *clink = body->link("LLEG_ANKLE_P");
+    if(!mergeLink(plink, clink)) {
+        std::cout << "merge failed" << std::endl;
+        return -1;
+    }
+    std::cout << "Merged0" << std::endl;
+    body->updateLinkTree();
+    std::cout << "Merged1" << std::endl;
+    //traverseBody(body);
+    {
+        StdBodyWriter writer;
+        writer.writeBody(body, "/tmp/sr.new.body");
+    }
+    return 0;
 }
 //
 // link->appendChild(child_link);

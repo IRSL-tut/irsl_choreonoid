@@ -550,12 +550,30 @@ int main(int argc, char **argv) {
     std::cout << "SCOPE ENDED" << std::endl;
     //
 
+    {
+        RoboasmFile roboasm("assembled_robot.roboasm");
+        if(roboasm.isValid()) {
+            std::cout << "valid file" << std::endl;
+            if(!roboasm.dumpRoboasm("/tmp/hoge.roboasm")) {
+                std::cout << "dump fail" << std::endl;
+            }
+        }
+    }
     RoboasmRobotPtr roboasm_rb = roboasm->makeRobotFromFile("assembled_robot.roboasm");
     if(!!roboasm_rb) {
         coordsPtrList lstp;
         roboasm_rb->allDescendants(lstp);
         std::cout << "roboasm_rb : " << lstp.size() << std::endl;
         print_lst(lstp);
+
+        if(roboasm_rb->checkValidity()) {
+            std::cout << "VALID" << std::endl;
+        }
+        RoboasmFile rb_file;
+        roboasm_rb->createRoboasm(rb_file);
+        if(!rb_file.dumpRoboasm("/tmp/fuga.roboasm")) {
+            std::cout << "dump fail fuga" << std::endl;
+        }
     }
 
     std::cout << "SCOPE FINISH" << std::endl;

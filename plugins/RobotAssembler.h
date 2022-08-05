@@ -2,10 +2,8 @@
 #include <irsl_choreonoid/Coordinates.h>
 #include <string>
 #include <vector>
-#include <map>
 #include <memory>
 #include <set>
-#include <iostream>
 
 #pragma once
 
@@ -96,11 +94,13 @@ public:
     }
     RoboasmCoordsPtr find(const std::string &name);
     template <typename T> RoboasmCoordsPtr find(const std::string &name);
-    bool isConnectingPoint();
-    bool isActuator();
-    bool isParts();
-    bool isRobot();
-
+    bool isConnectingPoint(); // inline
+    bool isActuator(); // inline
+    bool isParts(); // inline
+    bool isRobot(); // inline
+    RoboasmConnectingPoint *toConnectingPoint(); // inline
+    RoboasmParts *toParts(); // inline
+    RoboasmRobot *toRobot(); // inline
     enum ClassIDType {
         None,
         ID_Coords,
@@ -134,15 +134,32 @@ class RoboasmConnectingPoint : public RoboasmCoords
 public:
     RoboasmConnectingPoint(const std::string &_name, ConnectingPoint *_info);
     ~RoboasmConnectingPoint();
+    bool checkValidity();
     // inline??
-    bool isActuator();
-    bool hasConfiguration();
-    const std::string &currentConfiguration();
-    bool definedConfiguration();
-    ConnectingConfigurationID configurationID();
-    void configurationCoords(coordinates &_coords);
+    bool isActuator() {
+        if (info->getType() != ConnectingPoint::Parts) {
+            return true;
+        }
+        return false;
+    }
+    bool hasConfiguration() {
+        return (current_configuration_id >= 0 || configuration_str.size() > 0);
+    }
+    const std::string &currentConfiguration() {
+        return configuration_str;
+    }
+    bool definedConfiguration() {
+        return (current_configuration_id >= 0);
+    }
+    ConnectingConfigurationID configurationID() {
+        return current_configuration_id;
+    }
+    void configurationCoords(coordinates &_coords) {
+        _coords = configuration_coords;
+    }
 
     bool isActive() { return (descendants.size() < 1); }
+    bool isConnected() { return (descendants.size() > 0); }
     ConnectingPoint *info;
 protected:
     //void createFromInfo(ConnectingPoint *_info);
@@ -166,6 +183,9 @@ public:
     //RoboasmParts(const std::string &_name);
     RoboasmParts(const std::string &_name, Parts *_info);
     ~RoboasmParts();
+    bool checkValidity();
+    bool dumpConnectFromParent(AttachHistory &history);
+    void childParts(partsPtrList &lst);
     Parts *info;
 protected:
     void createConnectingPoints(const std::string &_namespace);
@@ -264,6 +284,7 @@ public:
                 ConnectingTypeMatch *_match = nullptr,
                 bool just_align = false);
 
+    // RoboasmRobotPtr detach(RoboasmPartsPtr _parts);
     size_t partsNum() {
         partsPtrList lst;
         allParts(lst);
@@ -274,14 +295,16 @@ public:
         connectingPoints(lst);
         return lst.size();
     }
-    bool checkValid();
+    bool checkValidity();
     bool createRoboasm(RoboasmFile &_roboasm);
+    void connectedPoints(connectingPointPtrList &lst);
 protected:
     SettingsPtr settings;
     AssembleConfig asm_config;
     friend RoboasmCoords;
     friend RoboasmParts;
     friend RoboasmConnectingPoint;
+    bool writeConfig(AssembleConfig &_config);
 };
 
 class Roboasm
@@ -346,6 +369,15 @@ inline bool RoboasmCoords::isRobot() {
     RoboasmRobot *ptr = dynamic_cast<RoboasmRobot*>(this);
     if(!!ptr) return true;
     return false;
+}
+inline RoboasmConnectingPoint *RoboasmCoords::toConnectingPoint() {
+    return dynamic_cast<RoboasmConnectingPoint*>(this);
+}
+inline RoboasmParts *RoboasmCoords::toParts() {
+    return dynamic_cast<RoboasmParts*>(this);
+}
+inline RoboasmRobot *RoboasmCoords::toRobot() {
+    return dynamic_cast<RoboasmRobot*>(this);
 }
 std::ostream& operator<< (std::ostream& ostr, const cnoid::coordinates &output);
 std::ostream& operator<< (std::ostream& ostr, const cnoid::robot_assembler::RoboasmCoords &output);
