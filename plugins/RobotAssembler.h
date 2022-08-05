@@ -347,7 +347,6 @@ inline bool RoboasmCoords::isRobot() {
     if(!!ptr) return true;
     return false;
 }
-} }
-
 std::ostream& operator<< (std::ostream& ostr, const cnoid::coordinates &output);
 std::ostream& operator<< (std::ostream& ostr, const cnoid::robot_assembler::RoboasmCoords &output);
+} }

@@ -35,7 +35,7 @@ RoboasmCoords::RoboasmCoords(const std::string &_name)
 }
 RoboasmCoords::~RoboasmCoords()
 {
-    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 // virtual ??
 void RoboasmCoords::update()
@@ -360,7 +360,7 @@ RoboasmConnectingPoint::RoboasmConnectingPoint(const std::string &_name,
 }
 RoboasmConnectingPoint::~RoboasmConnectingPoint()
 {
-    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 bool RoboasmConnectingPoint::isActuator()
 {
@@ -399,7 +399,7 @@ RoboasmParts::RoboasmParts(const std::string &_name, Parts *_info)
 }
 RoboasmParts::~RoboasmParts()
 {
-    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM(" [" << this << "] " << name_str << std::endl);
 }
 void RoboasmParts::createConnectingPoints(bool use_name_as_namespace)
 {
@@ -444,7 +444,7 @@ RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
 }
 RoboasmRobot::~RoboasmRobot()
 {
-    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM(" [" << this << "] " << name_str);
 }
 bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld)
 {
@@ -471,23 +471,23 @@ bool RoboasmRobot::changeRoot(RoboasmConnectingPointPtr _chld)
 {
     coordsPtrList lst;
     _chld->toRootList(lst);
-    DEBUG_STREAM_NL(" lst.size() = " << lst.size() << std::endl);
+    DEBUG_STREAM(" lst.size() = " << lst.size());
     if(lst.size() < 1) {
-        DEBUG_STREAM_NL(" lst.size() = " << lst.size() << std::endl);
+        DEBUG_STREAM(" lst.size() = " << lst.size());
         return false;
     }
 
     for(auto it = lst.begin(); it != lst.end(); it++) {
-        DEBUG_STREAM_NL(" dissocFromParent " << (*it)->name() << std::endl);
+        DEBUG_STREAM(" dissocFromParent " << (*it)->name());
         if ( !(*it)->dissocFromParent() ) {
-            DEBUG_STREAM_NL(" dissoc failed " << (*it)->name() << std::endl);
+            DEBUG_STREAM(" dissoc failed " << (*it)->name());
             return false;
         }
     }
-    DEBUG_STREAM_NL(" assoc:" << std::endl);
+    DEBUG_STREAM(" assoc:" << std::endl);
     size_t len_1 = lst.size() - 1;
     for(size_t i = 0; i < len_1; i++) {
-        DEBUG_STREAM_NL(" " << lst[i]->name() << " assoc: " << lst[i+1]->name() << std::endl);
+        DEBUG_STREAM(" " << lst[i]->name() << " assoc: " << lst[i+1]->name());
         lst[i]->assoc(lst[i+1]);
     }
     return true;
@@ -615,41 +615,38 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
         }
     }
     if (!!_config) {
-        std::cout << "config : " << _config->index << std::endl;
-        std::cout << "config : " << _config->name << std::endl;
-        std::cout << "config : "; print(_config->coords); std::cout << std::endl;
+        DEBUG_SIMPLE("config : " << _config->index);
+        DEBUG_SIMPLE("config : " << _config->name);
+        DEBUG_SIMPLE("config : " << _config->coords);
         _conf_coords = _config->coords;
     }
     coordinates r_point_w = _robot_point->worldcoords();
     //coordinates p_base_w  = _parts->worldcoords();
     //coordinates p_point_w = _parts_point->worldcoords();
-    std::cout << "r_point_w: " ;  print(r_point_w); std::cout << std::endl;
-    //std::cout << "p_base_w: " ;  print(p_base_w); std::cout << std::endl;
-    //std::cout << "p_point_w: " ;  print(p_point_w); std::cout << std::endl;
+    DEBUG_SIMPLE( "r_point_w: " << r_point_w);
+    //DEBUG_SIMPLE( "p_base_w: " ;  print(p_base_w << std::endl;
+    //DEBUG_SIMPLE( "p_point_w: " ;  print(p_point_w << std::endl;
 
     //r_point_w.transform(_conf_coords);
     coordinates p_base_to_point = *static_cast<coordinates *>(_parts_point.get());
     //p_base_w.transformation(p_base_to_point, p_point_w);
-    std::cout << "p_base_to_point: " ; print(p_base_to_point); std::cout << std::endl;
+    DEBUG_SIMPLE( "p_base_to_point: "  << p_base_to_point);
     p_base_to_point.inverse();
-    std::cout << "(inv)p_base_to_point: " ; print(p_base_to_point); std::cout << std::endl;
+    DEBUG_SIMPLE( "(inv)p_base_to_point: "  << p_base_to_point);
     r_point_w.transform(p_base_to_point);
-    std::cout << "r_point_w: " ;  print(r_point_w); std::cout << std::endl;
+    DEBUG_SIMPLE( "r_point_w: " << r_point_w);
 
     robot_or_parts->newcoords(r_point_w);
     _parts_point->update();
 
     // _parts_point->worldcoords() == _robot_point->worldcoords()
-    std::cout << "_robot_point->worldcoords(): " ;
-    print(_robot_point->worldcoords()); std::cout << std::endl;
-    std::cout << "_parts_point->worldcoords(): " ;
-    print(_parts_point->worldcoords()); std::cout << std::endl;
-    std::cout << "_parts->worldcoords(): " ;
-    print(robot_or_parts->worldcoords()); std::cout << std::endl;
+    DEBUG_SIMPLE( "_robot_point->worldcoords(): " << _robot_point->worldcoords());
+    DEBUG_SIMPLE( "_parts_point->worldcoords(): " << _parts_point->worldcoords());
+    DEBUG_SIMPLE( "_parts->worldcoords(): " << robot_or_parts->worldcoords());
 
     if (just_align) return true;
 
-    //std::cout << "reverse" << std::endl;
+    //DEBUG_SIMPLE( "reverse" );
     if(isrobot) {
         // [todo if Robot]
         //robot_
@@ -662,18 +659,18 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
         }
         if(!pp) {
             // [todo]
-            DEBUG_STREAM_NL(" no parts in directDescendants of robot" << std::endl);
+            DEBUG_STREAM(" no parts in directDescendants of robot");
         }
         if(!changeRoot(_parts_point)) {
-            DEBUG_STREAM_NL(" changeRoot failed" << std::endl);
+            DEBUG_STREAM(" changeRoot failed");
         }
         // _parts_point
     } else {
         reverseParentChild(parts_, _parts_point);
     }
-    //std::cout << "assoc" << std::endl;
+    //DEBUG_SIMPLE( "assoc" );
     _robot_point->assoc(_parts_point);
-    //std::cout << "update" << std::endl;
+    //DEBUG_SIMPLE( "update" );
     updateDescendants();
 
     if(!!_config) {
@@ -740,7 +737,7 @@ Roboasm::Roboasm(SettingsPtr settings)
 }
 Roboasm::~Roboasm()
 {
-    DEBUG_STREAM_NL(" [" << this << "] " << std::endl);
+    DEBUG_STREAM(" [" << this << "] ");
 }
 bool Roboasm::isReady()
 {
@@ -844,6 +841,4 @@ std::ostream& operator<< (std::ostream& ostr, const cnoid::robot_assembler::Robo
     ostr << output.worldcoords();
     return ostr;
 }
-
 } }
-
