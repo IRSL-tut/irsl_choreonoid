@@ -82,7 +82,7 @@ AssemblerItem::AssemblerItem(const AssemblerItem& org)
 
 AssemblerItem::~AssemblerItem()
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     delete impl;
 }
 
@@ -104,32 +104,32 @@ AssemblerItem::Impl::~Impl()
 //// protected / override Item Class
 Item* AssemblerItem::doDuplicate() const
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return new AssemblerItem(*this);
 }
 bool AssemblerItem::doAssign(const Item* srcItem)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
     //??
     //return impl->doAssign(srcItem);
 }
 void AssemblerItem::onTreePathChanged()
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 void AssemblerItem::onConnectedToRoot()
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 void AssemblerItem::doPutProperties(PutPropertyFunction& putProperty)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 #if 0
 void AssemblerItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     putProperty(_("Model name"), body->modelName());
     putProperty(_("Num links"), body->numLinks());
     putProperty(_("Num joints"), body->numJoints());
@@ -164,7 +164,7 @@ void AssemblerItem::Impl::doPutProperties(PutPropertyFunction& putProperty)
 // override
 bool AssemblerItem::setName(const std::string& name)
 {
-    DEBUG_STREAM_FUNC(" name: " << name << std::endl);
+    DEBUG_STREAM_NL(" name: " << name << std::endl);
     if(!!(impl->scene)) {
         RASceneRobotPtr p = dynamic_pointer_cast<RASceneRobot>(impl->scene);
         if(!!p) {

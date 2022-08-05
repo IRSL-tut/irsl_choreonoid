@@ -40,7 +40,7 @@ void RobotAssemblerPlugin::Impl::onSigOptionsParsed(po::variables_map& variables
 {
     if(variables.count("assembler")) {
         std::string fname_ = variables["assembler"].as<std::string>();
-        DEBUG_STREAM("robot_assembler config file: " << fname_ << std::endl);
+        DEBUG_STREAM_NL("robot_assembler config file: " << fname_ << std::endl);
 
         ra_settings = std::make_shared<ra::Settings> ();
         bool ret = ra_settings->parseYaml(fname_);
@@ -60,7 +60,7 @@ RobotAssemblerPlugin* RobotAssemblerPlugin::instance()
 RobotAssemblerPlugin::RobotAssemblerPlugin()
     : Plugin("RobotAssembler")
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     setActivationPriority(0);
     instance_ = this;
 
@@ -73,7 +73,7 @@ RobotAssemblerPlugin::~RobotAssemblerPlugin()
 
 bool RobotAssemblerPlugin::initialize()
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     OptionManager& om = this->optionManager();
     om.addOption("assembler", po::value<std::string>(), "load robot_assembler config file");
     //om.sigOptionsParsed(1).connect(onSigOptionsParsed);
@@ -94,7 +94,7 @@ bool RobotAssemblerPlugin::initialize()
 
 bool RobotAssemblerPlugin::finalize()
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     instance_ = nullptr;
     return true;
 }

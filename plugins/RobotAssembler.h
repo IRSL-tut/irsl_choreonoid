@@ -34,27 +34,43 @@ class RoboasmCoords : public coordinates
 public:
     RoboasmCoords(const std::string &_name);
     ~RoboasmCoords();
-    const std::string &name() const;
-    coordinates &worldcoords();
-    const coordinates &worldcoords() const;
-    void copyWorldcoords(coordinates &w);
-
-    void newcoords(coordinates &c);
-    RoboasmCoords *parent();
-    bool hasParent();
-    bool hasDescendants();
+    const std::string &name() const { return name_str; }
+    coordinates &worldcoords() { return buf_worldcoords; }
+    const coordinates &worldcoords() const {  return buf_worldcoords; }
+    void copyWorldcoords(coordinates &w) { w = buf_worldcoords; }
+    void newcoords(coordinates &c) {  pos = c.pos; rot = c.rot; update(); }
+    RoboasmCoords *parent() { return parent_ptr; }
+    bool hasParent() { return (!!parent_ptr); }
+    bool hasDescendants() { return (descendants.size() > 0); }
     // virtual ??
     void update();
-    void updateDescendants();
+    void updateDescendants() {
+        for(auto it = descendants.begin(); it != descendants.end(); it++) {
+        (*it)->update();
+        }
+    }
     void assoc(RoboasmCoordsPtr c);
-    bool dissoc(RoboasmCoordsPtr c);
-    bool dissocFromParent();
-    bool isDirectDescendant(RoboasmCoordsPtr c);
-    RoboasmCoordsPtr isDirectDescendant(RoboasmCoords* c);
+    bool dissoc(RoboasmCoordsPtr c) { return _dissoc(c.get()); }
+    bool dissocFromParent() {
+        if (!!parent_ptr) {
+            return parent_ptr->_dissoc(this);
+        }
+        return false;
+    }
+    bool isDirectDescendant(RoboasmCoordsPtr c) {
+        auto it = std::find(descendants.begin(), descendants.end(), c);
+        return (it != descendants.end());
+    }
+    RoboasmCoordsPtr isDirectDescendant(RoboasmCoords* c) {
+        for(auto it = descendants.begin(); it != descendants.end(); it++) {
+            if((*it).get() == c) return *it;
+        }
+        return nullptr;
+    }
     bool isDescendant(RoboasmCoordsPtr c);
     RoboasmCoordsPtr isDescendant(RoboasmCoords *c);
     // ???
-    void toRootList(coordsList &lst);
+    void toRootList(coordsList &lst); // self to root
     void toRootList(coordsPtrList &lst);
     void directDescendants(coordsPtrList &lst);
     template <typename T> void directDescendants(std::vector< std::shared_ptr < T > >&lst);
@@ -64,7 +80,9 @@ public:
     template <typename T> void allDescendants(std::vector< std::shared_ptr < T > >&lst);
     void toNextLink(); // ??
     //// point
-    void connectingPoints(connectingPointPtrList &lst);
+    void connectingPoints(connectingPointPtrList &lst) {
+        allDescendants<RoboasmConnectingPoint> (lst);
+    }
     void connectingPoints(connectingPointPtrList &activelst, connectingPointPtrList &inactivelst);
     void activeConnectingPoints(connectingPointPtrList &lst);
     void inactiveConnectingPoints(connectingPointPtrList &lst);
@@ -73,9 +91,15 @@ public:
     void activeActuators(connectingPointPtrList &lst);
     void inactiveActuators(connectingPointPtrList &lst);
     //// parts
-    void allParts(partsPtrList &lst);
+    void allParts(partsPtrList &lst) {
+        allDescendants<RoboasmParts> (lst);
+    }
     RoboasmCoordsPtr find(const std::string &name);
     template <typename T> RoboasmCoordsPtr find(const std::string &name);
+    bool isConnectingPoint();
+    bool isActuator();
+    bool isParts();
+    bool isRobot();
 
     enum ClassIDType {
         None,
@@ -100,6 +124,9 @@ protected:
     bool _erase_descendant(RoboasmCoords *c);
 
     friend std::ostream& operator<< (std::ostream& ostr, const RoboasmCoords &output);
+    friend RoboasmConnectingPoint;
+    friend RoboasmParts;
+    friend RoboasmRobot;
 };
 
 class RoboasmConnectingPoint : public RoboasmCoords
@@ -247,7 +274,7 @@ public:
         connectingPoints(lst);
         return lst.size();
     }
-
+    bool checkValid();
     bool createRoboasm(RoboasmFile &_roboasm);
 protected:
     SettingsPtr settings;
@@ -265,7 +292,15 @@ public:
     Roboasm(SettingsPtr settings);
     ~Roboasm();
     bool isReady();
-
+    static RoboasmConnectingPointPtr toConnectingPoint(RoboasmCoordsPtr p) {
+        return std::dynamic_pointer_cast<RoboasmConnectingPoint>(p);
+    }
+    static RoboasmPartsPtr toParts(RoboasmCoordsPtr p) {
+        return std::dynamic_pointer_cast<RoboasmParts>(p);
+    }
+    static RoboasmRobotPtr toRobot(RoboasmCoordsPtr p) {
+        return std::dynamic_pointer_cast<RoboasmRobot>(p);
+    }
     RoboasmPartsPtr makeParts(const std::string &_parts_key);
     RoboasmPartsPtr makeParts(const std::string &_parts_key, const std::string &_parts_name);
 
@@ -290,6 +325,28 @@ private:
     int parts_counter;
 };
 typedef std::shared_ptr<Roboasm> RoboasmPtr;
+
+// inline
+inline bool RoboasmCoords::isConnectingPoint() {
+    RoboasmConnectingPoint *ptr = dynamic_cast<RoboasmConnectingPoint*>(this);
+    if(!!ptr) return true;
+    return false;
+}
+inline bool RoboasmCoords::isActuator() {
+    RoboasmConnectingPoint *ptr = dynamic_cast<RoboasmConnectingPoint*>(this);
+    if(!ptr) return false;
+    return ptr->isActuator();
+}
+inline bool RoboasmCoords::isParts() {
+    RoboasmParts *ptr = dynamic_cast<RoboasmParts*>(this);
+    if(!!ptr) return true;
+    return false;
+}
+inline bool RoboasmCoords::isRobot() {
+    RoboasmRobot *ptr = dynamic_cast<RoboasmRobot*>(this);
+    if(!!ptr) return true;
+    return false;
+}
 } }
 
 std::ostream& operator<< (std::ostream& ostr, const cnoid::coordinates &output);

@@ -139,7 +139,7 @@ AssemblerBodyItemPtr AssemblerBodyItem::createItemFromAssemblerConf
 
     SgNode *sg = cnoid::robot_assembler::createSceneFromGeomatry(it->second.visual);
     if (!!sg) {
-        DEBUG_STREAM_INFO(AssemblerBodyItem, createItemFromAssemblerConf, "sg created" << std::endl);
+        DEBUG_STREAM_NL_INFO(AssemblerBodyItem, createItemFromAssemblerConf, "sg created" << std::endl);
         BodyPtr newBody = new Body;
         newBody->rootLink()->addShapeNode(sg);
         newBody->setName("Loaded_Body");

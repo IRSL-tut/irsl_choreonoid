@@ -72,7 +72,7 @@ static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_re
 }
 static void createSceneFromGeometry(SgPosTransform *sg_main, std::vector<Geometry> &geom_list)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     if (geom_list.size() <= 0) {
         //
         return;
@@ -84,11 +84,11 @@ static void createSceneFromGeometry(SgPosTransform *sg_main, std::vector<Geometr
         if (geom.type == Geometry::Mesh) {
             SceneLoader sceneLoader;
             sceneLoader.setMessageSink(std::cerr);
-            DEBUG_STREAM_FUNC(" mesh load: " << geom.url << std::endl);
+            DEBUG_STREAM_NL(" mesh load: " << geom.url << std::endl);
             SgNodePtr shape = sceneLoader.load(geom.url);
             if (!!shape) {
                 shape->setName(name_ + "/geom");
-                DEBUG_STREAM_FUNC(" mesh loaded!" << std::endl);
+                DEBUG_STREAM_NL(" mesh loaded!" << std::endl);
                 Position p; geom.coords.toPosition(p);
                 SgPosTransformPtr trs(new SgPosTransform(p));
                 trs->setName(name_ + "/geom_postrans");
@@ -141,7 +141,7 @@ RASceneConnectingPoint::RASceneConnectingPoint(RoboasmConnectingPointPtr _c)
 }
 RASceneConnectingPoint::~RASceneConnectingPoint()
 {
-    DEBUG_STREAM_FUNC(self->name() << std::endl);
+    DEBUG_STREAM_NL(self->name() << std::endl);
 }
 void RASceneConnectingPoint::changeState(RASceneConnectingPoint::Clicked _clk)
 {
@@ -205,7 +205,7 @@ RASceneParts::RASceneParts(RoboasmPartsPtr _p)
 }
 RASceneParts::~RASceneParts()
 {
-    DEBUG_STREAM_FUNC(self->name() << std::endl);
+    DEBUG_STREAM_NL(self->name() << std::endl);
 }
 RASceneRobot::RASceneRobot(RoboasmRobotPtr _r)
     : SgPosTransform(), self(_r)
@@ -226,31 +226,31 @@ RASceneRobot::RASceneRobot(RoboasmRobotPtr _r)
 }
 RASceneRobot::~RASceneRobot()
 {
-    DEBUG_STREAM_FUNC(self->name() << std::endl);
+    DEBUG_STREAM_NL(self->name() << std::endl);
 }
 //// overrides : SceneWidgetEventHandler
 void RASceneRobot::onSceneModeChanged(SceneWidgetEvent* event)
 {
     // SgNode should have Operable
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 bool RASceneRobot::onButtonPressEvent(SceneWidgetEvent* event)
 {
     SceneWidgetEvent::EventType tp = event->type();
-    DEBUG_STREAM_FUNC(" Type: " << tp << std::endl);
+    DEBUG_STREAM_NL(" Type: " << tp << std::endl);
 #if 0
     switch(tp) {
     case SceneWidgetEvent::ButtonPress:
         int bt = event->button();
         switch(bt) {
         case Qt::LeftButton:
-            DEBUG_STREAM_FUNC(" Left" << std::endl);
+            DEBUG_STREAM_NL(" Left" << std::endl);
             break;
         case Qt::RightButton:
-            DEBUG_STREAM_FUNC(" Right" << std::endl);
+            DEBUG_STREAM_NL(" Right" << std::endl);
             break;
         case Qt::MiddleButton:
-            DEBUG_STREAM_FUNC(" Middle" << std::endl);
+            DEBUG_STREAM_NL(" Middle" << std::endl);
             break;
         }
         break;
@@ -258,24 +258,24 @@ bool RASceneRobot::onButtonPressEvent(SceneWidgetEvent* event)
 #endif
     SgNodePath pt = event->nodePath();
 #if 0
-    DEBUG_STREAM_FUNC(" event->nodePath() : " << pt.size() << std::endl);
+    DEBUG_STREAM_NL(" event->nodePath() : " << pt.size() << std::endl);
     for (int i = 0 ; i < pt.size(); i++) {
         SgNode *ptr = pt[i];
-        DEBUG_STREAM_FUNC(" ---" << std::endl);
-        DEBUG_STREAM_FUNC(" " << static_cast<void *> (ptr) << std::endl);
-        DEBUG_STREAM_FUNC(" name: " << ptr->name() << std::endl);
-        DEBUG_STREAM_FUNC(" class: " << ptr->className() << std::endl);
-        DEBUG_STREAM_FUNC(" attr: " << ptr->attributes() << std::endl);
+        DEBUG_STREAM_NL(" ---" << std::endl);
+        DEBUG_STREAM_NL(" " << static_cast<void *> (ptr) << std::endl);
+        DEBUG_STREAM_NL(" name: " << ptr->name() << std::endl);
+        DEBUG_STREAM_NL(" class: " << ptr->className() << std::endl);
+        DEBUG_STREAM_NL(" attr: " << ptr->attributes() << std::endl);
         if (ptr->hasUri()) {
-            DEBUG_STREAM_FUNC( " uri: " << ptr->uri() << std::endl);
+            DEBUG_STREAM_NL( " uri: " << ptr->uri() << std::endl);
         }
         if (ptr->hasAbsoluteUri()) {
-            DEBUG_STREAM_FUNC( " abs_uri: " << ptr->absoluteUri() << std::endl);
+            DEBUG_STREAM_NL( " abs_uri: " << ptr->absoluteUri() << std::endl);
         }
         if (ptr->hasParents()) {
             int j = 0;
             for(auto it = ptr->parentBegin(); it != ptr->parentEnd(); it++, j++) {
-                DEBUG_STREAM_FUNC(" p" << j << " : " << static_cast<void *>(*it) << std::endl);
+                DEBUG_STREAM_NL(" p" << j << " : " << static_cast<void *>(*it) << std::endl);
             }
         }
     }
@@ -289,62 +289,62 @@ bool RASceneRobot::onButtonPressEvent(SceneWidgetEvent* event)
         if(!!pt_ && !!cp_) break;
     }
     if(!!cp_) {
-        DEBUG_STREAM_FUNC( " ConnectingPointClicked : " << cp_->name() << std::endl);
+        DEBUG_STREAM_NL( " ConnectingPointClicked : " << cp_->name() << std::endl);
         sigPointClickedFunc(cp_);
     } else if (!!pt_) {
-        DEBUG_STREAM_FUNC( " PartsClicked : " << pt_->name() << std::endl);
+        DEBUG_STREAM_NL( " PartsClicked : " << pt_->name() << std::endl);
         sigPartsClickedFunc(pt_);
     } else {
-        DEBUG_STREAM_FUNC( " ---unknown state---" << std::endl);
+        DEBUG_STREAM_NL( " ---unknown state---" << std::endl);
     }
     return false;
     //if return true, handling events after this function may not occurred
 }
 bool RASceneRobot::onDoubleClickEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     // disable default behavior / default: double click -> toggle edit-mode
     return true;
 }
 #if 0
 bool RASceneRobot::onButtonReleaseEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
 }
 bool RASceneRobot::onPointerMoveEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
 }
 void RASceneRobot::onPointerLeaveEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 bool RASceneRobot::onKeyPressEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
 }
 bool RASceneRobot::onKeyReleaseEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
 }
 bool RASceneRobot::onScrollEvent(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
     return false;
 }
 #endif
 void RASceneRobot::onFocusChanged(SceneWidgetEvent* event, bool on)
 {
     // may call when mode was changed
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 }
 bool RASceneRobot::onContextMenuRequest(SceneWidgetEvent* event)
 {
-    DEBUG_STREAM_FUNC(std::endl);
+    DEBUG_STREAM_NL(std::endl);
 
     auto menu = event->contextMenu();
 

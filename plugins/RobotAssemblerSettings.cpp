@@ -1056,7 +1056,7 @@ bool RoboasmFile::parseRoboasm(const std::string &_filename)
         Listing *lst = target->toListing();
         for(int i = 0; i < lst->size(); i++) {
             AttachHistoryItem hist;
-            DEBUG_STREAM_FUNC(" hist : " << i << std::endl);
+            DEBUG_STREAM_NL(" hist : " << i << std::endl);
             if (! parse(lst->at(i), hist) ) {
                 history.push_back(hist);
             }

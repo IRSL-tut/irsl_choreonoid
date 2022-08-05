@@ -61,5 +61,5 @@ void AssemblerBar::Impl::addButton(const char *icon, const char *tooltip, std::f
 
 void AssemblerBar::Impl::buttonClicked(int n)
 {
-    DEBUG_STREAM_FUNC(" buttonClicked:" << n << std::endl);
+    DEBUG_STREAM_NL(" buttonClicked:" << n << std::endl);
 }

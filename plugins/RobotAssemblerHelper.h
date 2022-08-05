@@ -117,7 +117,7 @@ public:
         partsPtrList plst;
         self->allParts(plst);
         if(plst.size() != sparts_set.size()) {
-            DEBUG_STREAM_FUNC(" Roboasm: " << plst.size() << " != Scene: " << sparts_set.size() << std::endl);
+            DEBUG_STREAM_NL(" Roboasm: " << plst.size() << " != Scene: " << sparts_set.size() << std::endl);
         }
         for(auto it = plst.begin(); it != plst.end(); it++) {
             bool exist = false;
@@ -130,12 +130,12 @@ public:
                 }
             }
             if(!exist) {
-                DEBUG_STREAM_FUNC(" Roboasm: " << (*it)->name() << " not in scene" << std::endl);
+                DEBUG_STREAM_NL(" Roboasm: " << (*it)->name() << " not in scene" << std::endl);
             } else {
                 coordinates rcoords;
                 self->worldcoords().transformation(rcoords, (*it)->worldcoords());
                 if(!rcoords.equal(scoords)) {
-                    DEBUG_STREAM_FUNC(" coords not equal r: " << (*it)->name() << std::endl);
+                    DEBUG_STREAM_NL(" coords not equal r: " << (*it)->name() << std::endl);
                     //std::cout << "r: " << rcoords << ", s: " << scoords << std::endl;
                 }
             }
@@ -149,7 +149,7 @@ public:
                 }
             }
             if(!exist) {
-                DEBUG_STREAM_FUNC(" Scene: " << (*sit)->name() << " not in roboasm" << std::endl);
+                DEBUG_STREAM_NL(" Scene: " << (*sit)->name() << " not in roboasm" << std::endl);
             }
         }
     }

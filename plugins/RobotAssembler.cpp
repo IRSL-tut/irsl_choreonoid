@@ -35,40 +35,7 @@ RoboasmCoords::RoboasmCoords(const std::string &_name)
 }
 RoboasmCoords::~RoboasmCoords()
 {
-    DEBUG_STREAM_FUNC(" [" << this << "] " << name_str << std::endl);
-}
-const std::string &RoboasmCoords::name() const
-{
-    return name_str;
-}
-coordinates &RoboasmCoords::worldcoords()
-{
-    return buf_worldcoords;
-}
-const coordinates &RoboasmCoords::worldcoords() const {
-    return buf_worldcoords;
-}
-void RoboasmCoords::copyWorldcoords(coordinates &w)
-{
-    w = buf_worldcoords;
-}
-void RoboasmCoords::newcoords(coordinates &c)
-{
-    pos = c.pos;
-    rot = c.rot;
-    update();
-}
-RoboasmCoords *RoboasmCoords::parent()
-{
-    return parent_ptr;
-}
-bool RoboasmCoords::hasParent()
-{
-    return (!!parent_ptr);
-}
-bool RoboasmCoords::hasDescendants()
-{
-    return (descendants.size() > 0);
+    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
 }
 // virtual ??
 void RoboasmCoords::update()
@@ -98,12 +65,6 @@ void RoboasmCoords::update()
         updateDescendants();
     }
 }
-void RoboasmCoords::updateDescendants()
-{
-    for(auto it = descendants.begin(); it != descendants.end(); it++) {
-        (*it)->update();
-    }
-}
 void RoboasmCoords::assoc(RoboasmCoordsPtr c)
 {
     if ( ! _existing_descendant(c) ) {
@@ -118,10 +79,6 @@ void RoboasmCoords::assoc(RoboasmCoordsPtr c)
         descendants.insert(c);
     }
 }
-bool RoboasmCoords::dissoc(RoboasmCoordsPtr c)
-{
-    return _dissoc(c.get());
-}
 bool RoboasmCoords::_dissoc(RoboasmCoords *c)
 {
     if (c->parent_ptr == this) {
@@ -131,25 +88,6 @@ bool RoboasmCoords::_dissoc(RoboasmCoords *c)
         return true;
     }
     return false;
-}
-bool RoboasmCoords::dissocFromParent()
-{
-    if (!!parent_ptr) {
-        return parent_ptr->_dissoc(this);
-    }
-    return false;
-}
-bool RoboasmCoords::isDirectDescendant(RoboasmCoordsPtr c)
-{
-    auto it = std::find(descendants.begin(), descendants.end(), c);
-    return (it != descendants.end());
-}
-RoboasmCoordsPtr RoboasmCoords::isDirectDescendant(RoboasmCoords *c)
-{
-    for(auto it = descendants.begin(); it != descendants.end(); it++) {
-        if((*it).get() == c) return *it;
-    }
-    return nullptr;
 }
 bool RoboasmCoords::isDescendant(RoboasmCoordsPtr c)
 {
@@ -250,10 +188,6 @@ template void RoboasmCoords::allDescendants<RoboasmConnectingPoint>(connectingPo
 template void RoboasmCoords::allDescendants<RoboasmParts>(partsPtrList &lst);
 
 void RoboasmCoords::toNextLink(){}
-void RoboasmCoords::connectingPoints(connectingPointPtrList &lst)
-{
-    allDescendants<RoboasmConnectingPoint> (lst);
-}
 void RoboasmCoords::connectingPoints(connectingPointPtrList &activelst,
                                      connectingPointPtrList &inactivelst)
 {
@@ -333,10 +267,6 @@ void RoboasmCoords::inactiveActuators(connectingPointPtrList &lst)
             lst.push_back(*it);
         }
     }
-}
-void RoboasmCoords::allParts(partsPtrList &lst)
-{
-    allDescendants<RoboasmParts> (lst);
 }
 RoboasmCoordsPtr RoboasmCoords::find(const std::string &name)
 {
@@ -430,7 +360,7 @@ RoboasmConnectingPoint::RoboasmConnectingPoint(const std::string &_name,
 }
 RoboasmConnectingPoint::~RoboasmConnectingPoint()
 {
-    DEBUG_STREAM_FUNC(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
 }
 bool RoboasmConnectingPoint::isActuator()
 {
@@ -469,7 +399,7 @@ RoboasmParts::RoboasmParts(const std::string &_name, Parts *_info)
 }
 RoboasmParts::~RoboasmParts()
 {
-    DEBUG_STREAM_FUNC(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
 }
 void RoboasmParts::createConnectingPoints(bool use_name_as_namespace)
 {
@@ -514,7 +444,7 @@ RoboasmRobot::RoboasmRobot(const std::string &_name, RoboasmPartsPtr parts,
 }
 RoboasmRobot::~RoboasmRobot()
 {
-    DEBUG_STREAM_FUNC(" [" << this << "] " << name_str << std::endl);
+    DEBUG_STREAM_NL(" [" << this << "] " << name_str << std::endl);
 }
 bool RoboasmRobot::reverseParentChild(RoboasmPartsPtr _parent, RoboasmConnectingPointPtr _chld)
 {
@@ -541,23 +471,23 @@ bool RoboasmRobot::changeRoot(RoboasmConnectingPointPtr _chld)
 {
     coordsPtrList lst;
     _chld->toRootList(lst);
-    DEBUG_STREAM_FUNC(" lst.size() = " << lst.size() << std::endl);
+    DEBUG_STREAM_NL(" lst.size() = " << lst.size() << std::endl);
     if(lst.size() < 1) {
-        DEBUG_STREAM_FUNC(" lst.size() = " << lst.size() << std::endl);
+        DEBUG_STREAM_NL(" lst.size() = " << lst.size() << std::endl);
         return false;
     }
 
     for(auto it = lst.begin(); it != lst.end(); it++) {
-        DEBUG_STREAM_FUNC(" dissocFromParent " << (*it)->name() << std::endl);
+        DEBUG_STREAM_NL(" dissocFromParent " << (*it)->name() << std::endl);
         if ( !(*it)->dissocFromParent() ) {
-            DEBUG_STREAM_FUNC(" dissoc failed " << (*it)->name() << std::endl);
+            DEBUG_STREAM_NL(" dissoc failed " << (*it)->name() << std::endl);
             return false;
         }
     }
-    DEBUG_STREAM_FUNC(" assoc:" << std::endl);
+    DEBUG_STREAM_NL(" assoc:" << std::endl);
     size_t len_1 = lst.size() - 1;
     for(size_t i = 0; i < len_1; i++) {
-        DEBUG_STREAM_FUNC(" " << lst[i]->name() << " assoc: " << lst[i+1]->name() << std::endl);
+        DEBUG_STREAM_NL(" " << lst[i]->name() << " assoc: " << lst[i+1]->name() << std::endl);
         lst[i]->assoc(lst[i+1]);
     }
     return true;
@@ -732,10 +662,10 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
         }
         if(!pp) {
             // [todo]
-            DEBUG_STREAM_FUNC(" no parts in directDescendants of robot" << std::endl);
+            DEBUG_STREAM_NL(" no parts in directDescendants of robot" << std::endl);
         }
         if(!changeRoot(_parts_point)) {
-            DEBUG_STREAM_FUNC(" changeRoot failed" << std::endl);
+            DEBUG_STREAM_NL(" changeRoot failed" << std::endl);
         }
         // _parts_point
     } else {
@@ -760,13 +690,28 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
 
     return true;
 }
+bool RoboasmRobot::checkValid()
+{
+    {
+        coordsPtrList lst;
+        directDescendants(lst);
+        if(lst.size() != 1) {
+
+            return false;
+        }
+        //dynamic_pointer_cast<Robolst[0]>
+    }
+}
 bool RoboasmRobot::createRoboasm(RoboasmFile &_roboasm)
 {
-    RoboasmPartsPtr _init_pt;
+    RoboasmPartsPtr init_pt_;
     {
-        RoboasmCoordsPtr ptr;
+        partsPtrList plst;
+        directDescendants<RoboasmParts>(plst);
+        if(plst.size() > 0) {
+            init_pt_ = plst[0];
+        }
     }
-    
     partsPtrList lst;
     allParts(lst);
     
@@ -795,7 +740,7 @@ Roboasm::Roboasm(SettingsPtr settings)
 }
 Roboasm::~Roboasm()
 {
-    DEBUG_STREAM_FUNC(" [" << this << "] " << std::endl);
+    DEBUG_STREAM_NL(" [" << this << "] " << std::endl);
 }
 bool Roboasm::isReady()
 {
