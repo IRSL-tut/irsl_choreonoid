@@ -1,6 +1,6 @@
 #include "AssemblerBar.h"
 //#include "AssemblerBodyItem.h"
-
+#include <cnoid/FileDialog>
 #include <vector>
 
 #define IRSL_DEBUG
@@ -21,6 +21,8 @@ public:
     void addButton(const char *icon, const char *tooltip, std::function<void()> func);
 
     void buttonClicked(int n);
+
+    // Proxy
 };
 
 }
@@ -47,6 +49,14 @@ AssemblerBar::Impl::Impl(AssemblerBar* _self)
     self = _self;
     addButton(":/Body/icon/storepose.svg", "No tooltip 0",
               [&](){ buttonClicked(0); } );
+    // align -
+    // align +
+    // un align
+    // attach
+    // [undo]
+    // write body
+    // write urdf
+    // delete All
 }
 
 void AssemblerBar::Impl::addButton(const char *icon, const char *tooltip, std::function<void()> func)

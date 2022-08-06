@@ -2,6 +2,7 @@
 
 #include <cnoid/SceneGraph>
 #include <cnoid/SceneWidgetEventHandler>
+#include <cnoid/Body>
 #include <set>
 
 #pragma once
@@ -195,9 +196,10 @@ protected:
     friend RASceneParts;
 };
 typedef ref_ptr<RASceneRobot> RASceneRobotPtr;
+
 // SgPosTransform -> SgPosTransform(partsScene) -> SgShape (parts) -> material(???)
 //                -> SgPosTransform -> SgShepe (connecting-point) -> SgMaterial (from list???
 //                                                                -> SgSwitch
 // notifyUpdate(SgUpdate::REMOVED | SgUpdate::ADDED | SgUpdate::MODIFIED); / on scene graph
-
+ 
 } }

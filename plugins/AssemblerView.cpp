@@ -18,12 +18,17 @@
 #include <cnoid/Widget>
 #include <cnoid/Buttons>
 
+#include <cnoid/FileDialog>
+
 #include <QLabel>
 #include <QStyle>
 #include <QBoxLayout>
 #include <QScrollArea>
 #include <QTabWidget>
 #include <QTextEdit>
+
+#include <cnoid/UTF8>
+#include <cnoid/stdx/filesystem>
 
 #include <vector>
 
@@ -33,56 +38,9 @@
 using namespace cnoid;
 
 namespace ra = cnoid::robot_assembler;
+namespace filesystem = cnoid::stdx::filesystem;
 
 namespace cnoid {
-
-class AssemblerSeneEvent : public SceneWidgetEventHandler
-{
-public:
-    int uniq_id;
-
-    // signals
-
-    //// overrides : SceneWidgetEventHandler
-    virtual void onSceneModeChanged(SceneWidgetEvent* event) override
-    {
-        DEBUG_STREAM_NL(std::endl);
-    }
-    //virtual bool onButtonPressEvent(SceneWidgetEvent* event) override;
-    virtual bool onDoubleClickEvent(SceneWidgetEvent* event) override
-    {
-        DEBUG_STREAM_NL(std::endl);
-        // override double-click default behavior(change mode)
-        return true;
-    }
-    //virtual bool onButtonReleaseEvent(SceneWidgetEvent* event) override;
-    //virtual bool onPointerMoveEvent(SceneWidgetEvent* event) override;
-    //virtual void onPointerLeaveEvent(SceneWidgetEvent* event) override;
-    //virtual bool onKeyPressEvent(SceneWidgetEvent* event) override;
-    //virtual bool onKeyReleaseEvent(SceneWidgetEvent* event) override;
-    //virtual bool onScrollEvent(SceneWidgetEvent* event) override;
-    //virtual void onFocusChanged(SceneWidgetEvent* event, bool on) override;
-    virtual bool onContextMenuRequest(SceneWidgetEvent* event) override
-    {
-        DEBUG_STREAM_NL(std::endl);
-        auto menu = event->contextMenu();
-
-        menu->addSeparator();
-        menu->addItem("Align");
-        menu->addItem("UnAlign");
-        menu->addSeparator();
-        menu->addItem("Attach");
-        menu->addSeparator();
-        menu->addItem("Undo");
-        menu->addSeparator();
-        menu->addItem("Write body");
-        menu->addItem("Write urdf");
-        menu->addSeparator();
-        menu->addItem("Delete All");
-
-        return true;
-    }
-};
 
 // view manager
 class AssemblerView::Impl
@@ -116,14 +74,21 @@ public:
         return (it != srobot_set.end());
     }
     void deleteRobot(ra::RASceneRobot *_rb);
+
     void attach();
 
-    // attach history
-    // align_
+    // void com_attach();
+    // void com_align(int i);
+    // void com_unalign();
+    // void com_undo();
+    // void com_write(filename, urdf);
+    // void com_delete_all();
+
     ra::RASceneConnectingPoint *clickedPoint0;
     ra::RASceneConnectingPoint *clickedPoint1;
     std::set<ra::RASceneConnectingPoint *> selectable_spoint_set;
 
+    int current_align_configuration;
     ra::SettingsPtr ra_settings;
     ra::RoboasmPtr roboasm;
     std::vector<PushButton *> partsButtons;
@@ -135,14 +100,36 @@ public:
         }
     }
 
-    AssemblerSeneEvent *self_event;
+    class AssemblerSceneEvent : public SceneWidgetEventHandler
+    {
+    public:
+        AssemblerSceneEvent(AssemblerView::Impl *_i) { impl = _i; }
+        int uniq_id;
+        AssemblerView::Impl *impl;
+        // signals
+
+        void save();
+        //// overrides : SceneWidgetEventHandler
+        virtual void onSceneModeChanged(SceneWidgetEvent* event) override;
+        //virtual bool onButtonPressEvent(SceneWidgetEvent* event) override;
+        virtual bool onDoubleClickEvent(SceneWidgetEvent* event) override;
+        //virtual bool onButtonReleaseEvent(SceneWidgetEvent* event) override;
+        //virtual bool onPointerMoveEvent(SceneWidgetEvent* event) override;
+        //virtual void onPointerLeaveEvent(SceneWidgetEvent* event) override;
+        //virtual bool onKeyPressEvent(SceneWidgetEvent* event) override;
+        //virtual bool onKeyReleaseEvent(SceneWidgetEvent* event) override;
+        //virtual bool onScrollEvent(SceneWidgetEvent* event) override;
+        //virtual void onFocusChanged(SceneWidgetEvent* event, bool on) override;
+        virtual bool onContextMenuRequest(SceneWidgetEvent* event) override;
+    };
+    AssemblerSceneEvent *self_event;
 };
 
 }
 
 void AssemblerView::initializeClass(ExtensionManager* ext)
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     ext->viewManager().registerClass<AssemblerView>("AssemblerView", "AssemblerView_View");
 }
 AssemblerView* AssemblerView::instance()
@@ -153,7 +140,7 @@ AssemblerView* AssemblerView::instance()
 
 AssemblerView::AssemblerView()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     impl = new Impl(this);
 }
 AssemblerView::~AssemblerView()
@@ -162,15 +149,15 @@ AssemblerView::~AssemblerView()
 }
 void AssemblerView::onActivated()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
 }
 void AssemblerView::onDeactivated()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
 }
 void AssemblerView::onAttachedMenuRequest(MenuManager& menu)
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
 }
 
 bool AssemblerView::storeState(Archive& archive)
@@ -222,7 +209,7 @@ AssemblerView::Impl::Impl(AssemblerView* self)
     initialize(false);
     //
     int id_ = SceneWidget::issueUniqueCustomModeId();
-    self_event = new AssemblerSeneEvent();
+    self_event = new AssemblerSceneEvent(this);
     SceneView::instance()->sceneWidget()->activateCustomMode(self_event, id_);
 }
 
@@ -554,7 +541,7 @@ void AssemblerView::Impl::deleteRobot(ra::RASceneRobot *_rb)
 }
 void AssemblerView::Impl::attach()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     if(!clickedPoint0 || !clickedPoint1) {
         DEBUG_STREAM_NL( " require 2 clicked point" << std::endl);
         return;
@@ -612,4 +599,72 @@ void AssemblerView::Impl::attach()
     DEBUG_STREAM_NL(" scene_robot0: " << cp0->scene_robot()->name() << " / scene_robot1: " << to_delete->name() << std::endl);
     deleteRobot(to_delete);
     //notifyUpdate(); // update at delete robot
+}
+void AssemblerView::Impl::AssemblerSceneEvent::onSceneModeChanged(SceneWidgetEvent* event)
+{
+    DEBUG_PRINT();
+}
+bool AssemblerView::Impl::AssemblerSceneEvent::onDoubleClickEvent(SceneWidgetEvent* event)
+{
+    DEBUG_PRINT();
+    // override double-click default behavior(change mode)
+    return true;
+}
+bool AssemblerView::Impl::AssemblerSceneEvent::onContextMenuRequest(SceneWidgetEvent* event)
+{
+    DEBUG_PRINT();
+    auto menu = event->contextMenu();
+
+    menu->addSeparator();
+    menu->addItem("Align")->sigTriggered().connect(
+        [this](){ } );
+    menu->addItem("UnAlign");
+    menu->addSeparator();
+    menu->addItem("Attach");
+    menu->addSeparator();
+    menu->addItem("Undo");
+    menu->addSeparator();
+    menu->addItem("Save model")->sigTriggered().connect(
+        [this](){ save(); } );
+    menu->addSeparator();
+    menu->addItem("Delete All");
+
+    return true;
+}
+void AssemblerView::Impl::AssemblerSceneEvent::save()
+{
+    DEBUG_PRINT();
+
+    auto dialog = new FileDialog();
+
+    dialog->setWindowTitle("Save a model");
+    dialog->setFileMode(QFileDialog::AnyFile);
+    dialog->setAcceptMode(QFileDialog::AcceptSave);
+    dialog->setViewMode(QFileDialog::List);
+    dialog->setLabelText(QFileDialog::Accept, "Save");
+    dialog->setLabelText(QFileDialog::Reject, "Cancel");
+    dialog->setOption(QFileDialog::DontConfirmOverwrite);
+
+    QStringList filters;
+    filters << "body files (*.body)";
+    filters << "urdf files (*.urdf)";
+    filters << "Any files (*)";
+    dialog->setNameFilters(filters);
+
+    if(dialog->exec() == QDialog::Accepted){
+        DEBUG_STREAM(" accepted");
+        auto fnames = dialog->selectedFiles();
+        if(!fnames.isEmpty()){
+            std::string fname = fnames.front().toStdString();
+            filesystem::path path(fromUTF8(fname));
+            std::string ext = path.extension().string();
+            if(ext == ".body"){
+                DEBUG_STREAM(" body : " << fname);
+            } else if (ext == ".urdf") {
+                DEBUG_STREAM(" urdf : " << fname);
+            }
+        }
+    }
+
+    delete dialog;
 }

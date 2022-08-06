@@ -121,8 +121,17 @@ protected:
 class Actuator : public ConnectingPoint
 {
 public:
-    Actuator() { type = UNDEFINED; }
-    Actuator(PartsType _tp) { type = _tp; }
+    Actuator() {
+        axis.Zero();
+        limit[0] = 0.0;
+        limit[1] = 0.0;
+        vlimit[0] = 0.0;
+        vlimit[1] = 0.0;
+        tqlimit[0] = 0.0;
+        tqlimit[1] = 0.0;
+        type = UNDEFINED;
+    }
+    Actuator(PartsType _tp) : Actuator() { type = _tp; }
 
     Vector3 axis;
     double limit[2];
@@ -166,6 +175,12 @@ struct Geometry
 class Parts
 {
 public:
+    Parts() : hasMassParam(false), mass(0.0)
+    {
+        COM.setZero();
+        inertia_tensor.setZero();
+    }
+
     std::string type;
     std::string class_name;
 

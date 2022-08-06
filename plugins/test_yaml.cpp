@@ -2,6 +2,8 @@
 // g++ -o cnoid_yaml_test cnoid_yaml_test.o -L/home/irsl/sandbox/choreonoid_ws/devel/lib -lCnoidUtil
 
 #include "RobotAssembler.h"
+#include "RobotAssemblerBody.h"
+#include <cnoid/StdBodyWriter>
 #include <iostream>
 
 using namespace cnoid;
@@ -573,6 +575,15 @@ int main(int argc, char **argv) {
         roboasm_rb->createRoboasm(rb_file);
         if(!rb_file.dumpRoboasm("/tmp/fuga.roboasm")) {
             std::cout << "dump fail fuga" << std::endl;
+        }
+
+        RoboasmBodyCreator rbc;
+        rbc.setMergeFixedJoint();
+        BodyPtr bd = rbc.createBody(roboasm_rb);
+        if (!!bd) {
+            std::cout << "body created" << std::endl;
+            StdBodyWriter writer;
+            writer.writeBody(bd, "/tmp/new.body");
         }
     }
 

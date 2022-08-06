@@ -429,16 +429,15 @@ bool RoboasmParts::checkValidity()
     return true;
 }
 bool RoboasmParts::dumpConnectFromParent(AttachHistory &history)
-{
-    DEBUG_STREAM(" [" << history.size() << "] : " << name());
+{// rewrite using parentParts()
+    //DEBUG_STREAM(" [" << history.size() << "] : " << name());
     AttachHistoryItem itm;
-
     if(!parent_ptr) return false;
     if(!parent_ptr->isRobot() &&
        !(!!parent_ptr->parent() && !!parent_ptr->parent()->parent()))
         return false;
     if(!info) return false;
-    DEBUG_STREAM(" [" << history.size() << "]  0");
+    //DEBUG_STREAM(" [" << history.size() << "]  0");
     if(!parent_ptr->isRobot()) {
         itm.parent = parent_ptr->parent()->parent()->name();
         itm.parts_name = name();
@@ -461,7 +460,7 @@ bool RoboasmParts::dumpConnectFromParent(AttachHistory &history)
     history.push_back(itm);
     partsPtrList lst;
     childParts(lst);
-    DEBUG_STREAM(" " << lst.size());
+    //DEBUG_STREAM(" " << lst.size());
     for(auto it = lst.begin(); it != lst.end(); it++) {
         if(!(*it)->dumpConnectFromParent(history)) {
             return false;
@@ -490,6 +489,37 @@ void RoboasmParts::childParts(partsPtrList &lst)
             }
         }
     }
+}
+bool RoboasmParts::parentParts(RoboasmPartsPtr &_res_parent,
+                               RoboasmConnectingPointPtr &_res_parent_point,
+                               RoboasmConnectingPointPtr &_res_self_point)
+{
+    if(!parent_ptr) return false;
+    if(parent_ptr->isRobot()) return false;
+    if(!parent_ptr->parent()) return false;
+    if(!parent_ptr->parent()->parent()) return false;
+    RoboasmParts *p_parts = parent_ptr->parent()->parent()->toParts();
+    if(!p_parts) return false;
+    RoboasmConnectingPoint *p_pt = parent_ptr->parent()->toConnectingPoint();
+    if(!p_pt) return false;
+    RoboasmConnectingPoint *self_pt = parent_ptr->toConnectingPoint();
+    if(!self_pt) return false;
+    RoboasmCoords *pp = parent_ptr->parent()->parent()->parent();
+    if(!pp) return false;
+    _res_parent = Roboasm::toParts(pp->isDirectDescendant(p_parts));
+    if(!_res_parent) return false;
+    _res_parent_point = Roboasm::toConnectingPoint(p_parts->isDirectDescendant(p_pt));
+    if(!_res_parent_point) {
+        _res_parent = nullptr;
+        return false;
+    }
+    _res_self_point = Roboasm::toConnectingPoint(p_pt->isDirectDescendant(self_pt));
+    if(!_res_self_point) {
+        _res_parent = nullptr;
+        _res_parent_point = nullptr;
+        return false;
+    }
+    return true;
 }
 void RoboasmParts::createConnectingPoints(bool use_name_as_namespace)
 {
@@ -821,17 +851,8 @@ bool RoboasmRobot::checkValidity()
 }
 bool RoboasmRobot::createRoboasm(RoboasmFile &_roboasm)
 {
-    RoboasmPartsPtr init_pt_;
-    {
-        partsPtrList plst;
-        directDescendants<RoboasmParts>(plst);
-        if(plst.size() > 0) {
-            init_pt_ = plst[0];
-        }
-    }
-    if(!init_pt_) {
-        return false;
-    }
+    RoboasmPartsPtr init_pt_ = rootParts();
+    if(!init_pt_) return false;
     init_pt_->dumpConnectFromParent(_roboasm.history);
     return writeConfig(_roboasm.config);
 }

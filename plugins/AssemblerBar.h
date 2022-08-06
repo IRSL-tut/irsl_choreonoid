@@ -11,6 +11,17 @@ public:
     static AssemblerBar* instance();
     virtual ~AssemblerBar();
 
+    SignalProxy<void(int flags)> sigAlignDecl;
+    SignalProxy<void(int flags)> sigAlignIncl;
+    SignalProxy<void(int flags)> sigUnAlign;
+    SignalProxy<void(int flags)> sigUnAttach;
+
+    SignalProxy<void(int flags)> sigUndo;
+    SignalProxy<void(int flags)> sigRedo;
+
+    SignalProxy<void(int flags)> sigWrite;
+    SignalProxy<void(int flags)> sigDeleteAll;
+
 private:
     AssemblerBar();
 

@@ -1,5 +1,5 @@
 #include "RobotAssemblerHelper.h"
-
+#include "RobotAssemblerBody.h"
 // shape
 #include <cnoid/SceneLoader>
 #include <cnoid/MeshGenerator>
@@ -22,7 +22,6 @@ static const Vector3f color_bad1(1.0f, 0.0f, 0.0f);
 static const Vector3f color_can_connect0(0.0f, 1.0f, 1.0f);
 static const Vector3f color_can_connect1(0.0f, 1.0f, 1.0f);
 static const Vector3f color_selected(0.5f, 0.0f, 0.5f);
-static const Vector3f color_not_selected(0.0f, 0.0f, 0.8f);
 
 static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_res_material,
                                        SgSwitchableGroupPtr &_res_switch)
@@ -70,59 +69,7 @@ static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_re
     _res_material = material;
     _res_switch = sw_g;
 }
-static void createSceneFromGeometry(SgPosTransform *sg_main, std::vector<Geometry> &geom_list)
-{
-    DEBUG_STREAM_NL(std::endl);
-    if (geom_list.size() <= 0) {
-        //
-        return;
-    }
-    const std::string &name_ = sg_main->name();
-    for(int i = 0; i < geom_list.size(); i++) {
-        Geometry &geom = geom_list[i];
 
-        if (geom.type == Geometry::Mesh) {
-            SceneLoader sceneLoader;
-            sceneLoader.setMessageSink(std::cerr);
-            DEBUG_STREAM_NL(" mesh load: " << geom.url << std::endl);
-            SgNodePtr shape = sceneLoader.load(geom.url);
-            if (!!shape) {
-                shape->setName(name_ + "/geom");
-                DEBUG_STREAM_NL(" mesh loaded!" << std::endl);
-                Position p; geom.coords.toPosition(p);
-                SgPosTransformPtr trs(new SgPosTransform(p));
-                trs->setName(name_ + "/geom_postrans");
-                trs->addChild(shape);
-                sg_main->addChild(trs);
-            }
-        } else if (geom.type == Geometry::Box) {
-            // parameter
-            MeshGenerator mg;
-            SgMeshPtr mesh = mg.generateBox(Vector3(geom.parameter[0], geom.parameter[1], geom.parameter[2]));
-
-            SgShapePtr shape(new SgShape());
-            shape->setMesh(mesh);
-            //shape->setName("box");
-            // material
-            if (!!shape) {
-                shape->setName(name_ + "/box");
-                SgMaterialPtr material(new SgMaterial());
-                material->setName(name_ + "material");
-                //Vector3f color(0.1f, 0.1f, 0.7f);
-                material->setDiffuseColor(color_not_selected);
-                material->setEmissiveColor(Vector3f(0.0f, 0.0f, 0.0f));
-                material->setAmbientIntensity(0.7f);
-                shape->setMaterial(material);
-
-                Position p; geom.coords.toPosition(p);
-                SgPosTransformPtr trs(new SgPosTransform(p));
-                trs->setName(name_ + "/geom_postrans");
-                trs->addChild(shape);
-                sg_main->addChild(trs);
-            }
-        }
-    }
-}
 RASceneConnectingPoint::RASceneConnectingPoint(RoboasmConnectingPointPtr _c)
     : SgPosTransform(), self(_c), current_state(DEFAULT)
 {

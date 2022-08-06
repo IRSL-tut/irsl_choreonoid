@@ -185,7 +185,10 @@ public:
     ~RoboasmParts();
     bool checkValidity();
     bool dumpConnectFromParent(AttachHistory &history);
-    void childParts(partsPtrList &lst);
+    void childParts(partsPtrList &lst);  // parts of just direct child
+    bool parentParts(RoboasmPartsPtr &_res_parent,
+                     RoboasmConnectingPointPtr &_res_parent_point,
+                     RoboasmConnectingPointPtr &_res_self_point);
     Parts *info;
 protected:
     void createConnectingPoints(const std::string &_namespace);
@@ -296,6 +299,18 @@ public:
         return lst.size();
     }
     bool checkValidity();
+    RoboasmPartsPtr rootParts() {
+      partsPtrList plst;
+      directDescendants<RoboasmParts>(plst);
+      if(plst.size() == 1) {
+        return plst[0];
+      } else if (plst.size() > 1) {
+          // not valid (many child parts)
+      } else {
+          // not valid (no child parts)
+      }
+      return nullptr;
+    }
     bool createRoboasm(RoboasmFile &_roboasm);
     void connectedPoints(connectingPointPtrList &lst);
 protected:

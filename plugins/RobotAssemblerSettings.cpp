@@ -1,8 +1,11 @@
 #include "RobotAssemblerSettings.h"
-#include <cnoid/YAMLReader>
-#include <cnoid/YAMLWriter>
+#include <cnoid/YAMLReader> //
+#include <cnoid/YAMLWriter> //
 #include <iostream>
 #include <cmath>
+
+//#include <cnoid/UTF8>
+//#include <cnoid/stdx/filesystem>
 
 #define IRSL_DEBUG
 #include "irsl_debug.h"
@@ -88,12 +91,16 @@ public:
         out = inertia_scale * in;
     }
     void convInertiaTensor(const std::vector<double> in, Matrix3 &out) {
-        // [TODO]
         Matrix3 mat = Matrix3::Zero();
         if (in.size() >= 9) {
-            mat(0, 0) = in[0];
+            mat(0, 0) = in[0]; mat(0, 1) = in[1]; mat(0, 2) = in[2];
+            mat(1, 0) = in[3]; mat(1, 1) = in[4]; mat(1, 2) = in[5];
+            mat(2, 0) = in[6]; mat(2, 1) = in[7]; mat(2, 2) = in[8];
         } else if (in.size() >= 6) {
-            mat(0, 0) = in[0];
+            // xx, xy, yz, yy, yz, zz
+            mat(0, 0) = in[0]; mat(0, 1) = in[1]; mat(0, 2) = in[2];
+            mat(1, 0) = in[1]; mat(1, 1) = in[3]; mat(1, 2) = in[4];
+            mat(2, 0) = in[2]; mat(2, 1) = in[4]; mat(2, 2) = in[5];
         }
         convInertiaTensor(mat, out);
     }
@@ -244,6 +251,8 @@ public:
     // reverse map (name -> index)
     std::map<std::string, long> reverseTypeNames; // listConnectingType
     std::map<std::string, long> reverseConfNames; // listConnectingConfiguration
+
+    //config _path
 };
 ////
 Settings::Settings()
@@ -317,6 +326,7 @@ bool Settings::Impl::parseYaml(const std::string &filename)
         std::cerr << "File Loading error : " << filename << std::endl;
         return false;
     }
+    //[TODO] config_path
     bool ret = false;
     for(int i = 0; i < yaml_reader.numDocuments(); i++) {
         ValueNode *val = yaml_reader.document(i);
