@@ -36,33 +36,44 @@ static void createShapeConnectingPoint(SgPosTransform *_root, SgMaterialPtr &_re
     material->setEmissiveColor(Vector3f(0.0f, 0.0f, 0.0f));
     material->setSpecularColor(Vector3f(0.0f, 0.0f, 0.0f));
     material->setAmbientIntensity(0.7f);
-
+#define SCP_LENGTH_LONG  0.014
+#define SCP_LENGTH_SHORT 0.007
+#define SCP_WIDTH 0.004
     SgSwitchableGroupPtr sw_g(new SgSwitchableGroup());
     sw_g->setName(name_ + "/switch");
     MeshGenerator mg;
     {
         SgShapePtr shape(new SgShape());
         shape->setName(name_ + "/x");
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.02, 0.005, 0.005));
+        SgMeshPtr mesh = mg.generateBox(Vector3(SCP_LENGTH_SHORT, SCP_WIDTH, SCP_WIDTH));
         shape->setMesh(mesh);
         shape->setMaterial(material);
-        sw_g->addChild(shape);
+        SgPosTransformPtr pt = new SgPosTransform();
+        pt->position().translation() = Vector3(SCP_LENGTH_SHORT/2 + SCP_WIDTH/2, 0, 0);
+        pt->addChild(shape);
+        sw_g->addChild(pt);
     }
     {
         SgShapePtr shape(new SgShape());
         shape->setName(name_ + "/y");
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.02, 0.005));
+        SgMeshPtr mesh = mg.generateBox(Vector3(SCP_WIDTH, SCP_LENGTH_SHORT, SCP_WIDTH));
         shape->setMesh(mesh);
         shape->setMaterial(material);
-        sw_g->addChild(shape);
+        SgPosTransformPtr pt = new SgPosTransform();
+        pt->position().translation() = Vector3(0, SCP_LENGTH_SHORT/2 + SCP_WIDTH/2, 0);
+        pt->addChild(shape);
+        sw_g->addChild(pt);
     }
     {
         SgShapePtr shape(new SgShape());
         shape->setName(name_ + "/z");
-        SgMeshPtr mesh = mg.generateBox(Vector3(0.005, 0.005, 0.02));
+        SgMeshPtr mesh = mg.generateBox(Vector3(SCP_WIDTH, SCP_WIDTH, SCP_LENGTH_LONG));
         shape->setMesh(mesh);
         shape->setMaterial(material);
-        sw_g->addChild(shape);
+        SgPosTransformPtr pt = new SgPosTransform();
+        pt->position().translation() = Vector3(0, 0, SCP_LENGTH_LONG/2 - SCP_WIDTH/2);
+        pt->addChild(shape);
+        sw_g->addChild(pt);
     }
     _root->addChild(sw_g);
 
@@ -169,6 +180,17 @@ RASceneRobot::RASceneRobot(RoboasmRobotPtr _r)
             pt->spoint_list[i]->robot_ptr = this;
             spoint_set.insert(pt->spoint_list[i]);
         }
+    }
+    if(lst.size() == 1) {
+        AttachHistoryItem itm;
+        itm.initial_parts = true;
+        itm.parts_name = lst[0]->name();
+        itm.parts_type = lst[0]->info->type;
+        history.push_back(itm);
+    } else if (lst.size() > 1) {
+        lst[0]->dumpConnectFromParent(history);
+    } else {
+        //
     }
 }
 RASceneRobot::~RASceneRobot()

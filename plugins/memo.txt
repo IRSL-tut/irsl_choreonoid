@@ -1,8 +1,50 @@
+## TODO (2022.8.7)
+
+ - attach history
+
+ - 表示の選択 (connecting, actuator active/in-active nothing)
+   bodyのメニュー
+   connectingのメニュー
+   
+ - unalign
+
+ - undo
+
+ - save history
+ - load history
+
+ - バーのアイコン作る
+ 
+ - next alignをもっと簡単に？ -> key??
+ 
+ - TreeWidget
+   - 表示
+   - 選択
+      -> sceneに表示
+      -> パラメータ設定 / rename
+
+ - connect_shapeへのscale導入
+
+-> そもそものディレクトリ構成をどうするか
+  独立した単体のプラグインとする -> choreonoid/ext に置ける
+  (rosパッケージとして使える？)
+
+scene-body(sig)
+view_tab(sig)
+view_tree(sig)
+
+assemble-manager(sig, proc)
+
+A:signal発生元が操作対象のポインターを持つ -> signal要らない -> 独自signalは必要ない
+B:操作対象のインスタンスがsignal発生元のシグナルを登録
+
+signal発生元: SignalProxyを持つ
+操作対象:connectしている
 
 ## TODO
- - attach できるか
+ DONE - attach できるか
 
- - eusと同じ位置にあるか
+ DONE - eusと同じ位置にあるか
  
  - roboasm.l を書き出せるか？ -> eusで読めるか
  // roboasm (yaml形式/)

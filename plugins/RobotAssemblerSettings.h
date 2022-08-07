@@ -239,8 +239,53 @@ public:
     std::string parent;
     bool inverse;
     bool initial_parts;
+
+    std::ostream &print(std::ostream &ostr)
+    {
+        ostr << "(";
+        if (parent.size() > 0) {
+            ostr << "(:parent " << parent << ")";
+        }
+        if (parts_name.size() > 0) {
+            ostr << "(:parts-name " << parts_name << ")";
+        }
+        if (parts_type.size() > 0) {
+            ostr << "(:parts-type " << parts_type << ")";
+        }
+        if (parts_point.size() > 0) {
+            ostr << "(:parts-point " << parts_point << ")";
+        }
+        if (robot_parts_point.size() > 0) {
+            ostr << "(:robot-parts-point " << robot_parts_point << ")";
+        }
+        if (configuration.size() > 0) {
+            ostr << "(:configuration " << configuration << ")";
+        } else {
+            ostr << "(:configuration ((";
+            Vector3 rpy; config_coords.getRPY(rpy);
+            ostr << config_coords.pos(0) << " ";
+            ostr << config_coords.pos(1) << " ";
+            ostr << config_coords.pos(2) << ")(";
+            ostr << rpy(2) << " ";
+            ostr << rpy(1) << " ";
+            ostr << rpy(0) << "))";
+        }
+        if(initial_parts) {
+            ostr << "(:initial-parts t)";
+        }
+        if(inverse) {
+            ostr << "(:inverse t)";
+        }
+        ostr << ")";
+        return ostr;
+    }
 };
 typedef std::vector<AttachHistoryItem> AttachHistory;
+typedef std::map<std::string, AttachHistoryItem*> StringMap;
+typedef std::pair<std::string, AttachHistoryItem*> StringPair;
+
+//void mergeAttachHistory(AttachHistory &_parent, const AttachHistory &_child);
+
 struct AssembleConfig
 {
     std::string robot_name;

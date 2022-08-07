@@ -180,13 +180,64 @@ public:
 #endif
     virtual void onFocusChanged(SceneWidgetEvent* event, bool on) override;
     virtual bool onContextMenuRequest(SceneWidgetEvent* event) override;
-
+    void attachHistory(AttachHistory &_hist,
+                       const std::string &_parent,
+                       const std::string &_robot_point,
+                       const std::string &_parts_name,
+                       const std::string &_parts_type,
+                       const std::string &_parts_point,
+                       coordinates &_coords)
+    {
+        _attachHistory(_hist, _parent, _robot_point, _parts_name, _parts_type, _parts_point);
+        _hist[0].configuration.clear();
+        _hist[0].config_coords = _coords;
+        for(auto it = _hist.begin(); it != _hist.end(); it++) {
+            history.push_back(*it);
+        }
+    }
+    void attachHistory(AttachHistory &_hist,
+                       const std::string &_parent,
+                       const std::string &_robot_point,
+                       const std::string &_parts_name,
+                       const std::string &_parts_type,
+                       const std::string &_parts_point,
+                       const std::string &_config)
+    {
+        _attachHistory(_hist, _parent, _robot_point, _parts_name, _parts_type, _parts_point);
+        _hist[0].configuration = _config;
+        coordinates cds;
+        _hist[0].config_coords = cds;
+        for(auto it = _hist.begin(); it != _hist.end(); it++) {
+            history.push_back(*it);
+        }
+    }
     // [todo]
     std::set<RASceneParts*> sparts_set;
     std::set<RASceneConnectingPoint*> spoint_set;
-protected:
-    RoboasmRobotPtr self;
+    AttachHistory history;
 
+protected:
+    bool _attachHistory(AttachHistory &_hist,
+                        const std::string &_parent,
+                        const std::string &_robot_point,
+                        const std::string &_parts_name,
+                        const std::string &_parts_type,
+                        const std::string &_parts_point)
+    {
+        if(_hist.size() < 1) return false;
+        // check _hist[0].parts_name == _parts_name
+        _hist[0].parts_name = _parts_name;
+        _hist[0].parts_type = _parts_type;
+        _hist[0].parts_point = _parts_point;
+        //_hist[0].configuration = _config;
+        _hist[0].robot_parts_point = _robot_point;
+        _hist[0].parent = _parent;
+        _hist[0].initial_parts = false;
+        _hist[0].inverse = false;
+
+        return true;
+    }
+    RoboasmRobotPtr self;
     // create SgRAParts and add as child
     Signal<int(RASceneConnectingPoint *_cp)> sigPointClickedFunc;
     Signal<int(RASceneParts *_pt)> sigPartsClickedFunc;

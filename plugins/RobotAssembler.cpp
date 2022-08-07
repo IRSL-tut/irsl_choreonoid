@@ -743,11 +743,12 @@ bool RoboasmRobot::attach(RoboasmCoordsPtr robot_or_parts,
     coordinates r_point_w = _robot_point->worldcoords();
     //coordinates p_base_w  = _parts->worldcoords();
     //coordinates p_point_w = _parts_point->worldcoords();
-    DEBUG_SIMPLE( "r_point_w: " << r_point_w);
+    DEBUG_SIMPLE( "r_point_w(org): " << r_point_w);
     //DEBUG_SIMPLE( "p_base_w: " ;  print(p_base_w << std::endl;
     //DEBUG_SIMPLE( "p_point_w: " ;  print(p_point_w << std::endl;
 
-    //r_point_w.transform(_conf_coords);
+    r_point_w.transform(_conf_coords);
+    DEBUG_SIMPLE( "r_point_w(with_conf): " << r_point_w);
     coordinates p_base_to_point = *static_cast<coordinates *>(_parts_point.get());
     //p_base_w.transformation(p_base_to_point, p_point_w);
     DEBUG_SIMPLE( "p_base_to_point: "  << p_base_to_point);

@@ -3,6 +3,7 @@
 #include "RobotAssemblerPlugin.h"
 #include "AssemblerItem.h"
 #include "AssemblerView.h"
+#include "AssemblerTreeView.h"
 #include "AssemblerBar.h"
 
 #include <fmt/format.h>
@@ -85,6 +86,7 @@ bool RobotAssemblerPlugin::initialize()
 
     //View
     AssemblerView::initializeClass(this);
+    AssemblerTreeView::initializeClass(this);
 
     //ToolBar
     addToolBar(AssemblerBar::instance());

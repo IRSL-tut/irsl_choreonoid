@@ -74,15 +74,17 @@ public:
         return (it != srobot_set.end());
     }
     void deleteRobot(ra::RASceneRobot *_rb);
-
-    void attach();
-
-    // void com_attach();
-    // void com_align(int i);
-    // void com_unalign();
-    // void com_undo();
-    // void com_write(filename, urdf);
-    // void com_delete_all();
+    void deleteAllRobots();
+    void attachRobots(bool _just_align = false);
+    void itemSelected(AssemblerItemPtr itm, bool on) {
+        DEBUG_STREAM(" item_selected: " << itm->name() << " : " << on);
+    }
+    void com_attach()  { attachRobots(); }
+    void com_align()   { attachRobots(true); }
+    void com_unalign() { }
+    void com_undo()    { }
+    void com_save()    { self_event->save(); }
+    void com_delete_all() { deleteAllRobots(); }
 
     ra::RASceneConnectingPoint *clickedPoint0;
     ra::RASceneConnectingPoint *clickedPoint1;
@@ -293,15 +295,15 @@ void AssemblerView::Impl::createButtons(ra::SettingsPtr &_ra_settings)
 // assemble manager
 void AssemblerView::Impl::partsButtonClicked(int index)
 {
-    DEBUG_STREAM_NL( " index: " << index << std::endl);
+    DEBUG_STREAM( " index: " << index );
     PushButton *bp = partsButtons[index];
 
     std::string name = bp->text().toStdString();
     const BoundingBox &bb = SceneView::instance()->sceneWidget()->scene()->boundingBox();
     Vector3 cent = bb.center();
     Vector3 size = bb.size();
-    DEBUG_STREAM_NL(" cent: " << cent(0) << ", " << cent(1) << ", " << cent(2) << std::endl);
-    DEBUG_STREAM_NL(" size: " << size(0) << ", " << size(1) << ", " << size(2) << std::endl);
+    DEBUG_STREAM(" cent: " << cent(0) << ", " << cent(1) << ", " << cent(2) );
+    DEBUG_STREAM(" size: " << size(0) << ", " << size(1) << ", " << size(2) );
     std::string rb_name;
     if (srobot_set.size() == 0) {
         rb_name = "AssembleRobot";
@@ -314,18 +316,21 @@ void AssemblerView::Impl::partsButtonClicked(int index)
         const BoundingBox &rb_bb = rb_scene->boundingBox();
         Vector3 rb_cent = rb_bb.center();
         Vector3 rb_size = rb_bb.size();
-        DEBUG_STREAM_NL(" rb_cent: " << rb_cent(0) << ", " << rb_cent(1) << ", " << rb_cent(2) << std::endl);
-        DEBUG_STREAM_NL(" rb_size: " << rb_size(0) << ", " << rb_size(1) << ", " << rb_size(2) << std::endl);
+        DEBUG_STREAM(" rb_cent: " << rb_cent(0) << ", " << rb_cent(1) << ", " << rb_cent(2) );
+        DEBUG_STREAM(" rb_size: " << rb_size(0) << ", " << rb_size(1) << ", " << rb_size(2) );
         coordinates cds(Vector3(0, cent(1) + size(1)/2 +  rb_size(1)/2, 0));
         rb_scene->setCoords(cds);
         if (!!rb_scene) {
             rb_scene->sigPointClicked().connect( [this](ra::RASceneConnectingPoint *_p) { return pointClicked(_p); });
             rb_scene->sigPartsClicked().connect( [this](ra::RASceneParts *_p) { return partsClicked(_p); });
             rb_scene->sigDeleteRobot().connect( [this](ra::RASceneRobot *_rb) { this->deleteRobot(_rb); });
-            rb_scene->sigAttach().connect( [this]() { this->attach(); });
+            rb_scene->sigAttach().connect( [this]() { this->com_attach(); });
+
+            itm->sigSelectionChanged().connect ( [this, itm](bool on) { this->itemSelected(itm, on); } );
         } else {
             //
         }
+        current_align_configuration = -1;
         clickedPoint0 = nullptr;
         clickedPoint1 = nullptr;
         selectable_spoint_set.clear();
@@ -341,84 +346,84 @@ void AssemblerView::Impl::partsButtonClicked(int index)
 }
 int AssemblerView::Impl::pointClicked(ra::RASceneConnectingPoint *_cp)
 {
-    DEBUG_STREAM_NL(" " << _cp->name() << std::endl);
+    DEBUG_STREAM(" " << _cp->name() );
     //_cp->switchOn(false);
     //_cp->notifyUpdate(SgUpdate::REMOVED | SgUpdate::ADDED | SgUpdate::MODIFIED);// on scene graph
 
     if ( !robotExist(_cp->scene_robot()) ) {
-        DEBUG_STREAM_NL(" robot not exist??" << std::endl);
+        DEBUG_STREAM(" robot not exist??" );
     }
     bool modified = false;
     if (clickedPoint0 == _cp) {
         if (!!clickedPoint1) {
             // move 1 -> 0 / (0: a, 1: b) :=> (0: b, 1: null)
-            DEBUG_STREAM_NL(" state0 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state0 : " << _cp->name() );
             clickedPoint0 = clickedPoint1;
             clickedPoint1 = nullptr;
             modified = true;
         } else {
             // toggle selection0
-            DEBUG_STREAM_NL(" state1 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state1 : " << _cp->name() );
             clickedPoint0 = nullptr;
             modified = true;
         }
     } else if (clickedPoint1 == _cp) {
         // toggle selection1
-        DEBUG_STREAM_NL(" state2 : " << _cp->name() << std::endl);
+        DEBUG_STREAM(" state2 : " << _cp->name() );
         clickedPoint1 = nullptr;
         modified = true;
     } else if (!clickedPoint0 && !clickedPoint1) {
         // add first one
-        DEBUG_STREAM_NL(" state3 : " << _cp->name() << std::endl);
+        DEBUG_STREAM(" state3 : " << _cp->name() );
         clickedPoint0 = _cp;
         modified = true;
     } else if (!!clickedPoint0 && !!clickedPoint1) {
-        DEBUG_STREAM_NL(" state4 : " << _cp->name() << std::endl);
+        DEBUG_STREAM(" state4 : " << _cp->name() );
         if(clickedPoint0->scene_robot() == _cp->scene_robot()) {
-            DEBUG_STREAM_NL(" state4.0 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state4.0 : " << _cp->name() );
             // same robot of selection0
             clickedPoint0 = _cp;
             modified = true;
         } else if (clickedPoint1->scene_robot() == _cp->scene_robot()) {
-            DEBUG_STREAM_NL(" state4.1 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state4.1 : " << _cp->name() );
             // same robot of selection1
             clickedPoint1 = _cp;
             modified = true;
         } else {
-            DEBUG_STREAM_NL(" state4.2 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state4.2 : " << _cp->name() );
             // replace last one
             clickedPoint1 = _cp;
             modified = true;
         }
     } else if (!!clickedPoint0) {
-        DEBUG_STREAM_NL(" state5 : " << _cp->name() << std::endl);
+        DEBUG_STREAM(" state5 : " << _cp->name() );
         if(clickedPoint0->scene_robot() == _cp->scene_robot()) {
-            DEBUG_STREAM_NL(" state5.0 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state5.0 : " << _cp->name() );
             // replace selection0
             clickedPoint0 = _cp;
             modified = true;
         } else {
-            DEBUG_STREAM_NL(" state5.1 : " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state5.1 : " << _cp->name() );
             // add second one
             clickedPoint1 = _cp;
             modified = true;
         }
     } else if (!!clickedPoint1) {
-        DEBUG_STREAM_NL(" state6 : (not occur!!) " << _cp->name() << std::endl);
+        DEBUG_STREAM(" state6 : (not occur!!) " << _cp->name() );
         if(clickedPoint1->scene_robot() == _cp->scene_robot()) {
-            DEBUG_STREAM_NL(" state6.0 " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state6.0 " << _cp->name() );
             clickedPoint0 = _cp;
             clickedPoint1 = nullptr;
             modified = true;
         } else {
-            DEBUG_STREAM_NL(" state6.1 " << _cp->name() << std::endl);
+            DEBUG_STREAM(" state6.1 " << _cp->name() );
             // add second one?
             clickedPoint0 = clickedPoint1;
             clickedPoint1 = _cp;
             modified = true;
         }
     } else {
-        DEBUG_STREAM_NL(" === unknown state === : " << _cp->name() << std::endl);
+        DEBUG_STREAM(" === unknown state === : " << _cp->name() );
     }
     if(modified) {
         updateConnectingPoints();
@@ -430,7 +435,7 @@ int AssemblerView::Impl::pointClicked(ra::RASceneConnectingPoint *_cp)
 }
 int AssemblerView::Impl::partsClicked(ra::RASceneParts *_pt)
 {
-    DEBUG_STREAM_NL(" " << _pt->name() << std::endl);
+    DEBUG_STREAM(" " << _pt->name() );
     return 1;
 }
 void AssemblerView::Impl::updateConnectingPoints()
@@ -438,7 +443,7 @@ void AssemblerView::Impl::updateConnectingPoints()
     //clickedPoint0
     //clickedPoint1
     if(!!clickedPoint0 && !!clickedPoint1) {
-        DEBUG_STREAM_NL(" state 0 : both clicked" << std::endl);
+        DEBUG_STREAM(" state 0 : both clicked" );
         //selectable_spoint_set.clear();
         // can match clickedPoint0/clickedPoint1
         bool can_match = roboasm->canMatch(clickedPoint0->point(), clickedPoint1->point());
@@ -452,18 +457,18 @@ void AssemblerView::Impl::updateConnectingPoints()
             clickedPoint1->changeState(ra::RASceneConnectingPoint::SELECT_BAD1);
         }
     } else if (!!clickedPoint0 &&  !clickedPoint1) {
-        DEBUG_STREAM_NL(" state 1 : one  clicked" << std::endl);
+        DEBUG_STREAM(" state 1 : one  clicked" );
         updateMatchedPoints(clickedPoint0);
         clickedPoint0->changeState(ra::RASceneConnectingPoint::SELECT_BAD0);
         //selectable_spoint_set.clear();
     } else if ( !clickedPoint0 && !!clickedPoint1) {
-        DEBUG_STREAM_NL(" state 2 : not occur!!" << std::endl);
+        DEBUG_STREAM(" state 2 : not occur!!" );
         // not occur
         updateMatchedPoints(clickedPoint1);
         clickedPoint1->changeState(ra::RASceneConnectingPoint::SELECT_BAD1);
         //selectable_spoint_set.clear();
     } else {
-        DEBUG_STREAM_NL(" state 3 : all clear" << std::endl);
+        DEBUG_STREAM(" state 3 : all clear" );
         //selectable_spoint_set.clear();
         clearAllPoints();
     }
@@ -503,7 +508,7 @@ void AssemblerView::Impl::updateMatchedPoints(ra::RASceneConnectingPoint *_pt, b
 void AssemblerView::Impl::updateRobots()
 {
     ItemList<AssemblerItem> lst =  RootItem::instance()->checkedItems<AssemblerItem>();
-    DEBUG_STREAM_NL(" lst : " << lst.size() << std::endl);
+    DEBUG_STREAM(" lst : " << lst.size() );
     srobot_set.clear();
     for(auto it = lst.begin(); it != lst.end(); it++) {
         SgNode *node = (*it)->getScene();
@@ -512,11 +517,25 @@ void AssemblerView::Impl::updateRobots()
             srobot_set.insert(rbt);
         }
     }
-    DEBUG_STREAM_NL(" robot_list : " << srobot_set.size() << std::endl);
+    DEBUG_STREAM(" robot_list : " << srobot_set.size() );
+}
+void AssemblerView::Impl::deleteAllRobots()
+{
+    ItemList<AssemblerItem> lst =  RootItem::instance()->checkedItems<AssemblerItem>();
+    srobot_set.clear();
+    for(auto it = lst.begin(); it != lst.end(); it++) {
+        (*it)->removeFromParentItem();
+    }
+    clickedPoint0 = nullptr;
+    clickedPoint1 = nullptr;
+    selectable_spoint_set.clear();
+    clearAllPoints();
+    notifyUpdate();
+    SceneView::instance()->sceneWidget()->viewAll();
 }
 void AssemblerView::Impl::deleteRobot(ra::RASceneRobot *_rb)
 {
-    DEBUG_STREAM_NL(" delete robot : " << _rb->name() << std::endl);
+    DEBUG_STREAM(" delete robot : " << _rb->name() );
     ItemList<AssemblerItem> lst =  RootItem::instance()->checkedItems<AssemblerItem>();
     srobot_set.clear();
     for(auto it = lst.begin(); it != lst.end(); it++) {
@@ -525,7 +544,7 @@ void AssemblerView::Impl::deleteRobot(ra::RASceneRobot *_rb)
         if (!!rbt) {
             if (rbt == _rb) {
                 // delete
-                DEBUG_STREAM_NL(" delete:" << std::endl);
+                DEBUG_STREAM(" delete:" );
                 (*it)->removeFromParentItem();
             } else {
                 srobot_set.insert(rbt);
@@ -539,11 +558,11 @@ void AssemblerView::Impl::deleteRobot(ra::RASceneRobot *_rb)
     notifyUpdate();
     SceneView::instance()->sceneWidget()->viewAll();
 }
-void AssemblerView::Impl::attach()
+void AssemblerView::Impl::attachRobots(bool _just_align)
 {
     DEBUG_PRINT();
     if(!clickedPoint0 || !clickedPoint1) {
-        DEBUG_STREAM_NL( " require 2 clicked point" << std::endl);
+        DEBUG_STREAM( " require 2 clicked point" );
         return;
     }
 
@@ -558,28 +577,60 @@ void AssemblerView::Impl::attach()
     ra::RoboasmRobotPtr rb0 = cp0->scene_robot()->robot();
     ra::RoboasmRobotPtr rb1 = cp1->scene_robot()->robot();
 
-    DEBUG_STREAM_NL(" rb0: " << rb0->name() << " <=(attach) rb1:" << rb1->name() << std::endl);
-    DEBUG_STREAM_NL(" cp0-point(): " << cp0->point()->name() << " cp1-point()" << cp1->point()->name() << std::endl);
+    DEBUG_STREAM(" rb0: " << rb0->name() << " <=(attach) rb1:" << rb1->name() );
+    DEBUG_STREAM(" cp0-point(): " << cp0->point()->name() << " cp1-point()" << cp1->point()->name() );
 
     bool res;
     std::vector<ra::ConnectingTypeMatch*> res_match_lst;
     res = rb0->searchMatch(rb1, cp1->point(), cp0->point(),
                            res_match_lst);
     if(!res) {
-        DEBUG_STREAM_NL(" not matched " << std::endl);
+        DEBUG_STREAM(" not matched " );
         return;
     }
-    DEBUG_STREAM_NL(" matched : " << res_match_lst.size() << std::endl);
-    ra::ConnectingTypeMatch* mt_ = res_match_lst[0];
-    ra::ConnectingConfigurationID ccid = mt_->allowed_configuration[0];
+    DEBUG_STREAM(" matched : " << res_match_lst.size() );
+    int counter_ = 0; bool find_ = false;
+    int target_config_ = current_align_configuration;
+    if(_just_align) target_config_++;
+    ra::ConnectingConfigurationID ccid = res_match_lst[0]->allowed_configuration[0];
+    for(int i = 0; i < res_match_lst.size(); i++) {
+        ra::ConnectingTypeMatch* mt_ = res_match_lst[i];
+        for(int j = 0; j < mt_->allowed_configuration.size(); j++) {
+            if (counter_ == target_config_) {
+                ccid = mt_->allowed_configuration[j];
+                find_ = true;
+            }
+            counter_++;
+        }
+    }
+    if(!find_) {
+        current_align_configuration = 0;
+    } else {
+        current_align_configuration++;
+    }
 
-    bool res_attach = rb0->attach(rb1, cp1->point(), cp0->point(), ccid);
+    if(_just_align) {
+        DEBUG_STREAM(" align: " << ccid);
+    } else {
+        DEBUG_STREAM(" attach: " << ccid);
+    }
+    ra::RoboasmParts *attached_parts = dynamic_cast<ra::RoboasmParts*>(cp0->point()->parent());
+    bool res_attach = rb0->attach(rb1, cp1->point(), cp0->point(), ccid, _just_align);
     if (!res_attach) {
-        DEBUG_STREAM_NL(" attach failed " << std::endl);
+        DEBUG_STREAM(" attach failed " );
         return;
     }
 
-    DEBUG_STREAM_NL(" attached !! " << std::endl);
+    if(_just_align) {
+        rb1->update();
+        rb1->updateDescendants();
+        cp1->scene_robot()->updateFromSelf();
+        notifyUpdate();
+        return;
+    }
+    //cp0->point();
+#if 0
+    DEBUG_STREAM(" attached !! " );
     {
         ra::coordsPtrList lst;
         rb0->allDescendants(lst);
@@ -587,6 +638,29 @@ void AssemblerView::Impl::attach()
         for(auto it = lst.begin(); it != lst.end(); it++) {
             std::cerr << cntr++ << " : " << *(*it) << std::endl;
         }
+    }
+#endif
+    std::string &config_ = ra_settings->listConnectingConfiguration[ccid].name;
+    if (cp1->scene_robot()->history.size() == 1) {
+        cp0->scene_robot()->attachHistory(
+            cp1->scene_robot()->history,
+            cp1->point()->parent()->name(),//parent,
+            cp1->point()->name(),          //robot_point,
+            attached_parts->name(),        //parts_name,
+            attached_parts->info->type,    //parts_type,
+            cp0->point()->name(),          //parts_point,
+            config_);
+    } else {
+        ra::AttachHistory hist_;
+        attached_parts->dumpConnectFromParent(hist_);
+        cp0->scene_robot()->attachHistory(
+            hist_,
+            cp1->point()->parent()->name(),//parent,
+            cp1->point()->name(),          //robot_point,
+            attached_parts->name(),        //parts_name,
+            attached_parts->info->type,    //parts_type,
+            cp0->point()->name(),          //parts_point,
+            config_);
     }
     // erase(rb1)
     // update position of cp0,cp1 <- worldcoords
@@ -596,7 +670,7 @@ void AssemblerView::Impl::attach()
     //marge cp0->scene_robot() <=: cp1->scene_robot()
     ra::RASceneRobot *to_delete = cp1->scene_robot(); // after merged robots, all connecting point should be
     cp0->scene_robot()->mergeRobot(cp1->scene_robot());
-    DEBUG_STREAM_NL(" scene_robot0: " << cp0->scene_robot()->name() << " / scene_robot1: " << to_delete->name() << std::endl);
+    DEBUG_STREAM(" scene_robot0: " << cp0->scene_robot()->name() << " / scene_robot1: " << to_delete->name() );
     deleteRobot(to_delete);
     //notifyUpdate(); // update at delete robot
 }
@@ -617,17 +691,20 @@ bool AssemblerView::Impl::AssemblerSceneEvent::onContextMenuRequest(SceneWidgetE
 
     menu->addSeparator();
     menu->addItem("Align")->sigTriggered().connect(
-        [this](){ } );
-    menu->addItem("UnAlign");
+        [this](){ impl->com_align(); } );
+    menu->addItem("UnAlign")->sigTriggered().connect(
+        [this](){ impl->com_unalign(); } );
     menu->addSeparator();
-    menu->addItem("Attach");
-    menu->addSeparator();
-    menu->addItem("Undo");
+    menu->addItem("Attach")->sigTriggered().connect(
+        [this](){ impl->com_attach(); } );
+    menu->addItem("Undo")->sigTriggered().connect(
+        [this](){ impl->com_undo(); } );
     menu->addSeparator();
     menu->addItem("Save model")->sigTriggered().connect(
         [this](){ save(); } );
     menu->addSeparator();
-    menu->addItem("Delete All");
+    menu->addItem("Delete All")->sigTriggered().connect(
+        [this](){ impl->com_delete_all(); } );
 
     return true;
 }
