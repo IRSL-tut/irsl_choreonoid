@@ -30,6 +30,7 @@ set(sources
   AssemblerView.cpp
   AssemblerTreeView.cpp
   AssemblerBar.cpp
+  AssemblerManager.cpp
   RobotAssemblerSettings.cpp
   RobotAssembler.cpp
   RobotAssemblerBody.cpp
@@ -42,6 +43,7 @@ set(headers
   AssemblerView.h
   AssemblerTreeView.h
   AssemblerBar.h
+  AssemblerManager.h
   RobotAssemblerSettings.h
   RobotAssembler.h
   RobotAssemblerBody.h

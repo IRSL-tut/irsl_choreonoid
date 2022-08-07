@@ -12,6 +12,7 @@
 namespace ra = cnoid::robot_assembler;
 
 namespace cnoid {
+
 class ItemManager;
 class AssemblerItem;
 

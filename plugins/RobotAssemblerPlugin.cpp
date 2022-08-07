@@ -5,6 +5,7 @@
 #include "AssemblerView.h"
 #include "AssemblerTreeView.h"
 #include "AssemblerBar.h"
+#include "AssemblerManager.h"
 
 #include <fmt/format.h>
 
@@ -30,38 +31,49 @@ public:
     Impl(RobotAssemblerPlugin *_self) { self = _self; }
 
     RobotAssemblerPlugin *self;
-    ra::SettingsPtr ra_settings;
 
     void onSigOptionsParsed(po::variables_map& variables);
 };
 
 }
-
 void RobotAssemblerPlugin::Impl::onSigOptionsParsed(po::variables_map& variables)
 {
+    // plugin created
+    // initializeClass
+    // creating project ( from .cnoid )
+    // onSigOptionParsed
+    DEBUG_PRINT();
     if(variables.count("assembler")) {
         std::string fname_ = variables["assembler"].as<std::string>();
-        DEBUG_STREAM_NL("robot_assembler config file: " << fname_ << std::endl);
+        DEBUG_STREAM("robot_assembler config file: " << fname_);
 
-        ra_settings = std::make_shared<ra::Settings> ();
+        ra::SettingsPtr ra_settings = std::make_shared<ra::Settings> ();
         bool ret = ra_settings->parseYaml(fname_);
 
         if (ret) {
-            AssemblerView *ptr = AssemblerView::instance();
-            ptr->createButtons(ra_settings);
+            DEBUG_STREAM(" settings created");
+            AssemblerManager *manager = AssemblerManager::instance();
+            if(!!manager) {
+                DEBUG_STREAM(" manager find 0");
+                manager->ra_settings = ra_settings;
+                DEBUG_STREAM(" manager find 1");
+                manager->roboasm = std::make_shared<ra::Roboasm>(ra_settings);
+                DEBUG_STREAM(" manager find 2");
+                AssemblerView *ptr = AssemblerView::instance();
+                DEBUG_STREAM(" manager find 3");
+                ptr->createButtons();
+            }
         }
     }
 }
-
 RobotAssemblerPlugin* RobotAssemblerPlugin::instance()
 {
     return instance_;
 }
-
 RobotAssemblerPlugin::RobotAssemblerPlugin()
     : Plugin("RobotAssembler")
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     setActivationPriority(0);
     instance_ = this;
 
@@ -71,10 +83,9 @@ RobotAssemblerPlugin::~RobotAssemblerPlugin()
 {
     delete impl;
 }
-
 bool RobotAssemblerPlugin::initialize()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     OptionManager& om = this->optionManager();
     om.addOption("assembler", po::value<std::string>(), "load robot_assembler config file");
     //om.sigOptionsParsed(1).connect(onSigOptionsParsed);
@@ -90,17 +101,15 @@ bool RobotAssemblerPlugin::initialize()
 
     //ToolBar
     addToolBar(AssemblerBar::instance());
-
+    DEBUG_STREAM(" FINISH Plugin initialize");
     return true;
 }
-
 bool RobotAssemblerPlugin::finalize()
 {
-    DEBUG_STREAM_NL(std::endl);
+    DEBUG_PRINT();
     instance_ = nullptr;
     return true;
 }
-
 const char* RobotAssemblerPlugin::description() const
 {
     static std::string text =
@@ -113,6 +122,5 @@ const char* RobotAssemblerPlugin::description() const
 
     return text.c_str();
 }
-
 
 CNOID_IMPLEMENT_PLUGIN_ENTRY(RobotAssemblerPlugin);
