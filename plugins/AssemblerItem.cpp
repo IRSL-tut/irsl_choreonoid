@@ -1,5 +1,6 @@
 #include "AssemblerItem.h"
 #include "RobotAssemblerHelper.h"
+#include "AssemblerManager.h"
 
 #include <cnoid/RootItem>
 #include <cnoid/LazySignal>
@@ -39,6 +40,8 @@ public:
     Signal<void(int flags)> sigModelUpdated;
 
     float transparency;
+
+    AssemblerManager *manager;
 };
 
 }

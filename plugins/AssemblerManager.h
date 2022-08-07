@@ -4,6 +4,7 @@
 #include "RobotAssembler.h"
 #include "RobotAssemblerHelper.h"
 #include "AssemblerItem.h"
+
 #include "exportdecl.h"
 
 #define IRSL_DEBUG
@@ -86,5 +87,4 @@ private:
 };
 
 }
-
 #endif

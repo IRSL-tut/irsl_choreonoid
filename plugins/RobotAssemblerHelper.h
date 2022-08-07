@@ -1,11 +1,11 @@
-#include "RobotAssembler.h"
+#ifndef CNOID_ROBOT_ASSEMBLER_HELPER_H
+#define CNOID_ROBOT_ASSEMBLER_HELPER_H
 
+#include "RobotAssembler.h"
 #include <cnoid/SceneGraph>
 #include <cnoid/SceneWidgetEventHandler>
 #include <cnoid/Body>
 #include <set>
-
-#pragma once
 
 // temp
 #define IRSL_DEBUG
@@ -17,6 +17,7 @@ namespace robot_assembler {
 class RASceneConnectingPoint;
 class RASceneParts;
 class RASceneRobot;
+class AssemblerManager;
 
 class RASceneConnectingPoint : public SgPosTransform
 {
@@ -238,6 +239,7 @@ protected:
         return true;
     }
     RoboasmRobotPtr self;
+    AssemblerManager *manager;
     // create SgRAParts and add as child
     Signal<int(RASceneConnectingPoint *_cp)> sigPointClickedFunc;
     Signal<int(RASceneParts *_pt)> sigPartsClickedFunc;
@@ -254,3 +256,5 @@ typedef ref_ptr<RASceneRobot> RASceneRobotPtr;
 // notifyUpdate(SgUpdate::REMOVED | SgUpdate::ADDED | SgUpdate::MODIFIED); / on scene graph
  
 } }
+
+#endif

@@ -5,7 +5,7 @@
 // #include <cnoid/LocatableItem>
 #include <cnoid/RenderableItem>
 #include "RobotAssembler.h"
-//#include "RobotAssemblerHelper.h"
+#include "RobotAssemblerHelper.h"
 
 #include "exportdecl.h"
 

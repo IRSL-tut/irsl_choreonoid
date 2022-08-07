@@ -1,11 +1,12 @@
+#ifndef CNOID_ROBOT_ASSEMBLER_MAIN_H
+#define CNOID_ROBOT_ASSEMBLER_MAIN_H
+
 #include "RobotAssemblerSettings.h"
 #include <irsl_choreonoid/Coordinates.h>
 #include <string>
 #include <vector>
 #include <memory>
 #include <set>
-
-#pragma once
 
 namespace cnoid {
 namespace robot_assembler {
@@ -397,3 +398,5 @@ inline RoboasmRobot *RoboasmCoords::toRobot() {
 std::ostream& operator<< (std::ostream& ostr, const cnoid::coordinates &output);
 std::ostream& operator<< (std::ostream& ostr, const cnoid::robot_assembler::RoboasmCoords &output);
 } }
+
+#endif

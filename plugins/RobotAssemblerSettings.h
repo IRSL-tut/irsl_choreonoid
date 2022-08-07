@@ -1,3 +1,6 @@
+#ifndef CNOID_ROBOT_ASSEMBLER_SETTINGS_H
+#define CNOID_ROBOT_ASSEMBLER_SETTINGS_H
+
 #include <irsl_choreonoid/Coordinates.h>
 
 #include <string>
@@ -5,8 +8,6 @@
 #include <memory>
 #include <map>
 //#include <set>
-
-#pragma once
 
 namespace cnoid {
 namespace robot_assembler {
@@ -323,3 +324,5 @@ private:
 };
 
 } }
+
+#endif

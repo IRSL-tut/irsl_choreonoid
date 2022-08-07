@@ -1,7 +1,8 @@
+#ifndef CNOID_ROBOT_ASSEMBLER_BODY_H
+#define CNOID_ROBOT_ASSEMBLER_BODY_H
+
 #include "RobotAssembler.h"
 #include <cnoid/Body>
-
-#pragma once
 
 namespace cnoid {
 namespace robot_assembler {
@@ -35,3 +36,4 @@ protected:
 };
 
 } }
+#endif

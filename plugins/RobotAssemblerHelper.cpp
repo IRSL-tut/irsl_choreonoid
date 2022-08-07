@@ -1,5 +1,7 @@
 #include "RobotAssemblerHelper.h"
+#include "RobotAssemblerHelper.h"
 #include "RobotAssemblerBody.h"
+
 // shape
 #include <cnoid/SceneLoader>
 #include <cnoid/MeshGenerator>

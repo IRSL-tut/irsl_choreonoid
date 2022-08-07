@@ -1,5 +1,5 @@
 #include "AssemblerBar.h"
-//#include "AssemblerBodyItem.h"
+#include "AssemblerManager.h"
 #include <cnoid/FileDialog>
 #include <vector>
 
@@ -22,7 +22,7 @@ public:
 
     void buttonClicked(int n);
 
-    // Proxy
+    AssemblerManager *manager;
 };
 
 }
