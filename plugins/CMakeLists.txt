@@ -26,9 +26,6 @@ message("Boost: ${boost_libraries}")
 
 set(sources
   RobotAssemblerPlugin.cpp
-  #AssemblerBodyItem.cpp
-  #AssemblerFileIO.cpp
-  #AssemblerSceneBody.cpp
   AssemblerItem.cpp
   AssemblerView.cpp
   AssemblerTreeView.cpp
@@ -41,9 +38,6 @@ set(sources
 
 set(headers
   RobotAssemblerPlugin.h
-  #AssemblerBodyItem.h
-  #AssemblerFileIO.h
-  #AssemblerSceneBody.h
   AssemblerItem.h
   AssemblerView.h
   AssemblerTreeView.h
