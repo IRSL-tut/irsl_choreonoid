@@ -295,6 +295,41 @@ class RobotModel(object):
         rL.seCoords(cds)
         self.robot.calcForwardKinematics()
 
+    def inverse_kinematics(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
+        constraints = IK.Constraints()
+        ra_constraint = IK.PositionConstraint()
+        ra_constraint.A_link =     eval('self.%s_tip_link'%(limb))
+        ra_constraint.A_localpos = eval('self.%s_tip_to_eef'%(limb))
+        #constraint->B_link() = nullptr;
+        ra_constraint.B_localpos = position
+        ra_constraint.weight = np.array(weight)
+        constraints.push_back(ra_constraint)
+
+        jlim_avoid_weight_old = np.zeros(6 + self.robot.getNumJoints())
+        ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
+        dq_weight_all = np.append(np.zeros(6), np.ones(self.robot.getNumJoints()))
+
+        d_level = 0
+        if debug:
+            d_level = 1
+
+        loop = IK.solveFullbodyIKLoopFast(self.robot,
+                                          constraints,
+                                          jlim_avoid_weight_old,
+                                          dq_weight_all,
+                                          20,
+                                          1e-6,
+                                          d_level)
+        if debug:
+            for cntr, const in enumerate(constraints):
+                const.debuglevel = 1
+                if const.checkConvergence():
+                    print('constraint %d (%s) : converged'%(cntr, const))
+                else:
+                    print('constraint %d (%s) : NOT converged'%(cntr, const))
+
+        return loop
+
     def move_centroid_on_foot_cnoid(self, p = 0.5, debug = False):
         mid_pos = self.foot_mid_coords(p)
         #mid_trans = iu.Position_translation(mid_pos)
