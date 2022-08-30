@@ -195,12 +195,12 @@ class RobotModel(object):
         self.torso_tip_link = None
         self.torso_tip_to_eef = None
 
-    def init_ending():
+    def init_ending(self):
         for limb in ('rleg', 'lleg', 'rarm', 'larm', 'head', 'torso'):
             eef = eval('self.%s_tip_to_eef'%(limb))
             if not eef is None:
-                eval('self.%s_tip_to_eef_coords = iu.coordinates(self.%s_tip_to_eef)'%(limb, limb))
-                eval('self.%s_end_coords = lambda : self.%s_tip_link.getCoords().transform(self.%s_tip_to_eef_coords)'%(limb, limb, limb))
+                exec('self.%s_tip_to_eef_coords = iu.coordinates(self.%s_tip_to_eef)'%(limb, limb))
+                exec('type(self).%s_end_coords = lambda self : self.%s_tip_link.getCoords().transform(self.%s_tip_to_eef_coords)'%(limb, limb, limb))
     #def robot(self):
     #    return robot
 
