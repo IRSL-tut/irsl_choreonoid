@@ -122,34 +122,56 @@ def flushRobotView(name):
 
 ###
 class DrawCoords(object):
-    def __init__(self):
-        self.RLine = di.DrawInterface(np.array([1, 0, 0]))
-        self.GLine = di.DrawInterface(np.array([0, 1, 0]))
-        self.BLine = di.DrawInterface(np.array([0, 0, 1]))
+    def __init__(self, color=None):
+        if color is None:
+            self.XLine = di.DrawInterface(np.array([1, 0, 0]))
+            self.YLine = di.DrawInterface(np.array([0, 1, 0]))
+            self.ZLine = di.DrawInterface(np.array([0, 0, 1]))
+        elif type(color) is np.ndarray:
+            self.XLine = di.DrawInterface(color)
+            self.YLine = di.DrawInterface(color)
+            self.ZLine = di.DrawInterface(color)
+        elif (type(color) is list) and ( (type(color[0]) is int) or (type(color[0]) is float) ):
+            self.XLine = di.DrawInterface(np.array(color))
+            self.YLine = di.DrawInterface(np.array(color))
+            self.ZLine = di.DrawInterface(np.array(color))
+        elif (type(color) is list) and (type(color[0]) is np.ndarray):
+            self.XLine = di.DrawInterface(color[0])
+            self.YLine = di.DrawInterface(color[1])
+            self.ZLine = di.DrawInterface(color[2])
+        elif (type(color) is list) and (type(color[0]) is list):
+            self.XLine = di.DrawInterface(np.array(color[0]))
+            self.YLine = di.DrawInterface(np.array(color[1]))
+            self.ZLine = di.DrawInterface(np.array(color[2]))
+        else:
+            self.XLine = di.DrawInterface(np.array([1, 0, 0]))
+            self.YLine = di.DrawInterface(np.array([0, 1, 0]))
+            self.ZLine = di.DrawInterface(np.array([0, 0, 1]))
+
     def __del__(self):
         print('del: {:X}'.format(id(self)))
-        self.RLine  = None
-        self.GLine  = None
-        self.BRLine = None
+        self.XLine  = None
+        self.YLine  = None
+        self.ZLine = None
     def __repr__(self):
-        return '<DrawCoords {:X}({:X},{:X},{:X})>'.format(id(self), id(self.RLine), id(self.GLine), id(self.BLine))
+        return '<DrawCoords {:X}({:X},{:X},{:X})>'.format(id(self), id(self.XLine), id(self.YLine), id(self.ZLine))
 
     def hide(self, flush = True):
-        self.RLine.hide()
-        self.GLine.hide()
-        self.BLine.hide()
+        self.XLine.hide()
+        self.YLine.hide()
+        self.ZLine.hide()
         if flush:
             di.flush()
     def show(self, flush = True):
-        self.RLine.show()
-        self.GLine.show()
-        self.BLine.show()
+        self.XLine.show()
+        self.YLine.show()
+        self.ZLine.show()
         if flush:
             di.flush()
     def hide_and_show(self, flush = True):
-        self.RLine.hide_and_show()
-        self.GLine.hide_and_show()
-        self.BLine.hide_and_show()
+        self.XLine.hide_and_show()
+        self.YLine.hide_and_show()
+        self.ZLine.hide_and_show()
         if flush:
             di.flush()
     def draw(self, coords, length = 0.1, axis_size = 0.02):
@@ -161,9 +183,9 @@ class DrawCoords(object):
         ax_vec = length * iu.normalizeVector(rot.dot(np.array([1, 1, 1])))
         pp = iu.Position_translation(coords)
 
-        self.RLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
-        self.GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
-        self.BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
+        self.XLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
+        self.YLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
+        self.ZLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
 
         self.show()
         di.flush()
