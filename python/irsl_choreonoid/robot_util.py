@@ -120,28 +120,40 @@ def flushRobotView(name):
     #MessageView.getInstance().flush()
     MessageView.instance.flush()
 
+###
 class DrawCoords(object):
     def __init__(self):
         self.RLine = di.DrawInterface(np.array([1, 0, 0]))
         self.GLine = di.DrawInterface(np.array([0, 1, 0]))
         self.BLine = di.DrawInterface(np.array([0, 0, 1]))
+    def __del__(self):
+        print('del: {:X}'.format(id(self)))
+        self.RLine  = None
+        self.GLine  = None
+        self.BRLine = None
+    def __repr__(self):
+        return '<DrawCoords {:X}({:X},{:X},{:X})>'.format(id(self), id(self.RLine), id(self.GLine), id(self.BLine))
 
-    def hide(self):
+    def hide(self, flush = True):
         self.RLine.hide()
         self.GLine.hide()
         self.BLine.hide()
-
-    def show(self):
+        if flush:
+            di.flush()
+    def show(self, flush = True):
         self.RLine.show()
         self.GLine.show()
         self.BLine.show()
-
-    def hide_and_show(self):
+        if flush:
+            di.flush()
+    def hide_and_show(self, flush = True):
         self.RLine.hide_and_show()
         self.GLine.hide_and_show()
         self.BLine.hide_and_show()
-
+        if flush:
+            di.flush()
     def draw(self, coords, length = 0.1, axis_size = 0.02):
+        self.hide()
         rot = iu.Position_rotation(coords)
         ax_x = length * rot[:3, 0]
         ax_y = length * rot[:3, 1]
@@ -153,7 +165,7 @@ class DrawCoords(object):
         self.GLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
         self.BLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
 
-        self.hide_and_show()
+        self.show()
         di.flush()
 ## add methods to choreonoid's class
 def __joint_list(self):
