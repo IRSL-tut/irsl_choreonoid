@@ -88,7 +88,15 @@ namespace cnoid {
 
             setColor(colorVec);
         }
-
+        ~DrawInterface() {
+            std::cerr << "delete : " << this << std::endl;
+            hide();
+            lineSet->clear();
+            lineSet->clearLines();
+            vertices = nullptr;
+            colors   = nullptr;
+            lineSet  = nullptr;
+        }
         void reset(){
             lineSet->clear();
             lineSet->clearLines();
