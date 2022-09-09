@@ -122,7 +122,8 @@ def flushRobotView(name):
 
 ###
 class DrawCoords(object):
-    def __init__(self, color=None):
+    def __init__(self, color=None, width=None):
+        self.width = width
         if color is None:
             self.XLine = di.DrawInterface(np.array([1, 0, 0]))
             self.YLine = di.DrawInterface(np.array([0, 1, 0]))
@@ -182,7 +183,10 @@ class DrawCoords(object):
         ax_z = length * rot[:3, 2]
         ax_vec = length * iu.normalizeVector(rot.dot(np.array([1, 1, 1])))
         pp = iu.Position_translation(coords)
-
+        if not self.width is None:
+            self.XLine.setLineWidth(self.width)
+            self.YLine.setLineWidth(self.width)
+            self.ZLine.setLineWidth(self.width)
         self.XLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
         self.YLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
         self.ZLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
