@@ -1,0 +1,42 @@
+name: Build-IRSL-system
+run-name: ${{ github.actor }} is building all-in system of irsl_choreonoid
+#
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '30 2 * * 4'
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: [ 18.04, 20.04 ] ## for 22.04 / ROS2 environment
+    runs-on: self-hosted
+    env:
+      IMAGE_NAME: irsl_choreonoid
+#      DOCKER_LOCAL: ghcr.io/
+#      DOCKER_LOCAL: repo.irsl.eiiris.tut.ac.jp/
+      DOCKER_DEPLOY: repo.irsl.eiiris.tut.ac.jp/
+    steps:
+      - name: Check Version
+        run: |
+          if   [ ${{ matrix.ubuntu }} == 22.04 ]; then
+            echo "ROS_DISTRO=noetic" >> $GITHUB_ENV
+          elif [ ${{ matrix.ubuntu }} == 20.04 ]; then
+            echo "ROS_DISTRO=noetic" >> $GITHUB_ENV
+          elif [ ${{ matrix.ubuntu }} == 18.04 ]; then
+            echo "ROS_DISTRO=melodic" >> $GITHUB_ENV
+          else
+            echo "ROS_DISTRO=none" >> $GITHUB_ENV
+          fi
+      - name: Check out repository code(src)
+        uses: actions/checkout@v3
+      - name: Check Build 1st
+        run: >
+          docker build . -f .github/workflows/Dockerfile --pull
+          --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
+          -t actions/irsl_choreonoid:${{ matrix.ubuntu }}
