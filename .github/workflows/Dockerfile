@@ -19,11 +19,12 @@ RUN apt update -q -qq && \
 ### create workspace
 WORKDIR /choreonoid_ws
 ##
-COPY config/dot.rosinstall dot.rosinstall
+COPY config .irsl_choreonoid_config
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    wstool init src dot.rosinstall && \
+    wstool init src .irsl_choreonoid_config/dot.rosinstall && \
     rm -rf src/irsl_choreonoid && \
-    wstool update -t src
+    wstool update -t src && \
+    patch -d src -p0 < .irsl_choreonoid_config/osqp-cpp.patch
 ##
 COPY . src/irsl_choreonoid
 
