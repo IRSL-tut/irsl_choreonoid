@@ -1,8 +1,5 @@
 - git:
     local-name: choreonoid
-    #uri: https://github.com/choreonoid/choreonoid.git
-    #uri: https://github.com/YoheiKakiuchi/choreonoid.git
-    #version: add_console_local
     uri: https://github.com/IRSL-tut/choreonoid.git
     version: stable
 - git:
@@ -12,13 +9,20 @@
 - git:
     local-name: ik_solvers
     uri: https://github.com/YoheiKakiuchi/ik_solvers.git
-    #version: add_python
-    version: add_python_with_prioritized
+    version: add_python_with_prioritized_latest
 - git:
     local-name: prioritized_qp
     uri: https://github.com/Naoki-Hiraoka/prioritized_qp.git
-    version: 603939698e32c7616eda2dd8a8151e0abcd261ed
+    version: 14353de1dbc54ea9a669497c1bf535542c24f2a1
 - git:
     local-name: qp_solvers
     uri: https://github.com/Naoki-Hiraoka/qp_solvers.git
-    version: f18241f7bf29c436ef2f1d3fd770b3790b16ffd4
+    version: 98b12996bbc07e909a124eecc04e92489f45bec3
+- git:
+    local-name: osqp-eigen
+    uri: https://github.com/robotology/osqp-eigen.git
+    version: v0.7.0
+- git: ### for osqp-cpp
+    local-name: abseil_catkin
+    uri: https://github.com/Naoki-Hiraoka/abseil_catkin.git
+    version: 1eee20b1b4706a8b1c9f6bd9853b0a525b1a368d
