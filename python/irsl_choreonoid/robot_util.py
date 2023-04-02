@@ -58,7 +58,11 @@ def cnoidTranslation(cPosition):
   return cPosition[:3, 3]
 
 def loadRobot(fname):
-    return cnoid.Body.BodyLoader().load(str(fname))
+    rb = cnoid.Body.BodyLoader().load(str(fname))
+    rb.updateLinkTree()
+    rb.initializePosition()
+    rb.calcForwardKinematics()
+    return rb
 
 def loadRobotItem(fname, name = None, world = True):
     '''Load robot model and add it as Item
@@ -83,6 +87,8 @@ def loadRobotItem(fname, name = None, world = True):
         rr = bI.body()
     else:
         rr = bI.body
+    rr.updateLinkTree()
+    rr.initializePosition()
     rr.calcForwardKinematics()
     bI.storeInitialState()
     if world == True:
@@ -213,7 +219,7 @@ class RobotModel(object):
         if isinstance(robot, BodyItem):
             self.robot = robot.body
             self.item = robot
-        elif isinstance(robot, cnoid.Base.Body):
+        elif isinstance(robot, cnoid.Body.Body):
             self.robot = robot
         else:
             raise TypeError('')
@@ -266,8 +272,9 @@ class RobotModel(object):
         return self.robot.angleVector(angles)
 
     def flush(self):
-        if not (self.item is None):
+        if self.robot is not None:
             self.robot.calcForwardKinematics()
+        if self.item is not None:
             self.item.notifyKinematicStateChange()
             MessageView.instance.flush()
 
