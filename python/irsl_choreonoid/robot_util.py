@@ -354,7 +354,7 @@ class RobotModel(object):
         rL.setCoords(cds)
         self.robot.calcForwardKinematics()
 
-    def inverse_kinematics(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
+    def inverse_kinematics_cnoid(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
         ra_constraint.A_link =     eval('self.%s_tip_link'%(limb))
@@ -389,6 +389,10 @@ class RobotModel(object):
 
         return loop
 
+    def inverse_kinematics(self, coords, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
+        pos = coords.toPosition()
+        return inverse_kinematics_cnoid(pos, limb=limb, weight=weight, debug=debug)
+
     def move_centroid_on_foot_cnoid(self, p = 0.5, debug = False):
         mid_pos = self.foot_mid_coords(p)
         #mid_trans = iu.Position_translation(mid_pos)
@@ -413,7 +417,6 @@ class RobotModel(object):
         com_constraint = IK.COMConstraint()
         com_constraint.A_robot = self.robot
         com_constraint.B_localp = mid_trans
-
         w = com_constraint.weight
         w[2] = 0.0
         com_constraint.weight = w
@@ -421,11 +424,13 @@ class RobotModel(object):
 
         jlim_avoid_weight_old = np.zeros(6 + self.robot.getNumJoints())
         ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
-        dq_weight_all = np.array( (1,1,1,0,0,0) + self.leg_mask() )
+        dq_weight_all = np.array( (1,1,0, 0,0,0) + self.leg_mask() )
 
         d_level = 0
         if debug:
             d_level = 1
+            for const in constraints:
+                const.debuglevel = 1
 
         loop = IK.solveFullbodyIKLoopFast(self.robot,
                                           constraints,
@@ -444,8 +449,18 @@ class RobotModel(object):
 
         return loop
 
+    def move_centroid_on_foot_qp(self, p = 0.5, debug = False):
+        pass
+
+    def move_centroid_on_foot(self, p = 0.5, debug = False):
+        return self.move_centroid_on_foot_cnoid(p = p, debug = debug)
+
     def fullbody_inverse_kinematics_cnoid(self):
         pass
+    def fullbody_inverse_kinematics_qp(self):
+        pass
+    def fullbody_inverse_kinematics(self):
+        return self.fullbody_inverse_kinematics_cnoid()
 
 def merge_mask(tp1, tp2):
     return tuple([x or y for (x, y) in zip(tp1, tp2)])
