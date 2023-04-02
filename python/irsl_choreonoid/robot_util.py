@@ -43,6 +43,9 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
         getItemTreeView().checkItem(sim_)
     return sim_
 
+def isInChoreonoid():
+    return (RootItem.instance is not None)
+
 def cnoidPosition(rotation = None, translation = None):
   ret = np.identity(4)
   if not (rotation is None):
@@ -432,3 +435,8 @@ class RobotModel(object):
 
     def fullbody_inverse_kinematics_cnoid(self):
         pass
+
+def merge_mask(tp1, tp2):
+    return tuple([x or y for (x, y) in zip(tp1, tp2)])
+def invert_mask(tp1):
+    return tuple([0 if x else 1 for x in tp1])
