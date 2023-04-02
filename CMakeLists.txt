@@ -4,7 +4,7 @@ cmake_policy(SET CMP0057 NEW)
 
 project(irsl_choreonoid)
 
-add_compile_options(-std=c++17)
+#add_compile_options(-std=c++17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 ##find_package(catkin REQUIRED COMPONENTS xxxx)
@@ -68,9 +68,11 @@ link_directories(${CHOREONOID_LIBRARY_DIRS})
 ##endforeach(lib)
 ##message ("cnoid_body_lib: ${CHOREONOID_BODY_LIBRARIES_ABS}")
 
+#add_subdirectory(sample)
+add_subdirectory(pybind11)
+
 # for python module
 catkin_python_setup()
-
 
 #add_library(${PROJECT_NAME}
 #  src/EigenUtil.cpp
@@ -102,6 +104,3 @@ install(DIRECTORY test
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )
-
-#add_subdirectory(sample)
-add_subdirectory(pybind11)
