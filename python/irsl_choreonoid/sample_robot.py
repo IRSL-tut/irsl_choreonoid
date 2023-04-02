@@ -35,6 +35,7 @@ class SampleRobot(ru.RobotModel):
                                                 np.array([0.0, 0.0, -0.14]))
         self.larm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
                                                 np.array([0.0, 0.0, -0.14]))
+        self.init_ending()
 
     def default_pose__(self):
         return np.array([ 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## rleg

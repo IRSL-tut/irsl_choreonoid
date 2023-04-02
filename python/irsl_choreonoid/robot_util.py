@@ -289,8 +289,11 @@ class RobotModel(object):
 
     def set_pose(self, name):
         av = eval('self.%s_pose__()'%(name))
-        self.angle_vector(av)
-        return self.angle_vector()
+        self.angleVector(av)
+        return self.angleVector()
+
+    def end_effector_cnoid(self, limb):
+        return eval('self.%s_end_effector_cnoid()'%(limb))
 
     def end_effector(self, limb):
         tip_link = eval('self.%s_tip_link'%(limb))
@@ -299,40 +302,48 @@ class RobotModel(object):
         cds.transform(tip_to_eef)
         return cds
 
-    def end_effector_cnoid(self, limb):
-        return eval('self.%s_end_effector_cnoid()'%(limb))
-
+    ### Position
     def rleg_end_effector_cnoid(self):
         return self.rleg_tip_link.getPosition().dot(self.rleg_tip_to_eef)
-
     def lleg_end_effector_cnoid(self):
         return self.lleg_tip_link.getPosition().dot(self.lleg_tip_to_eef)
-
     def rarm_end_effector_cnoid(self):
         return self.rarm_tip_link.getPosition().dot(self.rarm_tip_to_eef)
-
     def larm_end_effector_cnoid(self):
         return self.larm_tip_link.getPosition().dot(self.larm_tip_to_eef)
-
     def head_end_effector_cnoid(self):
         return self.head_tip_link.getPosition().dot(self.head_tip_to_eef)
-
     def torso_end_effector_cnoid(self):
         return self.torso_tip_link.getPosition().dot(self.torso_tip_to_eef)
 
     def foot_mid_coords_cnoid(self, p = 0.5):
-        return iu.mid_coords_pos(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
+        return iu.Position_mid_coords(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
 
-    def fix_leg_to_coords_cnoid(self, coords, p = 0.5):
-        mc = self.foot_mid_coords(p)
+    def fix_leg_to_coords_cnoid(self, position, p = 0.5):
+        mc = self.foot_mid_coords_cnoid(p)
         rL = self.robot.rootLink
         rL.setPosition(
-            (iu.PositionInverse(mc).dot(coords)).dot(rL.getPosition())
+            (iu.PositionInverse(mc).dot(position)).dot(rL.getPosition())
             )
         self.robot.calcForwardKinematics()
 
+    ### coordinates
+    def rleg_end_effector(self):
+        return self.rleg_tip_link.getCoords().transform(self.rleg_tip_to_eef_coords)
+    def lleg_end_effector(self):
+        return self.lleg_tip_link.getCoords().transform(self.lleg_tip_to_eef_coords)
+    def rarm_end_effector(self):
+        return self.rarm_tip_link.getCoords().transform(self.rarm_tip_to_eef_coords)
+    def larm_end_effector(self):
+        return self.larm_tip_link.getCoords().transform(self.larm_tip_to_eef_coords)
+    def head_end_effector(self):
+        return self.head_tip_link.getCoords().transform(self.head_tip_to_eef_coords)
+    def torso_end_effector(self):
+        return self.torso_tip_link.getCoords().transform(self.torso_tip_to_eef_coords)
+
     def foot_mid_coords(self, p = 0.5):
-        return iu.mid_coords(p, self.end_effector('rleg'), self.end_effector('lleg'))
+        cds = self.end_effector('rleg')
+        return cds.mid_coords(0.5, self.end_effector('lleg'))
 
     def fix_leg_to_coords(self, coords, p = 0.5):
         mc = self.foot_mid_coords(p)
@@ -340,7 +351,7 @@ class RobotModel(object):
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(rL.getCoords())
-        rL.seCoords(cds)
+        rL.setCoords(cds)
         self.robot.calcForwardKinematics()
 
     def inverse_kinematics(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
