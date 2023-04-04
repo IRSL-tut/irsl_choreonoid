@@ -1,5 +1,5 @@
 name: Build-IRSL-system
-run-name: ${{ github.actor }} is building all-in system of irsl_choreonoid
+#run-name: ${{ github.actor }} is building all-in system of irsl_choreonoid
 #
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
     branches: [main]
   schedule:
     - cron: '30 2 * * 4'
+
 jobs:
   build:
     strategy:
@@ -40,3 +41,7 @@ jobs:
           docker build . -f .github/workflows/Dockerfile --pull
           --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
           -t actions/irsl_choreonoid:${{ matrix.ubuntu }}
+      - name: Tests
+        run: >
+          docker run --rm actions/irsl_choreonoid:${{ matrix.ubuntu }}
+          -- bash -c 'source /choreonoid_ws/install/setup.bash; roscd irsl_choreonoid/test; PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 coords_test.py'
