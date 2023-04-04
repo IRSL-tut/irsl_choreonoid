@@ -43,6 +43,9 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
         getItemTreeView().checkItem(sim_)
     return sim_
 
+def isInChoreonoid():
+    return (RootItem.instance is not None)
+
 def cnoidPosition(rotation = None, translation = None):
   ret = np.identity(4)
   if not (rotation is None):
@@ -58,7 +61,11 @@ def cnoidTranslation(cPosition):
   return cPosition[:3, 3]
 
 def loadRobot(fname):
-    return cnoid.Body.BodyLoader().load(str(fname))
+    rb = cnoid.Body.BodyLoader().load(str(fname))
+    rb.updateLinkTree()
+    rb.initializePosition()
+    rb.calcForwardKinematics()
+    return rb
 
 def loadRobotItem(fname, name = None, world = True):
     '''Load robot model and add it as Item
@@ -83,6 +90,8 @@ def loadRobotItem(fname, name = None, world = True):
         rr = bI.body()
     else:
         rr = bI.body
+    rr.updateLinkTree()
+    rr.initializePosition()
     rr.calcForwardKinematics()
     bI.storeInitialState()
     if world == True:
@@ -213,7 +222,7 @@ class RobotModel(object):
         if isinstance(robot, BodyItem):
             self.robot = robot.body
             self.item = robot
-        elif isinstance(robot, cnoid.Base.Body):
+        elif isinstance(robot, cnoid.Body.Body):
             self.robot = robot
         else:
             raise TypeError('')
@@ -266,8 +275,9 @@ class RobotModel(object):
         return self.robot.angleVector(angles)
 
     def flush(self):
-        if not (self.item is None):
+        if self.robot is not None:
             self.robot.calcForwardKinematics()
+        if self.item is not None:
             self.item.notifyKinematicStateChange()
             MessageView.instance.flush()
 
@@ -279,8 +289,11 @@ class RobotModel(object):
 
     def set_pose(self, name):
         av = eval('self.%s_pose__()'%(name))
-        self.angle_vector(av)
-        return self.angle_vector()
+        self.angleVector(av)
+        return self.angleVector()
+
+    def end_effector_cnoid(self, limb):
+        return eval('self.%s_end_effector_cnoid()'%(limb))
 
     def end_effector(self, limb):
         tip_link = eval('self.%s_tip_link'%(limb))
@@ -289,40 +302,48 @@ class RobotModel(object):
         cds.transform(tip_to_eef)
         return cds
 
-    def end_effector_cnoid(self, limb):
-        return eval('self.%s_end_effector_cnoid()'%(limb))
-
+    ### Position
     def rleg_end_effector_cnoid(self):
         return self.rleg_tip_link.getPosition().dot(self.rleg_tip_to_eef)
-
     def lleg_end_effector_cnoid(self):
         return self.lleg_tip_link.getPosition().dot(self.lleg_tip_to_eef)
-
     def rarm_end_effector_cnoid(self):
         return self.rarm_tip_link.getPosition().dot(self.rarm_tip_to_eef)
-
     def larm_end_effector_cnoid(self):
         return self.larm_tip_link.getPosition().dot(self.larm_tip_to_eef)
-
     def head_end_effector_cnoid(self):
         return self.head_tip_link.getPosition().dot(self.head_tip_to_eef)
-
     def torso_end_effector_cnoid(self):
         return self.torso_tip_link.getPosition().dot(self.torso_tip_to_eef)
 
     def foot_mid_coords_cnoid(self, p = 0.5):
-        return iu.mid_coords_pos(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
+        return iu.Position_mid_coords(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
 
-    def fix_leg_to_coords_cnoid(self, coords, p = 0.5):
-        mc = self.foot_mid_coords(p)
+    def fix_leg_to_coords_cnoid(self, position, p = 0.5):
+        mc = self.foot_mid_coords_cnoid(p)
         rL = self.robot.rootLink
         rL.setPosition(
-            (iu.PositionInverse(mc).dot(coords)).dot(rL.getPosition())
+            (iu.PositionInverse(mc).dot(position)).dot(rL.getPosition())
             )
         self.robot.calcForwardKinematics()
 
+    ### coordinates
+    def rleg_end_effector(self):
+        return self.rleg_tip_link.getCoords().transform(self.rleg_tip_to_eef_coords)
+    def lleg_end_effector(self):
+        return self.lleg_tip_link.getCoords().transform(self.lleg_tip_to_eef_coords)
+    def rarm_end_effector(self):
+        return self.rarm_tip_link.getCoords().transform(self.rarm_tip_to_eef_coords)
+    def larm_end_effector(self):
+        return self.larm_tip_link.getCoords().transform(self.larm_tip_to_eef_coords)
+    def head_end_effector(self):
+        return self.head_tip_link.getCoords().transform(self.head_tip_to_eef_coords)
+    def torso_end_effector(self):
+        return self.torso_tip_link.getCoords().transform(self.torso_tip_to_eef_coords)
+
     def foot_mid_coords(self, p = 0.5):
-        return iu.mid_coords(p, self.end_effector('rleg'), self.end_effector('lleg'))
+        cds = self.end_effector('rleg')
+        return cds.mid_coords(0.5, self.end_effector('lleg'))
 
     def fix_leg_to_coords(self, coords, p = 0.5):
         mc = self.foot_mid_coords(p)
@@ -330,10 +351,10 @@ class RobotModel(object):
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(rL.getCoords())
-        rL.seCoords(cds)
+        rL.setCoords(cds)
         self.robot.calcForwardKinematics()
 
-    def inverse_kinematics(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
+    def inverse_kinematics_cnoid(self, position, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
         ra_constraint.A_link =     eval('self.%s_tip_link'%(limb))
@@ -368,6 +389,10 @@ class RobotModel(object):
 
         return loop
 
+    def inverse_kinematics(self, coords, limb = 'rarm', weight = [1,1,1, 1,1,1], debug = False):
+        pos = coords.toPosition()
+        return inverse_kinematics_cnoid(pos, limb=limb, weight=weight, debug=debug)
+
     def move_centroid_on_foot_cnoid(self, p = 0.5, debug = False):
         mid_pos = self.foot_mid_coords(p)
         #mid_trans = iu.Position_translation(mid_pos)
@@ -392,7 +417,6 @@ class RobotModel(object):
         com_constraint = IK.COMConstraint()
         com_constraint.A_robot = self.robot
         com_constraint.B_localp = mid_trans
-
         w = com_constraint.weight
         w[2] = 0.0
         com_constraint.weight = w
@@ -400,11 +424,13 @@ class RobotModel(object):
 
         jlim_avoid_weight_old = np.zeros(6 + self.robot.getNumJoints())
         ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
-        dq_weight_all = np.array( (1,1,1,0,0,0) + self.leg_mask() )
+        dq_weight_all = np.array( (1,1,0, 0,0,0) + self.leg_mask() )
 
         d_level = 0
         if debug:
             d_level = 1
+            for const in constraints:
+                const.debuglevel = 1
 
         loop = IK.solveFullbodyIKLoopFast(self.robot,
                                           constraints,
@@ -423,5 +449,20 @@ class RobotModel(object):
 
         return loop
 
+    def move_centroid_on_foot_qp(self, p = 0.5, debug = False):
+        pass
+
+    def move_centroid_on_foot(self, p = 0.5, debug = False):
+        return self.move_centroid_on_foot_cnoid(p = p, debug = debug)
+
     def fullbody_inverse_kinematics_cnoid(self):
         pass
+    def fullbody_inverse_kinematics_qp(self):
+        pass
+    def fullbody_inverse_kinematics(self):
+        return self.fullbody_inverse_kinematics_cnoid()
+
+def merge_mask(tp1, tp2):
+    return tuple([x or y for (x, y) in zip(tp1, tp2)])
+def invert_mask(tp1):
+    return tuple([0 if x else 1 for x in tp1])

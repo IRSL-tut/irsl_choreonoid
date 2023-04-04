@@ -7,14 +7,16 @@ import math
 
 def init_sample_robot(world = True):
     fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
-    ru.loadRobot(fname, 'SampleRobot', world)
-    i = ru.findItem('SampleRobot')
-    return SampleRobot(i)
-
-def merge_mask(tp1, tp2):
-    return tuple([x or y for (x, y) in zip(tp1, tp2)])
-def invert_mask(tp1):
-    return tuple([0 if x else 1 for x in tp1])
+    if ru.isInChoreonoid():
+        ### in choreonoid
+        ru.loadRobotItem(fname, 'SampleRobot', world)
+        i = ru.findItem('SampleRobot')
+        return SampleRobot(i)
+    else:
+        ### not in choreonoid
+        rb = ru.loadRobot(fname)
+        rb.calcForwardKinematics()
+        return SampleRobot(rb)
 
 class SampleRobot(ru.RobotModel):
     def __init__(self, robot):
@@ -33,6 +35,7 @@ class SampleRobot(ru.RobotModel):
                                                 np.array([0.0, 0.0, -0.14]))
         self.larm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
                                                 np.array([0.0, 0.0, -0.14]))
+        self.init_ending()
 
     def default_pose__(self):
         return np.array([ 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## rleg

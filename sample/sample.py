@@ -16,11 +16,12 @@ rr.flush()
 cds0 = rr.foot_mid_coords()
 
 ## 左右脚先の中点を与えた座標に一致させる（以下の場合は原点）
-rr.fix_leg_to_coords(np.identity(4))
+#rr.fix_leg_to_coords_cnoid(np.identity(4)) ## Position
+rr.fix_leg_to_coords(iu.coordinates()) ## coordinates
 rr.flush()## 画面の更新
 
 ## 腰を前後左右に動かして重心を左右脚先の中点上に一致させる
-rr.move_centroid_on_foot()
+rr.move_centroid_on_foot_cnoid(debug=True)
 rr.flush()## 画面の更新
 cds1 = rr.foot_mid_coords()## 左右脚先の中点
 
