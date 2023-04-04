@@ -192,10 +192,16 @@ namespace cnoid {
 #endif
         }
 
-        bool isInitial() {
+        bool isInitial() const {
             if(pos.norm() != 0.0) return false;
             AngleAxis aa_(rot);
             if(aa_.angle() != 0.0) return false;
+            return true;
+        }
+        bool isInitial(double eps) {
+            if(pos.norm() > eps) return false;
+            AngleAxis aa_(rot);
+            if(aa_.angle() > eps) return false;
             return true;
         }
         void set(const Vector3 &p) { pos = p; }
