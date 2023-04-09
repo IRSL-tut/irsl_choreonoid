@@ -36,7 +36,14 @@ jobs:
           fi
       - name: Check out repository code(src)
         uses: actions/checkout@v3
-      - name: Check Build 1st
+      - name: Check Build (no cache)
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+        run: >
+          docker build . -f .github/workflows/Dockerfile --pull --no-cache
+          --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
+          -t actions/irsl_choreonoid:${{ matrix.ubuntu }}
+      - name: Check Build (cached)
+        if: github.event_name != 'workflow_dispatch' && github.event_name != 'pull_request'
         run: >
           docker build . -f .github/workflows/Dockerfile --pull
           --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
