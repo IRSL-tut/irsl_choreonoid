@@ -52,3 +52,23 @@ jobs:
         run: >
           docker run --rm actions/irsl_choreonoid:${{ matrix.ubuntu }}
           -- bash -c 'source /choreonoid_ws/install/setup.bash; roscd irsl_choreonoid/test; ./run_all_tests.sh'
+      - name: Dispatch
+        if: github.event_name == 'push' && matrix.ubuntu == '20.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.IRSL_PAT_CLS }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.IRSL_PAT_CLS }}
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: 'IRSL-tut',
+              repo: 'irsl_docker',
+              workflow_id: 'build-irsl-system.yaml',
+              ref: 'main',
+              inputs: {
+                event_type: 'build_all',
+                source: 'irsl_choreonoid',
+                hash: '${{ github.sha }}'
+              }
+            })
+      - run: echo "🍏 This job's status is ${{ job.status }}."
