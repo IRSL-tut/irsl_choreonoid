@@ -20,7 +20,14 @@ else:
 rr = ru.RobotModel(rb)
 rr.flush()
 
-def solveClosedIK(targetq = None, joint_id = 0):
+doClosedIK = True
+
+def solveClosedIK(targetq = None, joint_id = 0, flush = True):
+    global rr
+    global doClosedIK
+    if not doClosedIK:
+        doClosedIK = True
+        return
     constraints = IK.Constraints()
 
     l0 = rr.robot.getLink('LINK0')
@@ -32,8 +39,10 @@ def solveClosedIK(targetq = None, joint_id = 0):
             l0.q = targetq
         else:
             l1.q = targetq
-
-    rr.flush()
+    if flush:
+        rr.flush()
+    else:
+        rr.robot.calcForwardKinematics()
 
     ex_constraint = IK.PositionConstraint()
     ex_constraint.A_link     = rr.robot.getLink('LINKD')
@@ -69,9 +78,17 @@ def solveClosedIK(targetq = None, joint_id = 0):
                                       1e-5,
                                       0)
     print("loop: {}".format(loop))
-    rr.flush()
+    if flush:
+        rr.flush()
+    else:
+        doClosedIK = False
+        rr.flush()
 
 solveClosedIK(0.6)
 
+def voidIK():
+    solveClosedIK(flush=False)
+
 if ru.isInChoreonoid():
     print("solveClosedIK() ## after you move joints")
+    rb.sigKinematicStateChanged.connect(voidIK)
