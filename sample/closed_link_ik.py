@@ -20,14 +20,9 @@ else:
 rr = ru.RobotModel(rb)
 rr.flush()
 
-doClosedIK = True
-
 def solveClosedIK(targetq = None, joint_id = 0, flush = True):
     global rr
-    global doClosedIK
-    if not doClosedIK:
-        doClosedIK = True
-        return
+
     constraints = IK.Constraints()
 
     l0 = rr.robot.getLink('LINK0')
@@ -44,6 +39,7 @@ def solveClosedIK(targetq = None, joint_id = 0, flush = True):
     else:
         rr.robot.calcForwardKinematics()
 
+    ## closed link definition
     ex_constraint = IK.PositionConstraint()
     ex_constraint.A_link     = rr.robot.getLink('LINKD')
     cds_a = iu.coordinates(np.array([1.3, 0, 0]))
@@ -51,8 +47,10 @@ def solveClosedIK(targetq = None, joint_id = 0, flush = True):
     ex_constraint.B_link     = rr.robot.getLink('LINK1')
     cds_b = iu.coordinates(np.array([0,   0, 0.07]))
     ex_constraint.B_localpos = cds_b.toPosition()
-    ex_constraint.weight = np.array([1, 1, 1, 0, 0, 0]) ## xyz : constrained
+    ex_constraint.weight = np.array([1, 1, 1, 0, 0, 0]) ## xyz : fixed, rpy : free
+    ## A_link->A_localpos == B_link->B_localpos
 
+    ## constraint for moved joint
     j_constraint = IK.JointAngleConstraint()
     if joint_id == 0:
         j_constraint.joint = l0
@@ -67,22 +65,23 @@ def solveClosedIK(targetq = None, joint_id = 0, flush = True):
     constraints.push_back(ex_constraint)
     constraints.push_back(j_constraint)
 
+    ## total degree of freedom ( 6DOF of rootLlink and all joints)
     jlim_avoid_weight_old = np.zeros(6 + rr.robot.getNumJoints())
+    ## zero => not moved
     dq_weight_all = np.append(np.zeros(6), np.ones(rr.robot.getNumJoints())) ## root is fixed
 
     loop = IK.solveFullbodyIKLoopFast(rr.robot,
                                       constraints,
                                       jlim_avoid_weight_old,
                                       dq_weight_all,
-                                      30,
-                                      1e-5,
-                                      0)
+                                      30,   ## maximum iteration
+                                      1e-5, ## error threshold
+                                      0)    ## debug flag
     print("loop: {}".format(loop))
     if flush:
         rr.flush()
     else:
-        doClosedIK = False
-        rr.flush()
+        rr.robot.calcForwardKinematics()
 
 solveClosedIK(0.6)
 
@@ -91,4 +90,7 @@ def voidIK():
 
 if ru.isInChoreonoid():
     print("solveClosedIK() ## after you move joints")
-    rb.sigKinematicStateChanged.connect(voidIK)
+    if hasattr(rb, 'sigKinematicsPostProcess'):
+        rb.sigKinematicsPostProcess.connect(voidIK)
+    else:
+        rb.sigKinematicStateChanged.connect(voidIK)
