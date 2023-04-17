@@ -24,7 +24,9 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     wstool init src .irsl_choreonoid_config/dot.rosinstall && \
     rm -rf src/irsl_choreonoid && \
     wstool update -t src && \
-    patch -d src -p0 < .irsl_choreonoid_config/osqp-cpp.patch
+    patch -d src -p0 < .irsl_choreonoid_config/osqp-cpp.patch && \
+    patch -d src -p1 < .irsl_choreonoid_config/choreonoid_closed_ik.patch
+
 ##
 COPY . src/irsl_choreonoid
 

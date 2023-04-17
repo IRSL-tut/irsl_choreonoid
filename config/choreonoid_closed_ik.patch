@@ -1,0 +1,44 @@
+diff --git a/choreonoid/src/BodyPlugin/BodyItem.cpp b/choreonoid/src/BodyPlugin/BodyItem.cpp
+index a49155d8..99189ab0 100644
+--- a/choreonoid/src/BodyPlugin/BodyItem.cpp
++++ b/choreonoid/src/BodyPlugin/BodyItem.cpp
+@@ -974,6 +974,7 @@ void BodyItem::Impl::emitSigKinematicStateChanged()
+ 
+ void BodyItem::notifyKinematicStateChange(bool requestFK, bool requestVelFK, bool requestAccFK)
+ {
++    sigKinematicsPostProcess_();
+     impl->notifyKinematicStateChange(requestFK, requestVelFK, requestAccFK, true);
+ }
+ 
+diff --git a/choreonoid/src/BodyPlugin/BodyItem.h b/choreonoid/src/BodyPlugin/BodyItem.h
+index 5c3fef82..10034999 100644
+--- a/choreonoid/src/BodyPlugin/BodyItem.h
++++ b/choreonoid/src/BodyPlugin/BodyItem.h
+@@ -201,6 +201,7 @@ public:
+     
+     class Impl;
+ 
++    SignalProxy<void()> sigKinematicsPostProcess() { return sigKinematicsPostProcess_; }
+ protected:
+     BodyItem(const BodyItem& org, CloneMap* cloneMap);
+     virtual Item* doCloneItem(CloneMap* cloneMap) const override;
+@@ -217,6 +218,7 @@ private:
+     std::vector<bool> collisionLinkBitSet_;
+     std::vector<std::vector<CollisionLinkPairPtr>> collisionsOfLink_;
+     Signal<void()> sigCollisionsUpdated_;
++    Signal<void()> sigKinematicsPostProcess_;
+ 
+     friend class PyBodyPlugin;
+ };
+diff --git a/choreonoid/src/BodyPlugin/pybind11/PyBodyItem.cpp b/choreonoid/src/BodyPlugin/pybind11/PyBodyItem.cpp
+index 61c7b36c..ee685e84 100644
+--- a/choreonoid/src/BodyPlugin/pybind11/PyBodyItem.cpp
++++ b/choreonoid/src/BodyPlugin/pybind11/PyBodyItem.cpp
+@@ -41,6 +41,7 @@ void exportBodyItem(py::module m)
+         .def("restoreInitialState", &BodyItem::restoreInitialState, py::arg("doNotify") = true)
+         .def("getInitialState", &BodyItem::getInitialState)
+         .def_property_readonly("sigKinematicStateChanged", &BodyItem::sigKinematicStateChanged)
++        .def_property_readonly("sigKinematicsPostProcess", &BodyItem::sigKinematicsPostProcess)
+         .def("notifyKinematicStateChange",
+              (void (BodyItem::*)(bool, bool, bool)) &BodyItem::notifyKinematicStateChange,
+              py::arg("requestFK") = false, py::arg("requestVelFK") = false, py::arg("requestAccFK") = false)
