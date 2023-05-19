@@ -62,9 +62,9 @@ jobs:
           script: |
             github.rest.actions.createWorkflowDispatch({
               owner: 'IRSL-tut',
-              repo: 'irsl_docker',
-              workflow_id: 'build-irsl-system.yaml',
+              repo: 'irsl_docker_irsl_system',
               ref: 'main',
+              workflow_id: 'build-irsl-system.yaml',
               inputs: {
                 event_type: 'build_all',
                 source: 'irsl_choreonoid',
