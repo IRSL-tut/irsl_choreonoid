@@ -1,4 +1,5 @@
-import irsl_choreonoid.robot_util as ru
+from . import robot_util as ru
+from . import cnoid_util as cu
 import cnoid.IRSLUtil as iu
 import cnoid.Util
 import numpy as np
@@ -7,14 +8,14 @@ import math
 
 def init_sample_robot(world = True):
     fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
-    if ru.isInChoreonoid():
+    if cu.isInChoreonoid():
         ### in choreonoid
-        ru.loadRobotItem(fname, 'SampleRobot', world)
-        i = ru.findItem('SampleRobot')
+        cu.loadRobotItem(fname, 'SampleRobot', world)
+        i = cu.findItem('SampleRobot')
         return SampleRobot(i)
     else:
         ### not in choreonoid
-        rb = ru.loadRobot(fname)
+        rb = cu.loadRobot(fname)
         rb.calcForwardKinematics()
         return SampleRobot(rb)
 

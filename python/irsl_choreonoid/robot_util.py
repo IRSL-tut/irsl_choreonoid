@@ -1,8 +1,7 @@
-from cnoid.Base import *
-from cnoid.BodyPlugin import *
-#from cnoid.PythonSimScriptPlugin import *
 import cnoid.Body
 #import cnoid.Util
+
+from .cnoid_util import *
 
 import cnoid.IRSLUtil as iu
 import cnoid.DrawInterface as di
@@ -10,124 +9,6 @@ import cnoid.DrawInterface as di
 import cnoid.IKSolvers as IK
 
 import numpy as np
-
-def getItemTreeView():
-    if callable(ItemTreeView.instance):
-        return ItemTreeView.instance()
-    else:
-        return ItemTreeView.instance
-
-def getRootItem():
-    if callable(RootItem.instance):
-        return RootItem.instance()
-    else:
-        return RootItem.instance
-
-def getWorld(name = 'World'):
-    rI = getRootItem()
-    ret = rI.findItem(name)
-    if ret == None:
-        ret = WorldItem()
-        ret.setName(name)
-        rI.addChildItem(ret)
-        getItemTreeView().checkItem(ret)
-    return ret
-
-def addSimulator(world = None, simulator_name = 'AISTSimulator'):
-    if world is None:
-        world = getWorld()
-    sim_ = world.findItem(simulator_name)
-    if sim_ == None:
-        sim_ = AISTSimulatorItem()
-        world.addChildItem(sim_)
-        getItemTreeView().checkItem(sim_)
-    return sim_
-
-def isInChoreonoid():
-    return (RootItem.instance is not None)
-
-def cnoidPosition(rotation = None, translation = None):
-  ret = np.identity(4)
-  if not (rotation is None):
-    ret[:3, :3] = rotation
-  if not (translation is None):
-    ret[:3, 3] = translation
-  return ret
-
-def cnoidRotation(cPosition):
-  return cPosition[:3, :3]
-
-def cnoidTranslation(cPosition):
-  return cPosition[:3, 3]
-
-def loadRobot(fname):
-    rb = cnoid.Body.BodyLoader().load(str(fname))
-    rb.updateLinkTree()
-    rb.initializePosition()
-    rb.calcForwardKinematics()
-    return rb
-
-def loadRobotItem(fname, name = None, world = True):
-    '''Load robot model and add it as Item
-
-    Parameters
-    ----------
-    fname : str
-        file name of model
-    name : str
-        name of Item
-
-    Returns
-    -------
-    instance of cnoid.Body.Body
-    '''
-    # print('loadRobot: %s'%(fname))
-    bI = BodyItem()
-    bI.load(str(fname))
-    if name:
-        bI.setName(name)
-    if callable(bI.body):
-        rr = bI.body()
-    else:
-        rr = bI.body
-    rr.updateLinkTree()
-    rr.initializePosition()
-    rr.calcForwardKinematics()
-    bI.storeInitialState()
-    if world == True:
-        wd = getWorld()
-        if callable(wd.childItem):
-            wd.insertChildItem(bI, wd.childItem())
-        else:
-            wd.insertChildItem(bI, wd.childItem)
-    elif type(world) is cnoid.BodyPlugin.WorldItem:
-        if callable(world.childItem):
-            world.insertChildItem(bI, world.childItem())
-        else:
-            world.insertChildItem(bI, world.childItem)
-
-    getItemTreeView().checkItem(bI)
-    return bI
-
-
-def findItem(name):
-    return getRootItem().findItem(name)
-
-def removeItem(item_):
-    item_.detachFromParentItem()
-
-def findRobot(name):
-    ret = findItem(name)
-    ## add class check...
-    if callable(ret.body):
-        return ret.body()
-    else:
-        return ret.body
-
-def flushRobotView(name):
-    findItem(name).notifyKinematicStateChange()
-    #MessageView.getInstance().flush()
-    MessageView.instance.flush()
 
 ###
 class DrawCoords(object):
