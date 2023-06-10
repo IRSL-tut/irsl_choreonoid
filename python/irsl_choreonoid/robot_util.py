@@ -52,6 +52,7 @@ def make_coordinates(coords_map):
 
 ###
 class DrawCoords(object):
+    """ deprecated, use DrawCoordsList """
     def __init__(self, color=None, width=None):
         self.width = width
         if color is None:
@@ -133,54 +134,114 @@ class DrawCoords(object):
         self.ZLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
         self.show(flush=flush)
 
+# class DrawCoordsList(object):
+#     def __init__(self):
+#         self.coords_list = []
+#         self.count = 0
+#     def flush(self):
+#         di.flush()
+#     def hide(self, start=0, length=0):
+#         if length == 0:
+#             end = None
+#         else:
+#             end = start + length
+#         for l in self.coords_list[start:end]:
+#             l.hide(flush=False)
+#         di.flush()
+#     def show(self, start=0, length=0):
+#         if length == 0:
+#             end = None
+#         else:
+#             end = start + length
+#         for l in self.coords_list[start:end]:
+#             l.show(flush=False)
+#         di.flush()
+#     def clear(self):
+#         for l in self.coords_list:
+#             l.hide(flush=False)
+#         di.flush()
+#         self.coords_list = []
+#         self.count = 0
+#     def generatePointFunction(self, length=0.1, maxlength=0, flush=True):
+#         def closure_func__(lst, **kwargs):
+#             pos = np.array(lst[0][1:])
+#             cd = DrawCoords()
+#             cds_ = iu.coordinates(pos)
+#             cd.draw_simple(cds_, length=length, flush=flush)
+#             self.coords_list.append(cd)
+#             self.count += 1
+#         return closure_func__
+#     def generateCoordsFunction(self, length=0.1, maxlength=0, flush=True):
+#         def closure_func__(lst, **kwargs):
+#             lst = lst[0]
+#             pos = np.array(lst[1:4])
+#             rpy = np.array(lst[4:7])
+#             cd = DrawCoords()
+#             cds_ = iu.coordinates(pos)
+#             cds_.setRPY(rpy)
+#             cd.draw_simple(cds_, length=length, flush=flush)
+#             self.coords_list.append(cd)
+#             self.count += 1
+#        return closure_func__
+
 class DrawCoordsList(object):
-    def __init__(self):
-        self.coords_list = []
+    def __init__(self, x_color=np.array([1,0,0]), y_color=np.array([0,1,0]), z_color=np.array([0,0,1]), length=0.1):
+        self.x_color = x_color
+        self.y_color = y_color
+        self.z_color = z_color
+        self.length = length
+        self.reset()
+    def __del__(self):
+        self.hide()
+        self.interface = None
+    def reset(self):
+        self.interface = di.DrawInterface(self.x_color)
+        self.x_color_index = 0
+        self.y_color_index = self.interface.addColor(self.y_color)
+        self.z_color_index = self.interface.addColor(self.z_color)
         self.count = 0
     def flush(self):
         di.flush()
     def hide(self, start=0, length=0):
-        if length == 0:
-            end = None
-        else:
-            end = start + length
-        for l in self.coords_list[start:end]:
-            l.hide(flush=False)
+        self.interface.hide(False)
         di.flush()
     def show(self, start=0, length=0):
-        if length == 0:
-            end = None
-        else:
-            end = start + length
-        for l in self.coords_list[start:end]:
-            l.show(flush=False)
+        self.interface.show(False)
         di.flush()
     def clear(self):
-        for l in self.coords_list:
-            l.hide(flush=False)
+        self.interface.hide(False)
         di.flush()
-        self.coords_list = []
-        self.count = 0
-    def generatePointFunction(self, length=0.1, maxlength=0, flush=True):
+        self.reset()
+    def addCoords(self, coords, flush=False):
+        if flush:
+            self.interface.hide(False)
+        self.interface.addAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
+        if flush:
+            self.interface.show(True)
+            di.flush()
+        self.count += 1
+    def addCross(self, coords, flush=False):
+        if flush:
+            self.interface.hide(False)
+        self.interface.addBDAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
+        if flush:
+            self.interface.show(True)
+            di.flush()
+        self.count += 1
+    def generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
         def closure_func__(lst, **kwargs):
-            pos = np.array(lst[0][1:])
-            cd = DrawCoords()
+            pos = np.array(lst[index][1:])
             cds_ = iu.coordinates(pos)
-            cd.draw_simple(cds_, length=length, flush=flush)
-            self.coords_list.append(cd)
-            self.count += 1
+            self.addCross(cds_,flush=flush)
         return closure_func__
-    def generateCoordsFunction(self, length=0.1, maxlength=0, flush=True):
+    def generateCoordsFunction(self, length=0.1, maxlength=0, index=0, flush=True):
         def closure_func__(lst, **kwargs):
-            lst = lst[0]
+            lst = lst[index]
             pos = np.array(lst[1:4])
             rpy = np.array(lst[4:7])
-            cd = DrawCoords()
             cds_ = iu.coordinates(pos)
             cds_.setRPY(rpy)
-            cd.draw_simple(cds_, length=length, flush=flush)
-            self.coords_list.append(cd)
-            self.count += 1
+            self.addCoords(cds_,flush=flush)
         return closure_func__
 
 ## add methods to choreonoid's class

@@ -32,6 +32,10 @@ namespace cnoid {
             // TODO: How to notify for redrawing
             SceneView::instance()->sceneWidget()->sceneRoot()->notifyUpdate();
         }
+    public: static void convertVector3(const Vector3 &_in, Vector3f &_out)
+        {
+            _out.x() = _in.x(); _out.y() = _in.y(); _out.z() = _in.z();
+        }
     public:
         // added by IRSL
         DrawInterface() {
@@ -176,26 +180,93 @@ namespace cnoid {
         }
 
         // add
+        int addColor(Vector3f colorVec) {
+            colors->push_back(colorVec);
+            return colors->size() - 1;
+        }
+        void addDrawLine(Vector3f startPos, Vector3f endPos, int color_idx = 0) {
+            SgIndexArray& colorIndices = lineSet->colorIndices();
+
+            vertices->push_back(startPos);
+            vertices->push_back(endPos);
+            int sz = vertices->size();
+            lineSet->addLine(sz-2, sz-1);
+
+            // colorIndices.reserve(2);
+            //for(int i=0; i<2*2; ++i) colorIndices.push_back(color_idx);
+            for(int i=0; i < 2; ++i) colorIndices.push_back(color_idx);
+        }
         void drawAxis(coordinates &_cds, int _axis, double _length)
         {
-            Vector3 v_a;
+            Vector3 tmp;
+            Vector3f v_a;
             switch(_axis) {
             case 0:
-                _cds.x_axis(v_a);
+                _cds.x_axis(tmp);
                 break;
             case 1:
-                _cds.y_axis(v_a);
+                _cds.y_axis(tmp);
                 break;
             case 2:
-                _cds.z_axis(v_a);
+                _cds.z_axis(tmp);
                 break;
             }
+            convertVector3(tmp, v_a);
             v_a *= _length;
-            Vector3 pos(_cds.pos);
-            Vector3f st(pos.x(), pos.y(), pos.z());
-            pos += v_a;
-            Vector3f ed(pos.x(), pos.y(), pos.z());
-            this->drawLine(st, ed);
+            Vector3f st(_cds.pos.x(), _cds.pos.y(), _cds.pos.z());
+            this->drawLine(st, st + v_a);
+        }
+        void addAxis(coordinates &_cds, int _axis, double _length, int _color = 0)
+        {
+            Vector3 tmp;
+            Vector3f v_a;
+            switch(_axis) {
+            case 0:
+                _cds.x_axis(tmp);
+                break;
+            case 1:
+                _cds.y_axis(tmp);
+                break;
+            case 2:
+                _cds.z_axis(tmp);
+                break;
+            }
+            convertVector3(tmp, v_a);
+            v_a *= _length;
+            Vector3f st(_cds.pos.x(), _cds.pos.y(), _cds.pos.z());
+            this->addDrawLine(st, st + v_a, _color);
+        }
+        void addAxis3(coordinates &_cds, double _length, int _x_color = 0, int _y_color = 0, int _z_color = 0)
+        {
+            this->addAxis(_cds, 0, _length, _x_color);
+            this->addAxis(_cds, 1, _length, _y_color);
+            this->addAxis(_cds, 2, _length, _z_color);
+        }
+        void addBDAxis(coordinates &_cds, int _axis, double _length, int _color = 0)//Both Direction
+        {
+            Vector3 tmp;
+            Vector3f v_a;
+            switch(_axis) {
+            case 0:
+                _cds.x_axis(tmp);
+                break;
+            case 1:
+                _cds.y_axis(tmp);
+                break;
+            case 2:
+                _cds.z_axis(tmp);
+                break;
+            }
+            convertVector3(tmp, v_a);
+            v_a *= (0.5 * _length);
+            Vector3f st(_cds.pos.x(), _cds.pos.y(), _cds.pos.z());
+            this->addDrawLine(st - v_a, st + v_a, _color);
+        }
+        void addBDAxis3(coordinates &_cds, double _length, int _x_color = 0, int _y_color = 0, int _z_color = 0)//Both Direction
+        {
+            this->addBDAxis(_cds, 0, _length, _x_color);
+            this->addBDAxis(_cds, 1, _length, _y_color);
+            this->addBDAxis(_cds, 2, _length, _z_color);
         }
     private:
         void drawArcPreserve(Vector3f posVec, Vector3f radiousVec, Vector3f axisVec, float rotAngle){
