@@ -40,23 +40,24 @@ class DrawCoords(object):
             self.ZLine = di.DrawInterface(np.array([0, 0, 1]))
 
     def __del__(self):
-        print('del: {:X}'.format(id(self)))
-        self.XLine  = None
-        self.YLine  = None
+        # print('del: {:X}'.format(id(self)))
+        self.hide()
+        self.XLine = None
+        self.YLine = None
         self.ZLine = None
     def __repr__(self):
         return '<DrawCoords {:X}({:X},{:X},{:X})>'.format(id(self), id(self.XLine), id(self.YLine), id(self.ZLine))
 
     def hide(self, flush = True):
-        self.XLine.hide()
-        self.YLine.hide()
-        self.ZLine.hide()
+        self.XLine.hide(False)
+        self.YLine.hide(False)
+        self.ZLine.hide(False)
         if flush:
             di.flush()
     def show(self, flush = True):
-        self.XLine.show()
-        self.YLine.show()
-        self.ZLine.show()
+        self.XLine.show(False)
+        self.YLine.show(False)
+        self.ZLine.show(False)
         if flush:
             di.flush()
     def hide_and_show(self, flush = True):
@@ -65,8 +66,18 @@ class DrawCoords(object):
         self.ZLine.hide_and_show()
         if flush:
             di.flush()
-    def draw(self, coords, length = 0.1, axis_size = 0.02):
-        self.hide()
+    def draw_simple(self, coords, length=0.1, flush=True):
+        # self.hide(flush=flush)
+        if not self.width is None:
+            self.XLine.setLineWidth(self.width)
+            self.YLine.setLineWidth(self.width)
+            self.ZLine.setLineWidth(self.width)
+        self.XLine.drawAxis(coords, 0, length)
+        self.YLine.drawAxis(coords, 1, length)
+        self.ZLine.drawAxis(coords, 2, length)
+        self.show(flush=flush)
+    def draw(self, coords, length = 0.1, axis_size = 0.02, flush=True):
+        self.hide(flush=flush)
         rot = iu.Position_rotation(coords)
         ax_x = length * rot[:3, 0]
         ax_y = length * rot[:3, 1]
@@ -80,9 +91,58 @@ class DrawCoords(object):
         self.XLine.drawArrow(pp, pp + ax_x, axis_size, ax_vec, 15)
         self.YLine.drawArrow(pp, pp + ax_y, axis_size, ax_vec, 15)
         self.ZLine.drawArrow(pp, pp + ax_z, axis_size, ax_vec, 15)
+        self.show(flush=flush)
 
-        self.show()
+class DrawCoordsList(object):
+    def __init__(self):
+        self.coords_list = []
+        self.count = 0
+    def flush(self):
         di.flush()
+    def hide(self, start=0, length=0):
+        if length == 0:
+            end = None
+        else:
+            end = start + length
+        for l in self.coords_list[start:end]:
+            l.hide(flush=False)
+        di.flush()
+    def show(self, start=0, length=0):
+        if length == 0:
+            end = None
+        else:
+            end = start + length
+        for l in self.coords_list[start:end]:
+            l.show(flush=False)
+        di.flush()
+    def clear(self):
+        for l in self.coords_list:
+            l.hide(flush=False)
+        di.flush()
+        self.coords_list = []
+        self.count = 0
+    def generatePointFunction(self, length=0.1, maxlength=0, flush=True):
+        def closure_func__(lst, **kwargs):
+            pos = np.array(lst[0][1:])
+            cd = DrawCoords()
+            cds_ = iu.coordinates(pos)
+            cd.draw_simple(cds_, length=length, flush=flush)
+            self.coords_list.append(cd)
+            self.count += 1
+        return closure_func__
+    def generateCoordsFunction(self, length=0.1, maxlength=0, flush=True):
+        def closure_func__(lst, **kwargs):
+            lst = lst[0]
+            pos = np.array(lst[1:4])
+            rpy = np.array(lst[4:7])
+            cd = DrawCoords()
+            cds_ = iu.coordinates(pos)
+            cds_.setRPY(rpy)
+            cd.draw_simple(cds_, length=length, flush=flush)
+            self.coords_list.append(cd)
+            self.count += 1
+        return closure_func__
+
 ## add methods to choreonoid's class
 def __joint_list(self):
     return [self.joint(idx) for idx in range(self.numJoints) ]

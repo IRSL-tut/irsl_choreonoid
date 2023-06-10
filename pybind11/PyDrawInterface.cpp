@@ -31,6 +31,10 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawLineArcArrow", &DrawInterface::drawLineArcArrow)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
         //
+        .def("drawAxis",
+             [] (DrawInterface &self, coordinates &_cds, int _axis, double _length) {
+                 self.drawAxis(_cds, _axis, _length); })
+        //
         .def("hide_and_show", &DrawInterface::hide_and_show)
         .def("add_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)

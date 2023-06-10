@@ -12,6 +12,7 @@
 
 #include <QCoreApplication>
 
+#include "irsl_choreonoid/Coordinates.h"
 namespace cnoid {
 
     class DrawInterface : public Referenced
@@ -29,6 +30,7 @@ namespace cnoid {
             //update view??
             QCoreApplication::processEvents(QEventLoop::AllEvents);
             // TODO: How to notify for redrawing
+            SceneView::instance()->sceneWidget()->sceneRoot()->notifyUpdate();
         }
     public:
         // added by IRSL
@@ -89,7 +91,7 @@ namespace cnoid {
             setColor(colorVec);
         }
         ~DrawInterface() {
-            std::cerr << "delete : " << this << std::endl;
+            //std::cerr << "delete : " << this << std::endl;
             hide();
             lineSet->clear();
             lineSet->clearLines();
@@ -113,17 +115,17 @@ namespace cnoid {
             lineSet->setLineWidth(width);
         }
 
-        void show(){
-            sw->sceneRoot()->addChildOnce(lineSet, true);
+        void show(bool flush=true){
+            sw->sceneRoot()->addChildOnce(lineSet, flush);
         }
 
-        void hide(){
-            sw->sceneRoot()->removeChild(lineSet, true);
+        void hide(bool flush=true){
+            sw->sceneRoot()->removeChild(lineSet, flush);
         }
 
-        void hide_and_show() {
+        void hide_and_show(bool flush=true) {
             sw->sceneRoot()->removeChild(lineSet);
-            sw->sceneRoot()->addChildOnce(lineSet, true);
+            sw->sceneRoot()->addChildOnce(lineSet, flush);
         }
 
         void drawLine(Vector3f startPos, Vector3f endPos){
@@ -173,6 +175,28 @@ namespace cnoid {
             drawArrowTipPreserve(endPos, directionVec, arrowLength, axisVec, arrowAngle, q*radiousVec);
         }
 
+        // add
+        void drawAxis(coordinates &_cds, int _axis, double _length)
+        {
+            Vector3 v_a;
+            switch(_axis) {
+            case 0:
+                _cds.x_axis(v_a);
+                break;
+            case 1:
+                _cds.y_axis(v_a);
+                break;
+            case 2:
+                _cds.z_axis(v_a);
+                break;
+            }
+            v_a *= _length;
+            Vector3 pos(_cds.pos);
+            Vector3f st(pos.x(), pos.y(), pos.z());
+            pos += v_a;
+            Vector3f ed(pos.x(), pos.y(), pos.z());
+            this->drawLine(st, ed);
+        }
     private:
         void drawArcPreserve(Vector3f posVec, Vector3f radiousVec, Vector3f axisVec, float rotAngle){
             drawArcImpl(posVec, radiousVec, axisVec, rotAngle, true);
