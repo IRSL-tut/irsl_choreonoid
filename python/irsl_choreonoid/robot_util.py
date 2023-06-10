@@ -10,6 +10,46 @@ import cnoid.IKSolvers as IK
 
 import numpy as np
 
+def make_coordinates(coords_map):
+    pos = None
+    for key in ('position', 'translation', 'pos', 'trans'):
+        if key in coords_map:
+            pos = np.array(coords_map[key])
+            break
+    for key in ('q', 'quaternion'):
+        if key in coords_map:
+            q = np.array(coords_map[key])
+            if pos is None:
+                return iu.coordinates(q)
+            else:
+                return iu.coordinates(pos, q)
+    for key in ('angle-axis', 'aa'):
+        if key in coords_map:
+            aa = coords_map[key]
+            rot = iu.angleAxisNormalized(aa[3], np.array(aa[:3]))
+            if pos is None:
+                return iu.coordinates(rot)
+            else:
+                return iu.coordinates(pos, rot)
+    for key in ('rotation', 'matrix', 'mat', 'rot'):
+        if key in coords_map:
+            rot = np.array(coords_map[key])
+            if pos is None:
+                return iu.coordinates(rot)
+            else:
+                return iu.coordinates(pos, rot)
+    for key in ('rpy', 'RPY', 'roll-pitch-yaw'):
+        if key in coords_map:
+            if pos is None:
+                ret = iu.coordinates()
+            else:
+                ret = iu.coordinates(pos)
+            ret.setRPY(np.array(coords_map[key]))
+            return ret
+    if pos is not None:
+        return iu.coordinates(pos)
+    raise Exception('{}'.format(coords_map))
+
 ###
 class DrawCoords(object):
     def __init__(self, color=None, width=None):
