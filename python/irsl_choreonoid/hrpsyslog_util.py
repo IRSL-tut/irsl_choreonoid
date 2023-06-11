@@ -288,12 +288,18 @@ class HrpsysLogFiles(object):
             except Exception as e:
                 print('error occured while opening {}'.format(self.zip_filename))
                 raise e
-    def applyFunction(self, func, start=0, length=0, skip=1, process_result_func=None):
+    def applyFunction(self, functions, start=0, length=0, skip=1, process_result_functions=None):
         sbuf = io.StringIO() ## compatibility for file and zipfile
         readers = [ csv.reader(f, delimiter=' ').__iter__() for f in self.file_list ]
         endidx = start + length
         cntr = 0
         skip_counter = 0
+        if type(functions) is not list and type(functions) is not tuple:
+            functions = [ functions ]
+        if process_result_functions is not None and type(process_result_functions) is not list and type(process_result_functions) is not tuple:
+            process_result_functions = [ process_result_functions ]
+        elif process_result_functions is None:
+            process_result_functions = [ None ] * len(functions)
         try:
             ### HOT FIX for python3
             zipfile.ZipExtFile.__next__  = lambda self_: self_.next_original().decode('utf-8')
@@ -301,9 +307,10 @@ class HrpsysLogFiles(object):
                 if cntr >= start and skip_counter >= skip: ###
                     # dls = [ filter(lambda x: x != '', row) for row in rows ] ## python2
                     dls = [ [ float(x) for x in filter(lambda x: x != '', row) ] for row in rows ] ## python3
-                    res = func(dls)
-                    if process_result_func is not None:
-                        process_result_func(res)
+                    for func, res_func in zip(functions, process_result_functions):
+                        res = func(dls)
+                        if res_func is not None:
+                            res_func(res)
                     skip_counter = 0
                 skip_counter += 1
                 cntr += 1
