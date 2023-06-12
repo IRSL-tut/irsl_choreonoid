@@ -31,6 +31,24 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawLineArcArrow", &DrawInterface::drawLineArcArrow)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
         //
+        .def("addColor", &DrawInterface::addColor)
+        .def("addDrawLine", &DrawInterface::addDrawLine)
+        .def("drawAxis",
+             [] (DrawInterface &self, coordinates &_cds, int _axis, double _length) {
+                 self.drawAxis(_cds, _axis, _length); })
+        .def("addAxis",
+             [] (DrawInterface &self, coordinates &_cds, int _axis, double _length, int _color) {
+                 self.addAxis(_cds, _axis, _length, _color); })
+        .def("addAxis3",
+             [] (DrawInterface &self, coordinates &_cds, double _length, int _x_color, int _y_color, int _z_color) {
+                 self.addAxis3(_cds, _length, _x_color, _y_color, _z_color); })
+        .def("addBDAxis",
+             [] (DrawInterface &self, coordinates &_cds, int _axis, double _length, int _color) {
+                 self.addBDAxis(_cds, _axis, _length, _color); })
+        .def("addBDAxis3",
+             [] (DrawInterface &self, coordinates &_cds, double _length, int _x_color, int _y_color, int _z_color) {
+                 self.addBDAxis3(_cds, _length, _x_color, _y_color, _z_color); })
+        //
         .def("hide_and_show", &DrawInterface::hide_and_show)
         .def("add_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
