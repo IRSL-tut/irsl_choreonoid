@@ -1,6 +1,6 @@
 ## exec on choreonoid
 from irsl_choreonoid.hrpsyslog_util import HrpsysLogFiles
-from irsl_choreonoid.robot_util import DrawCoordsList
+from irsl_choreonoid.draw_coords import DrawCoordsList
 import numpy as np
 
 hrpsys_log_dir = '/tmp'
