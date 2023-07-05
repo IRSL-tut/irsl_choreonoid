@@ -17,7 +17,7 @@ namespace cnoid {
 
     class DrawInterface : public Referenced
     {
-    private:
+    protected:
         Vector3f colorVec_;
         SceneView* sv;
         SceneWidget* sw;
@@ -25,6 +25,7 @@ namespace cnoid {
         SgVertexArrayPtr vertices;
         SgColorArrayPtr colors;
     // added by IRSL
+        SgPosTransformPtr posTrans;
     public: static void flush()
         {
             //update view??
@@ -38,57 +39,29 @@ namespace cnoid {
         }
     public:
         // added by IRSL
-        DrawInterface() {
-            sv = SceneView::instance();
-            sw = sv->sceneWidget();
-            //lineSet.reset();
-            //vetices.reset();
-            //colors.reset();
-        }
-        void add_object(SgNodePtr &obj, bool update) {
-            sw->sceneRoot()->addChildOnce(obj, update);
-        }
-        void add_object(SgGroupPtr &obj, bool update) {
-            sw->sceneRoot()->addChildOnce(obj, update);
-        }
-        void add_object(SgTransformPtr &obj, bool update) {
-            sw->sceneRoot()->addChildOnce(obj, update);
-        }
-        void add_object(SgPosTransformPtr &obj, bool update) {
-            sw->sceneRoot()->addChildOnce(obj, update);
-        }
-        void add_object(SgShapePtr &obj, bool update) {
-            sw->sceneRoot()->addChildOnce(obj, update);
-        }
-        void remove_object(SgNodePtr &obj, bool update) {
-            sw->sceneRoot()->removeChild(obj, update);
-        }
-        void remove_object(SgGroupPtr &obj, bool update) {
-            sw->sceneRoot()->removeChild(obj, update);
-        }
-        void remove_object(SgTransformPtr &obj, bool update) {
-            sw->sceneRoot()->removeChild(obj, update);
-        }
-        void remove_object(SgPosTransformPtr &obj, bool update) {
-            sw->sceneRoot()->removeChild(obj, update);
-        }
-        void remove_object(SgShapePtr &obj, bool update) {
-            sw->sceneRoot()->removeChild(obj, update);
-        }
         void render() {
             // sw->sceneRoot() or sw->scene()
             sw->renderScene();
         }
+        void setOrigin(const coordinates &_cds) {
+            _cds.toPosition(posTrans->T());
+        }
+        void getOrigin(coordinates &_res) {
+            _res = posTrans->T();
+        }
+        DrawInterface() { } // just using at GeneralDrawInterface
         // original settings
         DrawInterface(Vector3f colorVec){
             sv = SceneView::instance();
             sw = sv->sceneWidget();
-
             lineSet = new SgLineSet;
             vertices = lineSet->getOrCreateVertices();
             colors = lineSet->getOrCreateColors();
+            //sw->sceneRoot()->addChild(lineSet);
 
-            sw->sceneRoot()->addChild(lineSet);
+            posTrans = new SgPosTransform();
+            posTrans->T().setIdentity();
+            sw->sceneRoot()->addChild(posTrans);
 
             setLineWidth(1);
 
@@ -96,17 +69,23 @@ namespace cnoid {
         }
         ~DrawInterface() {
             //std::cerr << "delete : " << this << std::endl;
-            hide();
-            lineSet->clear();
-            lineSet->clearLines();
+            if (!!lineSet) {
+                hide();
+                lineSet->clear();
+                lineSet->clearLines();
+            }
+            sw->sceneRoot()->removeChild(posTrans);
             vertices = nullptr;
             colors   = nullptr;
             lineSet  = nullptr;
+            posTrans = nullptr;
         }
         void reset(){
             lineSet->clear();
             lineSet->clearLines();
             setColor(colorVec_);
+            //
+            posTrans->T().setIdentity();
         }
 
         void setColor(Vector3f colorVec){
@@ -120,16 +99,16 @@ namespace cnoid {
         }
 
         void show(bool flush=true){
-            sw->sceneRoot()->addChildOnce(lineSet, flush);
+            posTrans->addChildOnce(lineSet, flush);
         }
 
         void hide(bool flush=true){
-            sw->sceneRoot()->removeChild(lineSet, flush);
+            posTrans->removeChild(lineSet, flush);
         }
 
         void hide_and_show(bool flush=true) {
-            sw->sceneRoot()->removeChild(lineSet);
-            sw->sceneRoot()->addChildOnce(lineSet, flush);
+            posTrans->removeChild(lineSet);
+            posTrans->addChildOnce(lineSet, flush);
         }
 
         void drawLine(Vector3f startPos, Vector3f endPos){
@@ -333,5 +312,55 @@ namespace cnoid {
         }
     };
     typedef ref_ptr<DrawInterface> DrawInterfacePtr;
+
+    class GeneralDrawInterface : public DrawInterface
+    {
+    public:
+        GeneralDrawInterface() {
+            sv = SceneView::instance();
+            sw = sv->sceneWidget();
+            //lineSet.reset();
+            //vetices.reset();
+            //colors.reset();
+            posTrans = new SgPosTransform();
+            posTrans->T().setIdentity();
+            sw->sceneRoot()->addChild(posTrans);
+        }
+        ~GeneralDrawInterface() {
+            posTrans->clearChildren();
+            sw->sceneRoot()->removeChild(posTrans, true);
+        }
+        void add_object(SgNodePtr &obj, bool update) {
+            posTrans->addChildOnce(obj, update);
+        }
+        void add_object(SgGroupPtr &obj, bool update) {
+            posTrans->addChildOnce(obj, update);
+        }
+        void add_object(SgTransformPtr &obj, bool update) {
+            posTrans->addChildOnce(obj, update);
+        }
+        void add_object(SgPosTransformPtr &obj, bool update) {
+            posTrans->addChildOnce(obj, update);
+        }
+        void add_object(SgShapePtr &obj, bool update) {
+            posTrans->addChildOnce(obj, update);
+        }
+        void remove_object(SgNodePtr &obj, bool update) {
+            posTrans->removeChild(obj, update);
+        }
+        void remove_object(SgGroupPtr &obj, bool update) {
+            posTrans->removeChild(obj, update);
+        }
+        void remove_object(SgTransformPtr &obj, bool update) {
+            posTrans->removeChild(obj, update);
+        }
+        void remove_object(SgPosTransformPtr &obj, bool update) {
+            posTrans->removeChild(obj, update);
+        }
+        void remove_object(SgShapePtr &obj, bool update) {
+            posTrans->removeChild(obj, update);
+        }
+    };
+    typedef ref_ptr<GeneralDrawInterface> GeneralDrawInterfacePtr;
 
 }
