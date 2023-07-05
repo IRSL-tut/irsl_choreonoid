@@ -74,6 +74,7 @@ namespace cnoid {
                 lineSet->clear();
                 lineSet->clearLines();
             }
+            sw->sceneRoot()->removeChild(posTrans);
             vertices = nullptr;
             colors   = nullptr;
             lineSet  = nullptr;
@@ -325,7 +326,10 @@ namespace cnoid {
             posTrans->T().setIdentity();
             sw->sceneRoot()->addChild(posTrans);
         }
-
+        ~GeneralDrawInterface() {
+            posTrans->clearChildren();
+            sw->sceneRoot()->removeChild(posTrans, true);
+        }
         void add_object(SgNodePtr &obj, bool update) {
             posTrans->addChildOnce(obj, update);
         }
