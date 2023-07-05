@@ -19,7 +19,6 @@ PYBIND11_MODULE(DrawInterface, m)
 
     py::class_< DrawInterface, DrawInterfacePtr, Referenced >(m, "DrawInterface")
         .def(py::init<Eigen::Vector3f>())
-        .def(py::init<>())
         .def("setLineWidth", &DrawInterface::setLineWidth)
         .def("setColor", &DrawInterface::setColor)
         .def("show", &DrawInterface::show)
@@ -31,6 +30,11 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("drawLineArcArrow", &DrawInterface::drawLineArcArrow)
         .def("drawArrowTip", &DrawInterface::drawArrowTip)
         //
+        .def("setOrigin", &DrawInterface::setOrigin)
+        .def("getOrigin", [] (GeneralDrawInterface &self) {
+            coordinates _res;
+            self.getOrigin(_res);
+            return _res; })
         .def("addColor", &DrawInterface::addColor)
         .def("addDrawLine", &DrawInterface::addDrawLine)
         .def("drawAxis",
@@ -50,27 +54,6 @@ PYBIND11_MODULE(DrawInterface, m)
                  self.addBDAxis3(_cds, _length, _x_color, _y_color, _z_color); })
         //
         .def("hide_and_show", &DrawInterface::hide_and_show)
-        .def("add_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (DrawInterface::*)(SgGroupPtr &, bool)) &DrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (DrawInterface::*)(SgTransformPtr &, bool)) &DrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (DrawInterface::*)(SgPosTransformPtr &, bool)) &DrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (DrawInterface::*)(SgShapePtr &, bool)) &DrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        //
-        .def("remove_object", (void (DrawInterface::*)(SgNodePtr &, bool)) &DrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (DrawInterface::*)(SgGroupPtr &, bool)) &DrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (DrawInterface::*)(SgTransformPtr &, bool)) &DrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (DrawInterface::*)(SgPosTransformPtr &, bool)) &DrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (DrawInterface::*)(SgShapePtr &, bool)) &DrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
         //
         .def("render", &DrawInterface::render)
         ;
@@ -78,6 +61,38 @@ PYBIND11_MODULE(DrawInterface, m)
     //SgPointSet
     //SgLineSet
     //SgOverlay
+    py::class_< GeneralDrawInterface, GeneralDrawInterfacePtr, DrawInterface >(m, "GeneralDrawInterface")
+        .def(py::init<>())
+        .def("setOrigin", &DrawInterface::setOrigin)
+        .def("getOrigin", [] (GeneralDrawInterface &self) {
+            coordinates _res;
+            self.getOrigin(_res);
+            return _res; })
+        //
+        .def("add_object", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("add_object", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::add_object,
+             py::arg("object"), py::arg("update") = false)
+        //
+        .def("remove_object", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("remove_object", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        //
+        .def("render", &DrawInterface::render)
+        ;
 
     m.def("flush", &DrawInterface::flush);
 }
