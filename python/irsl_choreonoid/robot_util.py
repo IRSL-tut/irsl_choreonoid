@@ -7,6 +7,7 @@ import cnoid.IRSLUtil as iu
 import cnoid.IKSolvers as IK
 
 import numpy as np
+import random
 
 def make_coordinates(coords_map):
     pos = None
@@ -47,6 +48,211 @@ def make_coordinates(coords_map):
     if pos is not None:
         return iu.coordinates(pos)
     raise Exception('{}'.format(coords_map))
+
+def make_coords_map(coords):
+    return {'pos': cds.pos.tolist(), 'aa': cds.rotationAngle().tolist()}
+
+##
+## IKWrapper
+##
+class IKWrapper(object):
+    def __init__(self, robot, tip_link, tip_to_eef = None, use_joints = None):
+        self.__robot = robot
+        #
+        self.__tip_link = self.__parseLink(tip_link)
+        if self.__tip_link is None:
+            raise Exception('invalid tip_link')
+        #
+        if tip_to_eef is None:
+            self.__tip_to_eef = iu.coordinates()
+        elif type(tip_to_eef) is map:
+            self.__tip_to_eef = make_coordinates(tip_to_eef)
+        else:
+            self.__tip_to_eef = tip_to_eef
+        if type(self.__tip_to_eef) is not iu.coordinates:
+            raise Exception('invalid tip_to_eef')
+        self.__tip_to_eef_cnoid = self.__tip_to_eef.toPosition()
+        #
+        if use_joints is None:
+            self.__default_joints = self.__robot.jointList()
+        else:
+            self.__default_joints = [ self.__parseJoint(j) for j in use_joints ]
+        self.resetJointWeights()
+        self.__default_pose = self.angleVector()
+
+    def updateDefault(self):
+        self.__default_joints = self.__current_joints
+        self.__default_pose = self.angleVector()
+        self.resetJointWeights()
+
+    def __parseLink(self, id_name_link):
+        if type(id_name_link) is int:
+            return self.__robot.link(id_name_link)
+        elif type(id_name_link) is str:
+            return self.__robot.link(id_name_link)
+        elif type(id_name_link) is cnoid.Body.Link:
+            return id_name_link
+        return None
+
+    def __parseJoint(self, id_name_joint):
+        if type(id_name_joint) is int:
+            return self.__robot.joint(id_name_joint)
+        elif type(id_name_joint) is str:
+            return self.__robot.joint(id_name_joint)
+        elif type(id_name_joint) is cnoid.Body.Link:
+            return id_name_joint
+        return None
+
+    def endEffector(self, **kwargs):
+        return iu.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
+
+    def resetJointWeights(self):
+        self.__current_joints = [j for j in self.__default_joints]
+        self.updateJointWeights()
+
+    def updateJointWeights(self):
+        self.__joint_weights = np.zeros(self.__robot.numJoints)
+        for idx in range(self.__robot.numJoints):
+            if self.__robot.joint(idx) in self.__current_joints:
+                self.__joint_weights[idx] = 1
+
+    def setJoints(self, jlist, enable = True):
+        for j in jlist:
+            self.__setJoint(j, enable = enable)
+        self.updateJointWeights()
+
+    def __setJoint(self, joint_or_id, enable = True):
+        if type(joint_or_id) == cnoid.Body.Link:
+            pass
+        elif type(joint_or_id) == int:
+            if joint_or_id >= self.__robot.getNumJoints():
+                raise Exception('number of joints')
+            joint_or_id = self.__robot.joint(joint_or_id)
+        else:
+            raise Exception('wrong type')
+
+        if enable:
+            if not joint_or_id in self.__current_joints:
+                self.__current_joints.append(joint_or_id)
+        else:
+            while joint_or_id in self.__current_joints:
+                self.__current_joints.remove(joint_or_id)
+
+    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+        ##
+        if add_noise is not None:
+            if type(add_noise) is float:
+                self.addNoise(max_range = add_noise, joint_list = self.__current_joints)
+            else:
+                self.addNoise(max_range = 0.2, joint_list = self.__current_joints)
+        ##
+        if weight == 'position':
+            weight = [1, 1, 1, 0, 0, 0]
+        elif weight == 'rotation':
+            weight = [0, 0, 0, 1, 1, 1]
+        elif type(weight) is str:
+            ## 'xyzRPY'
+            wstr = weight
+            weight = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    weight[0] = 1
+                elif ss == 'y':
+                    weight[1] = 1
+                elif ss == 'z':
+                    weight[2] = 1
+                elif ss == 'R':
+                    weight[3] = 1
+                elif ss == 'P':
+                    weight[4] = 1
+                elif ss == 'Y':
+                    weight[5] = 1
+
+        constraints = IK.Constraints()
+        ra_constraint = IK.PositionConstraint()
+        ra_constraint.A_link =     self.__tip_link
+        ra_constraint.A_localpos = self.__tip_to_eef_cnoid
+        #constraint->B_link() = nullptr;
+        ra_constraint.B_localpos = coords.toPosition()
+        ra_constraint.weight = np.array(weight)
+        constraints.push_back(ra_constraint)
+
+        jlim_avoid_weight_old = np.zeros(6 + self.__robot.getNumJoints())
+        ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
+        dq_weight_all = np.append(np.zeros(6), self.__joint_weights)
+
+        d_level = 0
+        if debug:
+            d_level = 1
+
+        loop = IK.solveFullbodyIKLoopFast(self.__robot,
+                                          constraints,
+                                          jlim_avoid_weight_old,
+                                          dq_weight_all,
+                                          max_iteration,
+                                          threshold,
+                                          d_level)
+        if debug:
+            for cntr, const in enumerate(constraints):
+                const.debuglevel = 1
+                if const.checkConvergence():
+                    print('constraint %d (%s) : converged'%(cntr, const))
+                else:
+                    print('constraint %d (%s) : NOT converged'%(cntr, const))
+        return loop
+
+    #def angleVectorOrg(self, av = None):
+    #    if av is not None:
+    #        for idx in range(len(self.__default_joints)):
+    #            self.__default_joints[idx].q = av[idx]
+    #    return np.array([ j.q for j in self.__default_joints ])
+    ##
+    def angleVector(self, av = None):
+        return self.__angleVector(av, self.__default_joints)
+    def currentAngleVector(self, av = None):
+        return self.__angleVector(av, self.__current_joints)
+    def __angleVector(self, av, joint_list):
+        if av is not None:
+            for j, ang in zip(joint_list, av):
+                j.q = ang
+            self.__robot.calcForwardKinematics()
+        return np.array([ j.q for j in joint_list])
+
+    def resetPose(self):
+        self.angleVector(self.__default_pose)
+
+    def addNoise(self, max_range = 0.1, joint_list = None):
+        if joint_list is None:
+            joint_list = self.__default_joints
+        for j in joint_list:
+            j.q += random.uniform(-max_range, max_range)
+        self.__robot.calcForwardKinematics()
+
+    ## read-only
+    @property
+    def robot(self):
+        return self.__robot
+#    @body.setter
+#    def body(self, in_body):
+#        self.__body = in_body
+    @property
+    def tip_link(self):
+        return self.__tip_link
+    @property
+    def tip_to_eef(self):
+        return self.__tip_to_eef
+    @property
+    def joint_weights(self):
+        return self.__joint_weights
+    @property
+    def current_joints(self):
+        return self.__current_joints
+    @property
+    def default_joints(self):
+        return self.__default_joints
+    @property
+    def default_pose(self):
+        return self.__default_pose
 
 ## add methods to choreonoid's class
 def __joint_list(self):
