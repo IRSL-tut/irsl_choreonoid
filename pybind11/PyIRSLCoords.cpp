@@ -23,9 +23,9 @@ Matrix4RM mid_coords_pos_(const double p, ref_mat4 c1, ref_mat4 c2, const double
     return cnoid_pos.matrix();
 }
 
-PYBIND11_MODULE(IRSLUtil, m)
+PYBIND11_MODULE(IRSLCoords, m)
 {
-    m.doc() = "Utility for choreonoid";
+    m.doc() = "coordinates for choreonoid";
 
     py::module::import("cnoid.Body");
 
@@ -175,6 +175,7 @@ PYBIND11_MODULE(IRSLUtil, m)
     .def_property("rot",
                   [](coordinates &self) { return self.rot; },
                   [](coordinates &self, ref_mat3 mat) { self.rot = mat; })
+    .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); })
     .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
          [](const coordinates &self) -> Matrix4RM { Position p; self.toPosition(p); return p.matrix(); })
