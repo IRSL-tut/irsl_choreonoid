@@ -1,5 +1,5 @@
 import numpy as np
-from cnoid.IRSLUtil import coordinates
+from cnoid.IRSLCoords import coordinates
 from irsl_choreonoid.draw_coords import DrawCoordsList
 
 ## generate wrapper class

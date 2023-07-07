@@ -2,7 +2,7 @@ import cnoid.Base
 import cnoid.Util
 import numpy as np
 import cnoid.DrawInterface as di
-from cnoid.IRSLUtil import coordinates
+from cnoid.IRSLCoords import coordinates
 
 ## インターフェースのためのinstanceを作る
 di_instance = di.GeneralDrawInterface()

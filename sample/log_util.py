@@ -2,7 +2,7 @@
 import irsl_choreonoid.hrpsyslog_util as hu
 
 import irsl_choreonoid.robot_util as ru
-from cnoid.IRSLUtil import coordinates
+from cnoid.IRSLCoords import coordinates
 
 # names
 base = 'gopos_1_0_0_PL0_20220716120647'

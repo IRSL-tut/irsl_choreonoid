@@ -3,7 +3,7 @@ import cnoid.Body
 
 from .cnoid_util import *
 
-import cnoid.IRSLUtil as iu
+import cnoid.IRSLCoords as ic
 import cnoid.IKSolvers as IK
 
 import numpy as np
@@ -19,34 +19,34 @@ def make_coordinates(coords_map):
         if key in coords_map:
             q = np.array(coords_map[key])
             if pos is None:
-                return iu.coordinates(q)
+                return ic.coordinates(q)
             else:
-                return iu.coordinates(pos, q)
+                return ic.coordinates(pos, q)
     for key in ('angle-axis', 'aa'):
         if key in coords_map:
             aa = coords_map[key]
-            rot = iu.angleAxisNormalized(aa[3], np.array(aa[:3]))
+            rot = ic.angleAxisNormalized(aa[3], np.array(aa[:3]))
             if pos is None:
-                return iu.coordinates(rot)
+                return ic.coordinates(rot)
             else:
-                return iu.coordinates(pos, rot)
+                return ic.coordinates(pos, rot)
     for key in ('rotation', 'matrix', 'mat', 'rot'):
         if key in coords_map:
             rot = np.array(coords_map[key])
             if pos is None:
-                return iu.coordinates(rot)
+                return ic.coordinates(rot)
             else:
-                return iu.coordinates(pos, rot)
+                return ic.coordinates(pos, rot)
     for key in ('rpy', 'RPY', 'roll-pitch-yaw'):
         if key in coords_map:
             if pos is None:
-                ret = iu.coordinates()
+                ret = ic.coordinates()
             else:
-                ret = iu.coordinates(pos)
+                ret = ic.coordinates(pos)
             ret.setRPY(np.array(coords_map[key]))
             return ret
     if pos is not None:
-        return iu.coordinates(pos)
+        return ic.coordinates(pos)
     raise Exception('{}'.format(coords_map))
 
 def make_coords_map(coords):
@@ -64,12 +64,12 @@ class IKWrapper(object):
             raise Exception('invalid tip_link')
         #
         if tip_to_eef is None:
-            self.__tip_to_eef = iu.coordinates()
+            self.__tip_to_eef = ic.coordinates()
         elif type(tip_to_eef) is map:
             self.__tip_to_eef = make_coordinates(tip_to_eef)
         else:
             self.__tip_to_eef = tip_to_eef
-        if type(self.__tip_to_eef) is not iu.coordinates:
+        if type(self.__tip_to_eef) is not ic.coordinates:
             raise Exception('invalid tip_to_eef')
         self.__tip_to_eef_cnoid = self.__tip_to_eef.toPosition()
         #
@@ -104,7 +104,7 @@ class IKWrapper(object):
         return None
 
     def endEffector(self, **kwargs):
-        return iu.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
+        return ic.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
 
     def resetJointWeights(self):
         self.__current_joints = [j for j in self.__default_joints]
@@ -262,11 +262,11 @@ def __link_list(self):
 
 cnoid.Body.Body.jointList = __joint_list
 cnoid.Body.Body.linkList = __link_list
-cnoid.Body.Body.angleVector = lambda self, vec = None: iu.angleVector(self) if vec is None else iu.angleVector(self, vec)
-cnoid.Body.Link.getCoords = lambda self: iu.getCoords(self)
-cnoid.Body.Link.setCoords = lambda self, cds: iu.setCoords(self, cds)
-cnoid.Body.Link.getOffsetCoords = lambda self: iu.getOffsetCoords(self)
-cnoid.Body.Link.setOffsetCoords = lambda self, cds: iu.setOffsetCoords(self, cds)
+cnoid.Body.Body.angleVector = lambda self, vec = None: ic.angleVector(self) if vec is None else ic.angleVector(self, vec)
+cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
+cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
+cnoid.Body.Link.getOffsetCoords = lambda self: ic.getOffsetCoords(self)
+cnoid.Body.Link.setOffsetCoords = lambda self, cds: ic.setOffsetCoords(self, cds)
 
 class RobotModel(object):
     def __init__(self, robot):
@@ -298,7 +298,7 @@ class RobotModel(object):
         for limb in ('rleg', 'lleg', 'rarm', 'larm', 'head', 'torso'):
             eef = eval('self.%s_tip_to_eef'%(limb))
             if not eef is None:
-                exec('self.%s_tip_to_eef_coords = iu.coordinates(self.%s_tip_to_eef)'%(limb, limb))
+                exec('self.%s_tip_to_eef_coords = ic.coordinates(self.%s_tip_to_eef)'%(limb, limb))
                 exec('type(self).%s_end_coords = lambda self : self.%s_tip_link.getCoords().transform(self.%s_tip_to_eef_coords)'%(limb, limb, limb))
     #def robot(self):
     #    return robot
@@ -369,13 +369,13 @@ class RobotModel(object):
         return self.torso_tip_link.getPosition().dot(self.torso_tip_to_eef)
 
     def foot_mid_coords_cnoid(self, p = 0.5):
-        return iu.Position_mid_coords(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
+        return ic.Position_mid_coords(p, self.rleg_end_effector_cnoid(), self.lleg_end_effector_cnoid())
 
     def fix_leg_to_coords_cnoid(self, position, p = 0.5):
         mc = self.foot_mid_coords_cnoid(p)
         rL = self.robot.rootLink
         rL.setPosition(
-            (iu.PositionInverse(mc).dot(position)).dot(rL.getPosition())
+            (ic.PositionInverse(mc).dot(position)).dot(rL.getPosition())
             )
         self.robot.calcForwardKinematics()
 
@@ -447,7 +447,7 @@ class RobotModel(object):
 
     def move_centroid_on_foot_cnoid(self, p = 0.5, debug = False):
         mid_pos = self.foot_mid_coords(p)
-        #mid_trans = iu.Position_translation(mid_pos)
+        #mid_trans = ic.Position_translation(mid_pos)
         mid_trans = mid_pos.pos
 
         constraints = IK.Constraints()
