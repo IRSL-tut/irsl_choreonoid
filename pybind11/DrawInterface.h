@@ -43,6 +43,10 @@ namespace cnoid {
             // sw->sceneRoot() or sw->scene()
             sw->renderScene();
         }
+        void viewAll() {
+            //SceneView::instance()->sceneWidget()->viewAll();
+            sw->viewAll();
+        }
         void setOrigin(const coordinates &_cds) {
             _cds.toPosition(posTrans->T());
         }
