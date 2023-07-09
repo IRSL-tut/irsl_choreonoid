@@ -3,7 +3,8 @@
 import irsl_choreonoid.sample_robot as sr
 import irsl_choreonoid.robot_util as ru
 import numpy as np
-import cnoid.IRSLUtil as iu
+import cnoid.IRSLCoords as ic
+from cnoid.IRSLCoords import coordinates
 import math
 
 ## ロボットモデルの初期化
@@ -17,7 +18,7 @@ cds0 = rr.foot_mid_coords()
 
 ## 左右脚先の中点を与えた座標に一致させる（以下の場合は原点）
 #rr.fix_leg_to_coords_cnoid(np.identity(4)) ## Position
-rr.fix_leg_to_coords(iu.coordinates()) ## coordinates
+rr.fix_leg_to_coords(coordinates()) ## coordinates
 rr.flush()## 画面の更新
 
 ## 腰を前後左右に動かして重心を左右脚先の中点上に一致させる
@@ -30,12 +31,12 @@ rr.robot.calcCenterOfMass() ## 重心の計算
 rr.robot.centerOfMass ## 計算された重心位置
 
 ## 矢印の表示（重心）
-mass_coords = ru.DrawCoords()
-mass_coords.draw(iu.cnoidPosition(rr.robot.centerOfMass))
+#mass_coords = ru.DrawCoords()
+#mass_coords.draw(ic.cnoidPosition(rr.robot.centerOfMass))
 
 ## 矢印の表示（左手）
-larm_coords = ru.DrawCoords()
-larm_coords.draw(rr.larm_end_effector())
+#larm_coords = ru.DrawCoords()
+#larm_coords.draw(rr.larm_end_effector())
 
 # print joints
 #for j in rr.joint_list():

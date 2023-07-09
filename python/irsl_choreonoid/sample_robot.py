@@ -1,6 +1,6 @@
 from . import robot_util as ru
 from . import cnoid_util as cu
-import cnoid.IRSLUtil as iu
+import cnoid.IRSLCoords as ic
 import cnoid.Util
 import numpy as np
 
@@ -26,15 +26,15 @@ class SampleRobot(ru.RobotModel):
         self.rleg_tip_link = self.robot.link('RLEG_ANKLE_R')
         self.lleg_tip_link = self.robot.link('LLEG_ANKLE_R')
 
-        self.rleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.055]))
-        self.lleg_tip_to_eef = iu.cnoidPosition(np.array([0.0, 0.0, -0.055]))
+        self.rleg_tip_to_eef = ic.cnoidPosition(np.array([0.0, 0.0, -0.055]))
+        self.lleg_tip_to_eef = ic.cnoidPosition(np.array([0.0, 0.0, -0.055]))
 
         self.rarm_tip_link = self.robot.link('RARM_WRIST_R')
         self.larm_tip_link = self.robot.link('LARM_WRIST_R')
 
-        self.rarm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
+        self.rarm_tip_to_eef = ic.cnoidPosition(ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
                                                 np.array([0.0, 0.0, -0.14]))
-        self.larm_tip_to_eef = iu.cnoidPosition(iu.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
+        self.larm_tip_to_eef = ic.cnoidPosition(ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
                                                 np.array([0.0, 0.0, -0.14]))
         self.init_ending()
 

@@ -1,7 +1,7 @@
 ###
-set(TARGET PyIRSLUtil)
+set(TARGET PyIRSLCoords)
 
-add_cnoid_python_module(${TARGET} PyIRSLUtil.cpp)
+add_cnoid_python_module(${TARGET} PyIRSLCoords.cpp)
 
 target_link_libraries(${TARGET}
   ${catkin_LIBRARIES}
@@ -25,7 +25,6 @@ endif()
 ###
 set(TARGET2 PyDrawInterface)
 
-#set(headers DrawInterface.h)
 add_cnoid_python_module(${TARGET2} PyDrawInterface.cpp)
 
 target_link_libraries(${TARGET2}
@@ -48,14 +47,12 @@ else()
 endif()
 
 ###
-set(TARGET3 PyAssimp)
+set(TARGET3 PyIRSLUtil)
 
-#set(headers DrawInterface.h)
-add_cnoid_python_module(${TARGET3} PyAssimpModule.cpp)
+add_cnoid_python_module(${TARGET3} PyIRSLUtil.cpp)
 
 target_link_libraries(${TARGET3}
   ${CHOREONOID_BASE_LIBRARIES}
-  CnoidAssimpSceneLoader
   )
 
 target_compile_definitions(${TARGET3} PUBLIC ${CHOREONOID_COMPILE_DEFINITIONS})

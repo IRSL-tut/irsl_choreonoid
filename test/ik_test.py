@@ -1,6 +1,6 @@
 # PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 ik_test.py
 
-import cnoid.IRSLUtil as iu
+import cnoid.IRSLCoords as ic
 import irsl_choreonoid.sample_robot as sr
 import irsl_choreonoid.robot_util as ru
 import numpy as np
@@ -39,15 +39,15 @@ class TestRobotModel(unittest.TestCase):
     def test_fix_coords(self):
         rr = sr.init_sample_robot()
 
-        rot = iu.angleAxisNormalized(0.2, np.array([1.0, 2.0, 3.0]))
+        rot = ic.angleAxisNormalized(0.2, np.array([1.0, 2.0, 3.0]))
         pos = np.array([1.0, 2.0, 3.0])
-        cds = iu.coordinates(pos, rot)
+        cds = ic.coordinates(pos, rot)
         rr.robot.rootLink.setCoords(cds)
         rr.flush()
 
         cds_org = rr.foot_mid_coords()
 
-        rr.fix_leg_to_coords(iu.coordinates()) ## coordinates
+        rr.fix_leg_to_coords(ic.coordinates()) ## coordinates
         rr.flush()
 
         cds_fix = rr.foot_mid_coords()
@@ -64,7 +64,7 @@ class TestRobotModel(unittest.TestCase):
         rr.flush()
         rr.set_pose('default')
         rr.flush()
-        rr.fix_leg_to_coords(iu.coordinates()) ## coordinates
+        rr.fix_leg_to_coords(ic.coordinates()) ## coordinates
         rr.flush()
         cds_org = rr.foot_mid_coords()
 

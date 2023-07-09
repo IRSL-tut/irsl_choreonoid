@@ -6,7 +6,7 @@ import zipfile
 zipfile.ZipExtFile.next_original = zipfile.ZipExtFile.__next__
 ##
 import irsl_choreonoid.robot_util as ru
-from cnoid.IRSLUtil import coordinates
+from cnoid.IRSLCoords import coordinates
 
 def simple_merge(lst):
     ret = []

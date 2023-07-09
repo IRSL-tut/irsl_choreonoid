@@ -2,7 +2,7 @@
 # OR
 # PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 closed_link_ik.py
 
-import cnoid.IRSLUtil as iu
+from cnoid.IRSLCoords import coordinates
 import irsl_choreonoid.robot_util as ru
 import numpy as np
 import math
@@ -42,10 +42,10 @@ def solveClosedIK(targetq = None, joint_id = 0, flush = True):
     ## closed link definition
     ex_constraint = IK.PositionConstraint()
     ex_constraint.A_link     = rr.robot.getLink('LINKD')
-    cds_a = iu.coordinates(np.array([1.3, 0, 0]))
+    cds_a = coordinates(np.array([1.3, 0, 0]))
     ex_constraint.A_localpos = cds_a.toPosition()
     ex_constraint.B_link     = rr.robot.getLink('LINK1')
-    cds_b = iu.coordinates(np.array([0,   0, 0.07]))
+    cds_b = coordinates(np.array([0,   0, 0.07]))
     ex_constraint.B_localpos = cds_b.toPosition()
     ex_constraint.weight = np.array([1, 1, 1, 0, 0, 0]) ## xyz : fixed, rpy : free
     ## A_link->A_localpos == B_link->B_localpos
