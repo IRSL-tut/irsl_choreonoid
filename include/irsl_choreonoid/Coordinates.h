@@ -19,8 +19,9 @@ typedef Eigen::Ref<const cnoid::Vector3>   ref_vec3;
 
 //#define __irsl_use_inline__
 // all functions are inline function ...
-
 namespace cnoid {
+    typedef Isometry3 cnoidPosition;
+
     inline bool eps_eq(const double a, const double b, const double eps = 0.00001) {
         return fabs((a)-(b)) <= eps;
     }
@@ -139,7 +140,7 @@ namespace cnoid {
         }
     }
 
-    inline void mid_coords_pos(Position &mid_coords, const double p, const Position &c1, const Position &c2, const double eps) { // eps = 0.00001
+    inline void mid_coords_pos(cnoidPosition &mid_coords, const double p, const cnoidPosition &c1, const cnoidPosition &c2, const double eps) { // eps = 0.00001
         Matrix3 c1_rot(c1.linear());
         Matrix3 c2_rot(c2.linear());
         Matrix3 ret_rot;
@@ -181,7 +182,7 @@ namespace cnoid {
         coordinates(const Quaternion& q) : pos(Vector3::Zero()), rot(q) {}
         coordinates(const AngleAxis& ax) : pos(Vector3::Zero()), rot(ax) {}
         coordinates(const coordinates& c) : pos(c.pos), rot(c.rot) {}
-        coordinates(const Position& p) : pos(p.translation()), rot(p.linear()) {}
+        coordinates(const cnoidPosition& p) : pos(p.translation()), rot(p.linear()) {}
         coordinates(const Vector3& pp, double r, double p, double y) : pos(pp) { setRPY(r, p, y); }
         coordinates(const Vector3& pp, const Vector3& rpy) : pos(pp) { setRPY(rpy); }
         coordinates(double r, double p, double y) : pos(Vector3::Zero()) { setRPY(r, p, y); }
@@ -216,11 +217,19 @@ namespace cnoid {
             return true;
         }
 
-        void toPosition(Position &p) const
+        void toPosition(cnoidPosition &p) const
         {
             p.setIdentity();
             p.translation() = pos;
             p.linear() = rot;
+        }
+        cnoidPosition toPosition() const
+        {
+            cnoidPosition p;
+            p.setIdentity();
+            p.translation() = pos;
+            p.linear() = rot;
+            return p;
         }
         coordinates& operator=(const coordinates& c)
         {
@@ -230,7 +239,7 @@ namespace cnoid {
             }
             return *this;
         }
-        coordinates& operator=(const Position& p)
+        coordinates& operator=(const cnoidPosition& p)
         {
             pos = p.translation();
             rot = p.linear();
@@ -565,7 +574,7 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
 #endif
 
     //// for cnoid::Poisition
-    inline void rotate_with_matrix(Position &coords, const Matrix3 &mat, const coordinates::wrt wrt = coordinates::wrt::local )
+    inline void rotate_with_matrix(cnoidPosition &coords, const Matrix3 &mat, const coordinates::wrt wrt = coordinates::wrt::local )
     {
         Matrix3 rot = coords.linear();
         if (wrt == coordinates::wrt::local) {
@@ -578,40 +587,40 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
         coords.linear() = rot;
     }
 
-    inline void rotate(Position &coords, const double theta, const Vector3& axis, const coordinates::wrt wrt = coordinates::wrt::local )
+    inline void rotate(cnoidPosition &coords, const double theta, const Vector3& axis, const coordinates::wrt wrt = coordinates::wrt::local )
     {
         AngleAxis tmpr(theta, axis);
         rotate_with_matrix(coords, tmpr.toRotationMatrix(), wrt);
     }
 
-    inline void difference(const Position &coords, Vector3& dif_pos, Vector3& dif_rot, const Position& c)
+    inline void difference(const cnoidPosition &coords, Vector3& dif_pos, Vector3& dif_rot, const cnoidPosition& c)
     {
         dif_pos = c.translation() - coords.translation();
         _difference_rotation(dif_rot, coords.linear(), c.linear());
     }
-    inline void difference_rotation(const Position &coords, Vector3& dif_rot, const Position& c)
+    inline void difference_rotation(const cnoidPosition &coords, Vector3& dif_rot, const cnoidPosition& c)
     {
         _difference_rotation(dif_rot, coords.linear(), c.linear());
     }
-    inline void difference_position(const Position &coords, Vector3& dif_pos, const Position& c)
+    inline void difference_position(const cnoidPosition &coords, Vector3& dif_pos, const cnoidPosition& c)
     {
         dif_pos = c.translation() - coords.translation();
     }
-    inline void inverse_transformation(const Position &coords, Position& inv)
+    inline void inverse_transformation(const cnoidPosition &coords, cnoidPosition& inv)
     {
         inv = coords.inverse();
     }
 
-    inline void transform(Position &coords, const Position& c, const coordinates::wrt wrt = coordinates::wrt::local )
+    inline void transform(cnoidPosition &coords, const cnoidPosition& c, const coordinates::wrt wrt = coordinates::wrt::local )
     {
         if (wrt == coordinates::wrt::local) {
-            Position tmp = (coords * c);
+            cnoidPosition tmp = (coords * c);
             Matrix3 rot;
             _rotm3times(rot, coords.linear(), c.linear());
             coords.translation() = tmp.translation();
             coords.linear() = rot;
         } else if (wrt == coordinates::wrt::world || wrt == coordinates::wrt::parent) {
-            Position tmp = (c * coords);
+            cnoidPosition tmp = (c * coords);
             Matrix3 rot;
             _rotm3times(rot, c.linear(), coords.linear());
             coords.translation() = tmp.translation();
@@ -619,7 +628,7 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
         }
     }
 
-    inline void transformation(const Position &coords, Position& trans_coords, const Position &c, const coordinates::wrt wrt = coordinates::wrt::local )
+    inline void transformation(const cnoidPosition &coords, cnoidPosition& trans_coords, const cnoidPosition &c, const coordinates::wrt wrt = coordinates::wrt::local )
     {
 #if 0
         if(wrt == coordinates::wrt::local) {
@@ -628,13 +637,13 @@ typedef std::shared_ptr< coordinates > coordinatesPtr;
             transform(trans_coords, c);
         } else if (wrt == coordinates::wrt::world || wrt == coordinates::wrt::parent) {
             // c * coords^-1
-            Position inv_trans;
+            cnoidPosition inv_trans;
             inverse_transformation(coords, inv_trans);
             trans_coords = c;
             transform(trans_coords, inv_trans);
         }
 #endif
-        Position tmp(c);
+        cnoidPosition tmp(c);
         inverse_transformation(coords, trans_coords);
         transform(trans_coords, tmp, wrt);
     }
