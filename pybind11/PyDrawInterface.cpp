@@ -55,7 +55,9 @@ PYBIND11_MODULE(DrawInterface, m)
         //
         .def("hide_and_show", &DrawInterface::hide_and_show)
         //
-        .def("render", &DrawInterface::render)
+        .def("render", &DrawInterface::render)//should be class method
+        .def("flush", [](DrawInterface &self) { DrawInterface::flush(); })//should be class method
+        .def("viewAll", &DrawInterface::viewAll)// Can we implement viewThis?
         ;
     //SgPlot
     //SgPointSet
@@ -69,30 +71,32 @@ PYBIND11_MODULE(DrawInterface, m)
             self.getOrigin(_res);
             return _res; })
         //
-        .def("add_object", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
+        .def("addObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
+        .def("addObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::add_object,
+        .def("addObject", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::add_object,
+        .def("addObject", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
-        .def("add_object", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
-        //
-        .def("remove_object", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
-        .def("remove_object", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::remove_object,
+        .def("addObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
         //
-        .def("render", &DrawInterface::render)
+        .def("removeObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("removeObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("removeObject", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("removeObject", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        .def("removeObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::remove_object,
+             py::arg("object"), py::arg("update") = false)
+        //
+        .def("render", &DrawInterface::render)//should be class method
+        .def("flush", [](GeneralDrawInterface &self) { DrawInterface::flush(); })//should be class method
+        .def("viewAll", &DrawInterface::viewAll)// Can we implement viewThis?
         ;
 
-    m.def("flush", &DrawInterface::flush);
+    m.def("flush", &DrawInterface::flush); //Deprecated??
 }
