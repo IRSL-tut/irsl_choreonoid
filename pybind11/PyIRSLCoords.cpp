@@ -16,8 +16,8 @@ namespace py = pybind11;
 
 Matrix4RM mid_coords_pos_(const double p, ref_mat4 c1, ref_mat4 c2, const double eps)
 {
-    Position cnoid_pos;
-    Position p_c1(c1), p_c2(c2);
+    cnoidPosition cnoid_pos;
+    cnoidPosition p_c1(c1), p_c2(c2);
     cnoid_pos.setIdentity();
     mid_coords_pos(cnoid_pos, p, p_c1, p_c2, eps);
     return cnoid_pos.matrix();
@@ -64,25 +64,25 @@ PYBIND11_MODULE(IRSLCoords, m)
             return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
 
     /// for cnoid::Position
-    m.def("PositionInverse", [](ref_mat4 in_p) -> Matrix4RM { Position p(in_p); return p.inverse().matrix(); });
-    m.def("Position_translation", [](ref_mat4 in_p) { Position p(in_p); return Vector3(p.translation()); });
-    m.def("Position_quaternion", [](ref_mat4 in_p) { Quaternion q(Position(in_p).linear());
+    m.def("PositionInverse", [](ref_mat4 in_p) -> Matrix4RM { cnoidPosition p(in_p); return p.inverse().matrix(); });
+    m.def("Position_translation", [](ref_mat4 in_p) { cnoidPosition p(in_p); return Vector3(p.translation()); });
+    m.def("Position_quaternion", [](ref_mat4 in_p) { Quaternion q(cnoidPosition(in_p).linear());
             return Vector4(q.x(), q.y(), q.z(), q.w()); });
-    m.def("Position_rotation", [](ref_mat4 in_p) { Position p(in_p); return Matrix3RM(p.linear()); });
+    m.def("Position_rotation", [](ref_mat4 in_p) { cnoidPosition p(in_p); return Matrix3RM(p.linear()); });
     m.def("rotationToQuaternion", [](ref_mat3 rot) { Quaternion q(rot);
             return Vector4(q.x(), q.y(), q.z(), q.w()); });
     m.def("quaternionToRotation", [](ref_vec4 q) { return Matrix3RM(Quaternion(q)); });
 
     m.def("cnoidPosition", [](ref_mat3 rot, ref_vec3 trans) -> Matrix4RM {
-            Position ret; ret.setIdentity(); ret.linear() = rot; ret.translation() = trans; return ret.matrix(); });
+            cnoidPosition ret; ret.setIdentity(); ret.linear() = rot; ret.translation() = trans; return ret.matrix(); });
     m.def("cnoidPosition", [](ref_vec4 q, ref_vec3 trans) -> Matrix4RM {
-            Position ret; ret.setIdentity(); ret.linear() = Matrix3(Quaternion(q)); ret.translation() = trans; return ret.matrix(); });
+            cnoidPosition ret; ret.setIdentity(); ret.linear() = Matrix3(Quaternion(q)); ret.translation() = trans; return ret.matrix(); });
     m.def("cnoidPosition", [](ref_vec3 trans) -> Matrix4RM {
-            Position ret; ret.setIdentity(); ret.translation() = trans; return ret.matrix(); });
+            cnoidPosition ret; ret.setIdentity(); ret.translation() = trans; return ret.matrix(); });
     m.def("cnoidPosition", [](ref_mat3 rot) -> Matrix4RM {
-            Position ret; ret.setIdentity(); ret.linear() = rot; return ret.matrix(); });
+            cnoidPosition ret; ret.setIdentity(); ret.linear() = rot; return ret.matrix(); });
     m.def("cnoidPosition", [](ref_vec4 q) -> Matrix4RM {
-            Position ret; ret.setIdentity(); ret.linear() = Matrix3(Quaternion(q)); return ret.matrix(); });
+            cnoidPosition ret; ret.setIdentity(); ret.linear() = Matrix3(Quaternion(q)); return ret.matrix(); });
 
     m.def("normalizeVector", [](ref_vec3 v3) { return v3.normalized(); });
     m.def("normalizeVector", [](ref_vec4 v4) { return v4.normalized(); });
@@ -90,7 +90,7 @@ PYBIND11_MODULE(IRSLCoords, m)
     m.def("angleAxisNormalized", [](double angle, ref_vec3 axis) {
             Vector3 ax_ = axis.normalized(); return Matrix3RM(AngleAxis(angle, ax_)); });
     m.def("Position_rotate_with_matrix", [](ref_mat4 cds, ref_mat3 mat, const std::string &wrt) -> Matrix4RM {
-            Position coords(cds);
+            cnoidPosition coords(cds);
             Matrix3 mat_(mat);
             if (wrt == "local") {
                 rotate_with_matrix(coords, mat_, coordinates::wrt::local);
@@ -100,7 +100,7 @@ PYBIND11_MODULE(IRSLCoords, m)
             return coords.matrix(); },
         py::arg("cds"), py::arg("mat"), py::arg("wrt") = "local");
     m.def("Position_rotate", [](ref_mat4 cds, const double theta, ref_vec3 axis, const std::string &wrt) -> Matrix4RM {
-            Position coords(cds);
+            cnoidPosition coords(cds);
             if (wrt == "local") {
                 rotate(coords, theta, axis, coordinates::wrt::local);
             } else if (wrt == "world") {
@@ -109,8 +109,8 @@ PYBIND11_MODULE(IRSLCoords, m)
             return coords.matrix(); },
         py::arg("cds"), py::arg("theta"), py::arg("axis"), py::arg("wrt") = "local");
     m.def("Position_transform", [](ref_mat4 cds, ref_mat4 c, const std::string &wrt) -> Matrix4RM {
-            Position coords(cds);
-            Position c_(c);
+            cnoidPosition coords(cds);
+            cnoidPosition c_(c);
             if (wrt == "local") {
                 transform(coords, c_, coordinates::wrt::local);
             } else if (wrt == "world") {
@@ -119,9 +119,9 @@ PYBIND11_MODULE(IRSLCoords, m)
             return coords.matrix(); },
         py::arg("cds"), py::arg("c"), py::arg("wrt") = "local");
     m.def("Position_transformation", [](ref_mat4 cds, ref_mat4 c, const std::string &wrt) -> Matrix4RM {
-            Position coords(cds);
-            Position c_(c);
-            Position trans_c;
+            cnoidPosition coords(cds);
+            cnoidPosition c_(c);
+            cnoidPosition trans_c;
             if (wrt == "local") {
                 transformation(coords, trans_c, c_, coordinates::wrt::local);
             } else if (wrt == "world") {
@@ -153,7 +153,7 @@ PYBIND11_MODULE(IRSLCoords, m)
     .def(py::init([](ref_vec3 trs, ref_vec4 rot)
                   { Quaternion q(rot); return new coordinates(trs, q); }))
     .def(py::init([](ref_mat4 position)
-                  { Position p(position); return new coordinates(p); }))
+                  { cnoidPosition p(position); return new coordinates(p); }))
     .def("__repr__", [](const coordinates &self) {
             std::stringstream ss;
             ss << "<coordinates[";
@@ -178,7 +178,7 @@ PYBIND11_MODULE(IRSLCoords, m)
     .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); })
     .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
-         [](const coordinates &self) -> Matrix4RM { Position p; self.toPosition(p); return p.matrix(); })
+         [](const coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); })
     .def("rotate_with_matrix",
          [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
          {  self.rotate_with_matrix(mat, wrt); return &self; },
@@ -336,7 +336,7 @@ PYBIND11_MODULE(IRSLCoords, m)
           });
     m.def("setOffsetCoords",
           [](Link &self, const coordinates &cds) {
-              Position p;
+              cnoidPosition p;
               cds.toPosition(p);
               self.setOffsetPosition(p);
           });

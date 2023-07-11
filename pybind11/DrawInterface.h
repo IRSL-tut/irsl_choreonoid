@@ -30,7 +30,7 @@ namespace cnoid {
         {
             //update view??
             QCoreApplication::processEvents(QEventLoop::AllEvents);
-            // TODO: How to notify for redrawing
+            // TODO: How to notify for redrawing (SgUpdate::REMOVED | SgUpdate::ADDED | SgUpdate::MODIFIED)
             SceneView::instance()->sceneWidget()->sceneRoot()->notifyUpdate();
         }
     public: static void convertVector3(const Vector3 &_in, Vector3f &_out)
@@ -39,9 +39,9 @@ namespace cnoid {
         }
     public:
         // added by IRSL
-        void render() {
+        void render(bool doImmediately) {
             // sw->sceneRoot() or sw->scene()
-            sw->renderScene();
+            sw->renderScene(doImmediately);
         }
         void viewAll() {
             //SceneView::instance()->sceneWidget()->viewAll();
@@ -320,7 +320,8 @@ namespace cnoid {
     class GeneralDrawInterface : public DrawInterface
     {
     public:
-        GeneralDrawInterface() {
+        GeneralDrawInterface() : GeneralDrawInterface(false) {}
+        GeneralDrawInterface(bool Root) {
             sv = SceneView::instance();
             sw = sv->sceneWidget();
             //lineSet.reset();
@@ -328,11 +329,16 @@ namespace cnoid {
             //colors.reset();
             posTrans = new SgPosTransform();
             posTrans->T().setIdentity();
-            sw->sceneRoot()->addChild(posTrans);
+            if (Root) {
+                root = (SgGroup *)sw->sceneRoot();
+            } else {
+                root = (SgGroup *)sw->scene();
+            }
+            root->addChild(posTrans);
         }
         ~GeneralDrawInterface() {
             posTrans->clearChildren();
-            sw->sceneRoot()->removeChild(posTrans, true);
+            root->removeChild(posTrans, true);
         }
         void add_object(SgNodePtr &obj, bool update) {
             posTrans->addChildOnce(obj, update);
@@ -364,6 +370,8 @@ namespace cnoid {
         void remove_object(SgShapePtr &obj, bool update) {
             posTrans->removeChild(obj, update);
         }
+    private:
+        SgGroup *root;
     };
     typedef ref_ptr<GeneralDrawInterface> GeneralDrawInterfacePtr;
 
