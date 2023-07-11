@@ -65,12 +65,6 @@ PYBIND11_MODULE(DrawInterface, m)
     //SgOverlay
     py::class_< GeneralDrawInterface, GeneralDrawInterfacePtr, DrawInterface >(m, "GeneralDrawInterface")
         .def(py::init<>())
-        .def("setOrigin", &DrawInterface::setOrigin)
-        .def("getOrigin", [] (GeneralDrawInterface &self) {
-            coordinates _res;
-            self.getOrigin(_res);
-            return _res; })
-        //
         .def("addObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
@@ -81,6 +75,10 @@ PYBIND11_MODULE(DrawInterface, m)
              py::arg("object"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
+        .def("addPyObject", [] (GeneralDrawInterface &self, py::object _o, bool _update) {
+            SgNode *nd = _o.cast<SgNode *>();
+            if (!!nd) {  SgNodePtr ptr(nd); self.add_object(ptr, _update); return true; }
+            return false; }, py::arg("object"), py::arg("update") = false)
         //
         .def("removeObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::remove_object,
              py::arg("object"), py::arg("update") = false)
@@ -92,10 +90,10 @@ PYBIND11_MODULE(DrawInterface, m)
              py::arg("object"), py::arg("update") = false)
         .def("removeObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::remove_object,
              py::arg("object"), py::arg("update") = false)
-        //
-        .def("render", &DrawInterface::render)//should be class method
-        .def("flush", [](GeneralDrawInterface &self) { DrawInterface::flush(); })//should be class method
-        .def("viewAll", &DrawInterface::viewAll)// Can we implement viewThis?
+        .def("removePyObject", [] (GeneralDrawInterface &self, py::object _o, bool _update) {
+            SgNode *nd = _o.cast<SgNode *>();
+            if (!!nd) {  SgNodePtr ptr(nd); self.remove_object(ptr, _update); return true; }
+            return false; }, py::arg("object"), py::arg("update") = false)
         ;
 
     m.def("flush", &DrawInterface::flush); //Deprecated??
