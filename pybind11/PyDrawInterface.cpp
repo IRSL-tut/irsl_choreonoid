@@ -55,7 +55,7 @@ PYBIND11_MODULE(DrawInterface, m)
         //
         .def("hide_and_show", &DrawInterface::hide_and_show)
         //
-        .def("render", &DrawInterface::render)//should be class method
+        .def("render", &DrawInterface::render, py::arg("doImmediately") = false)//should be class method
         .def("flush", [](DrawInterface &self) { DrawInterface::flush(); })//should be class method
         .def("viewAll", &DrawInterface::viewAll)// Can we implement viewThis?
         ;
@@ -65,6 +65,7 @@ PYBIND11_MODULE(DrawInterface, m)
     //SgOverlay
     py::class_< GeneralDrawInterface, GeneralDrawInterfacePtr, DrawInterface >(m, "GeneralDrawInterface")
         .def(py::init<>())
+        .def(py::init<bool>())
         .def("addObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("object"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
