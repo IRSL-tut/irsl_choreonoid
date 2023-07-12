@@ -1,5 +1,6 @@
 from cnoid.Base import RootItem
 from cnoid.Base import ItemTreeView
+from cnoid.Base import MessageView
 
 from cnoid.BodyPlugin import AISTSimulatorItem
 from cnoid.BodyPlugin import BodyItem
@@ -69,7 +70,8 @@ def loadRobot(fname):
     return rb
 
 def flushRobotView(name):
-    findItem(name).notifyKinematicStateChange()
+    #findItem(name).notifyKinematicStateChange()
+    findItem(name).notifyKinematicStateUpdate()
     #MessageView.getInstance().flush()
     MessageView.instance.flush()
 
@@ -154,13 +156,32 @@ def loadRobotItem(fname, name = None, world = True):
     return bI
 
 def findItem(name):
-    return getRootItem().findItem(name)
+    return RootItem.instance.findItem(name)
+
+def findItems(name):
+    return [ itm for itm in RootItem.instance.getDescendantItems() if itm.name == name ]
 
 def removeItem(item_):
     item_.detachFromParentItem()
 
+def findBodyItem(name_or_body):
+    ret = None
+    if type(name_or_body) is str:
+        for itm in findItems(name_or_body):
+            if type(itm) is cnoid.BodyPlugin.BodyItem:
+                ret = itm
+                break
+    elif type(name_or_body) is cnoid.Body.Body:
+        for itm in RootItem.instance.getDescendantItems():
+            if type(itm) is cnoid.BodyPlugin.BodyItem and itm.body == name_or_body:
+                ret = itm
+                break
+    return ret
+
 def findRobot(name):
-    ret = findItem(name)
+    ret = findBodyItem(name)
+    if ret is None:
+        return None
     ## add class check...
     if callable(ret.body):
         return ret.body()
