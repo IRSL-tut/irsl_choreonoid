@@ -80,6 +80,13 @@ class IKWrapper(object):
         self.resetJointWeights()
         self.__default_pose = self.angleVector()
 
+    def flush(self):
+        self.__robot.calcForwardKinematics()
+        if isInChoreonoid(): ## only have effects while running in choreonoid
+            ret = findBodyItem(self.__robot)
+            if ret is not None:
+                ret.notifyKinematicStateUpdate()
+
     def updateDefault(self):
         self.__default_joints = self.__current_joints
         self.__default_pose = self.angleVector()
@@ -199,7 +206,7 @@ class IKWrapper(object):
                     print('constraint %d (%s) : converged'%(cntr, const))
                 else:
                     print('constraint %d (%s) : NOT converged'%(cntr, const))
-        return loop
+        return (const.checkConvergence(), loop)
 
     #def angleVectorOrg(self, av = None):
     #    if av is not None:
