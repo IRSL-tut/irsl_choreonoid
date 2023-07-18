@@ -10,6 +10,13 @@ import numpy as np
 import random
 
 def make_coordinates(coords_map):
+    """make_coordinates
+
+    Args:
+
+    Returns:
+
+    """
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):
         if key in coords_map:
@@ -50,13 +57,30 @@ def make_coordinates(coords_map):
     raise Exception('{}'.format(coords_map))
 
 def make_coords_map(coords):
+    """make_coords_map
+
+    Args:
+
+    Returns:
+
+    """
     return {'pos': cds.pos.tolist(), 'aa': cds.rotationAngle().tolist()}
 
 ##
 ## IKWrapper
 ##
 class IKWrapper(object):
+    """IKWrapper(class)
+
+    """
     def __init__(self, robot, tip_link, tip_to_eef = None, use_joints = None):
+        """IKWrapper(initializer)
+
+        Args:
+
+        Returns:
+
+        """
         self.__robot = robot
         #
         self.__tip_link = self.__parseLink(tip_link)
@@ -81,6 +105,13 @@ class IKWrapper(object):
         self.__default_pose = self.angleVector()
 
     def flush(self):
+        """flush
+
+        Args:
+
+        Returns:
+
+        """
         self.__robot.calcForwardKinematics()
         if isInChoreonoid(): ## only have effects while running in choreonoid
             ret = findBodyItem(self.__robot)
@@ -88,6 +119,13 @@ class IKWrapper(object):
                 ret.notifyKinematicStateUpdate()
 
     def updateDefault(self):
+        """updateDefault(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.__default_joints = self.__current_joints
         self.__default_pose = self.angleVector()
         self.resetJointWeights()
@@ -111,19 +149,47 @@ class IKWrapper(object):
         return None
 
     def endEffector(self, **kwargs):
+        """endEffector(self, **kwargs):
+
+        Args:
+
+        Returns:
+
+        """
         return ic.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
 
     def resetJointWeights(self):
+        """resetJointWeights(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.__current_joints = [j for j in self.__default_joints]
         self.updateJointWeights()
 
     def updateJointWeights(self):
+        """updateJointWeights(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.__joint_weights = np.zeros(self.__robot.numJoints)
         for idx in range(self.__robot.numJoints):
             if self.__robot.joint(idx) in self.__current_joints:
                 self.__joint_weights[idx] = 1
 
     def setJoints(self, jlist, enable = True):
+        """setJoints(self, jlist, enable = True):
+
+        Args:
+
+        Returns:
+
+        """
         for j in jlist:
             self.__setJoint(j, enable = enable)
         self.updateJointWeights()
@@ -146,6 +212,13 @@ class IKWrapper(object):
                 self.__current_joints.remove(joint_or_id)
 
     def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+        """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+
+        Args:
+
+        Returns:
+
+        """
         ##
         if add_noise is not None:
             if type(add_noise) is float:
@@ -215,8 +288,22 @@ class IKWrapper(object):
     #    return np.array([ j.q for j in self.__default_joints ])
     ##
     def angleVector(self, av = None):
+        """angleVector(self, av = None):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__angleVector(av, self.__default_joints)
     def currentAngleVector(self, av = None):
+        """currentAngleVector(self, av = None):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__angleVector(av, self.__current_joints)
     def __angleVector(self, av, joint_list):
         if av is not None:
@@ -226,9 +313,23 @@ class IKWrapper(object):
         return np.array([ j.q for j in joint_list])
 
     def resetPose(self):
+        """resetPose(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.angleVector(self.__default_pose)
 
     def addNoise(self, max_range = 0.1, joint_list = None):
+        """addNoise(self, max_range = 0.1, joint_list = None):
+
+        Args:
+
+        Returns:
+
+        """
         if joint_list is None:
             joint_list = self.__default_joints
         for j in joint_list:
@@ -238,27 +339,76 @@ class IKWrapper(object):
     ## read-only
     @property
     def robot(self):
+        """robot(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__robot
 #    @body.setter
 #    def body(self, in_body):
 #        self.__body = in_body
     @property
     def tip_link(self):
+        """tip_link(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__tip_link
     @property
     def tip_to_eef(self):
+        """tip_to_eef(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__tip_to_eef
     @property
     def joint_weights(self):
+        """joint_weights(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__joint_weights
     @property
     def current_joints(self):
+        """current_joints(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__current_joints
     @property
     def default_joints(self):
+        """default_joints(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__default_joints
     @property
     def default_pose(self):
+        """default_pose(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__default_pose
 
 ## add methods to choreonoid's class
