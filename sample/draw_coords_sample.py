@@ -15,8 +15,8 @@ for pos in (np.array([0, 0, 0]), np.array([1, 0, 0]), np.array([0, 1, 0]), np.ar
 cdl.show()
 
 ## move coords by setting Origin
-cds = coordinates()
-cds.translate(np.array([0, 0, 1.0]))
-cds.rotate(0.4, np.array([0.1, 0.2, 0.3]))
-cdl.setOrigin(cds)
-cdl.flush()
+cds = coordinates() ## instance of coordinates
+cds.translate(np.array([0, 0, 1.0])) ## translate
+cds.rotate(0.4, np.array([0.1, 0.2, 0.3])) ## rotate
+cdl.setOrigin(cds) ## set coordinates to drawn coords
+cdl.flush() ## view on choreonoid

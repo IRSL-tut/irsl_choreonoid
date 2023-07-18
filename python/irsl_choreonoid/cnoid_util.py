@@ -26,6 +26,33 @@ def load_script(filename):
     exec(open(filename).read())
 
 def parseURL(url):
+    """parse URL with IRSL original scheme
+
+    Args:
+        url (str): url
+
+        url is like 'scheme://netloc/xxx/yyy/zzz'
+
+    Returns:
+        str: absolute path
+
+    Examples:
+        >>> parseURL('choreonoid://share/dir/file')
+        /choreonoid/share/choreonoid-1.8/dir/file
+
+        >>> parseURL('env://HOME/dir/file')
+        /home/user/dir/file
+
+        >>> parseURL('file:///dir/file')
+        /dir/file
+
+        >>> parseURL('file://./dir/file')
+        /current_dir/dir/file
+
+        >>> parseURL('file://~/dir/file')
+        /home/user/dir/file
+    """
+
     if not '://' in url:
         return url
 
@@ -60,9 +87,24 @@ def parseURL(url):
 ## cnoid Util
 ##
 def isInChoreonoid():
+    """isInChoreonoid
+
+    Args:
+        None
+
+    Returns:
+
+    """
     return (RootItem.instance is not None)
 
 def loadRobot(fname):
+    """loadRobot
+
+    Args:
+
+    Returns:
+
+    """
     rb = BodyLoader().load(str(fname))
     rb.updateLinkTree()
     rb.initializePosition()
@@ -76,24 +118,52 @@ def flushRobotView(name):
     MessageView.instance.flush()
 
 def loadProject(project_file):
+    """loadProject
+
+    Args:
+
+    Returns:
+
+    """
     cnoid.Base.ProjectManager.instance.loadProject(filename=project_file)
 
 ##
 ## cnoid Item
 ##
 def getItemTreeView():
+    """getItemTreeView (deprecated)
+
+    Args:
+
+    Returns:
+
+    """
     if callable(ItemTreeView.instance):
         return ItemTreeView.instance()
     else:
         return ItemTreeView.instance
 
 def getRootItem():
+    """getRootItem (deprecated)
+
+    Args:
+
+    Returns:
+
+    """
     if callable(RootItem.instance):
         return RootItem.instance()
     else:
         return RootItem.instance
 
 def getWorld(name = 'World'):
+    """getWorld
+
+    Args:
+
+    Returns:
+
+    """
     rI = getRootItem()
     ret = rI.findItem(name)
     if ret == None:
@@ -104,6 +174,13 @@ def getWorld(name = 'World'):
     return ret
 
 def addSimulator(world = None, simulator_name = 'AISTSimulator'):
+    """addSimulator
+
+    Args:
+
+    Returns:
+
+    """
     if world is None:
         world = getWorld()
     sim_ = world.findItem(simulator_name)
@@ -114,19 +191,16 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
     return sim_
 
 def loadRobotItem(fname, name = None, world = True):
-    '''Load robot model and add it as Item
+    """Load robot model and add it as Item
 
-    Parameters
-    ----------
-    fname : str
-        file name of model
-    name : str
-        name of Item
+    Args:
+        fname (str): filename (or path)
+        name (str, optional): name of loaded robot-model
+        world (bool, optional): WorldItem is added if True
 
-    Returns
-    -------
-    instance of cnoid.Body.Body
-    '''
+    Returns:
+        cnoid.BodyPlugin.BodyItem : Loaded robot-model
+    """
     # print('loadRobot: %s'%(fname))
     bI = BodyItem()
     bI.load(str(fname))
@@ -156,15 +230,43 @@ def loadRobotItem(fname, name = None, world = True):
     return bI
 
 def findItem(name):
+    """findItem
+
+    Args:
+
+    Returns:
+
+    """
     return RootItem.instance.findItem(name)
 
 def findItems(name):
+    """findItems
+
+    Args:
+
+    Returns:
+
+    """
     return [ itm for itm in RootItem.instance.getDescendantItems() if itm.name == name ]
 
 def removeItem(item_):
+    """removeItem
+
+    Args:
+
+    Returns:
+
+    """
     item_.detachFromParentItem()
 
 def findBodyItem(name_or_body):
+    """findBodyItem
+
+    Args:
+
+    Returns:
+
+    """
     ret = None
     if type(name_or_body) is str:
         for itm in findItems(name_or_body):
@@ -179,6 +281,13 @@ def findBodyItem(name_or_body):
     return ret
 
 def findRobot(name):
+    """findRobot
+
+    Args:
+
+    Returns:
+
+    """
     ret = findBodyItem(name)
     if ret is None:
         return None
@@ -192,15 +301,36 @@ def findRobot(name):
 ## cnoid Position
 ##
 def cnoidPosition(rotation = None, translation = None):
-  ret = np.identity(4)
-  if not (rotation is None):
-    ret[:3, :3] = rotation
-  if not (translation is None):
-    ret[:3, 3] = translation
-  return ret
+    """cnoidPosition
+
+    Args:
+
+    Returns:
+
+    """
+    ret = np.identity(4)
+    if not (rotation is None):
+        ret[:3, :3] = rotation
+    if not (translation is None):
+        ret[:3, 3] = translation
+    return ret
 
 def cnoidRotation(cPosition):
-  return cPosition[:3, :3]
+    """cnoidRotation
+
+    Args:
+
+    Returns:
+
+    """
+    return cPosition[:3, :3]
 
 def cnoidTranslation(cPosition):
-  return cPosition[:3, 3]
+    """cnoidTranslation
+
+    Args:
+
+    Returns:
+
+    """
+    return cPosition[:3, 3]

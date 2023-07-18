@@ -53,6 +53,9 @@ PYBIND11_MODULE(DrawInterface, m)
              [] (DrawInterface &self, coordinates &_cds, double _length, int _x_color, int _y_color, int _z_color) {
                  self.addBDAxis3(_cds, _length, _x_color, _y_color, _z_color); })
         //
+        .def_property("T",
+                      [](DrawInterface &self) -> Isometry3::MatrixType& { return self.T().matrix(); },
+                      [](DrawInterface &self, Eigen::Ref<const Matrix4RM> T){ self.setPosition(T); })
         .def("hide_and_show", &DrawInterface::hide_and_show)
         //
         .def("render", &DrawInterface::render, py::arg("doImmediately") = false)//should be class method

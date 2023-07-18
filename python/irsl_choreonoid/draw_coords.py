@@ -3,7 +3,7 @@ import numpy as np
 
 ###
 class DrawCoords(object):
-    """ deprecated, use DrawCoordsList """
+##    """deprecated, use DrawCoordsList"""
     def __init__(self, color=None, width=None):
         self.width = width
         if color is None:
@@ -136,7 +136,16 @@ class DrawCoords(object):
 #        return closure_func__
 
 class DrawCoordsList(object):
+    """DrawCoordsList(class)
+    """
     def __init__(self, x_color=np.array([1,0,0]), y_color=np.array([0,1,0]), z_color=np.array([0,0,1]), length=0.1, width=None):
+        """DrawCoordsList(initializer)
+
+        Args:
+
+        Returns:
+
+        """
         self.x_color = x_color
         self.y_color = y_color
         self.z_color = z_color
@@ -144,34 +153,107 @@ class DrawCoordsList(object):
         self.reset()
         if width is not None:
             self.__interface.setLineWidth(width)
+
     def __del__(self):
         self.hide()
         self.__interface = None
+
     def setOrigin(self, coords):
+        """setOrigin(self, coords):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface.setOrigin(coords)
+
     def getOrigin(self):
+        """getOrigin(self):
+
+        Args:
+
+        Returns:
+
+        """
         return self.__interface.getOrigin()
+
     def setLineWidth(self, _width):
+        """setLineWidth(self, _width):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface.setLineWidth(_width)
+
     def reset(self):
+        """reset(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface = di.DrawInterface(self.x_color)
         self.x_color_index = 0
         self.y_color_index = self.__interface.addColor(self.y_color)
         self.z_color_index = self.__interface.addColor(self.z_color)
         self.count = 0
+
     def flush(self):
+        """flush(self):
+
+        Args:
+
+        Returns:
+
+        """
         di.flush()
+
     def hide(self, start=0, length=0):
+        """hide(self, start=0, length=0):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface.hide(False)
         di.flush()
+
     def show(self, start=0, length=0):
+        """show(self, start=0, length=0):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface.show(False)
         di.flush()
+
     def clear(self):
+        """clear(self):
+
+        Args:
+
+        Returns:
+
+        """
         self.__interface.hide(False)
         di.flush()
         self.reset()
+
     def addCoords(self, coords, flush=False):
+        """addCoords(self, coords, flush=False):
+
+        Args:
+
+        Returns:
+
+        """
         if flush:
             self.__interface.hide(False)
         self.__interface.addAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
@@ -179,7 +261,15 @@ class DrawCoordsList(object):
             self.__interface.show(True)
             di.flush()
         self.count += 1
+
     def addCross(self, coords, flush=False):
+        """addCross(self, coords, flush=False):
+
+        Args:
+
+        Returns:
+
+        """
         if flush:
             self.__interface.hide(False)
         self.__interface.addBDAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
@@ -187,13 +277,29 @@ class DrawCoordsList(object):
             self.__interface.show(True)
             di.flush()
         self.count += 1
+
     def generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
+        """generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
+
+        Args:
+
+        Returns:
+
+        """
         def closure_func__(lst, **kwargs):
             pos = np.array(lst[index][1:])
             cds_ = iu.coordinates(pos)
             self.addCross(cds_,flush=flush)
         return closure_func__
+
     def generateCoordsFunction(self, length=0.1, maxlength=0, index=0, flush=True):
+        """generateCoordsFunction(self, length=0.1, maxlength=0, index=0, flush=True):
+
+        Args:
+
+        Returns:
+
+        """
         def closure_func__(lst, **kwargs):
             lst = lst[index]
             pos = np.array(lst[1:4])

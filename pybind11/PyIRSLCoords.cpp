@@ -175,6 +175,29 @@ PYBIND11_MODULE(IRSLCoords, m)
     .def_property("rot",
                   [](coordinates &self) { return self.rot; },
                   [](coordinates &self, ref_mat3 mat) { self.rot = mat; })
+    .def_property("cnoidPosition",
+                  [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
+                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; })
+#if 0 // just test (do not make instance and change value of passed instance) // not succeeded
+    #include <iostream>
+    .def("setCoordsToPosition",
+         [](coordinates &self, Isometry3::MatrixType &_to) {
+             // Isometry3 T(Isometry3::Identity());
+             // Isometry3::MatrixType &mt = T.matrix();
+             // Isometry3 U(mt);
+             // print _to, address, elements
+             std::cerr << "_to(a): " << (void *)&_to << std::endl;
+             std::cerr << "_to(e0): " << _to << std::endl;
+             //Isometry3 &_T(_to);
+             Isometry3 _T(Isometry3::Identity());
+             // _T.matrix() = _to;
+             _T.translation() = self.pos;
+             _T.linear() = self.rot;
+             _to = _T.matrix();
+             std::cerr << "_to(e1): " << _to << std::endl;
+             // print _to, elements
+         })
+#endif
     .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); })
     .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
@@ -287,9 +310,10 @@ PYBIND11_MODULE(IRSLCoords, m)
             double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
             self.setRotationAngle(an_, ax_);
             return &self; } )
-    .def("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
-    .def("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
-    .def("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
+    .def_property_readonly("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
+    .def_property_readonly("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
+    .def_property_readonly("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
+    .def_property_readonly("RPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
     .def("getRPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
     .def("setRPY", [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); } )
     .def("setRPY", [](coordinates &self, double r, double p, double y) { self.setRPY(r,p,y); } )
