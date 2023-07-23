@@ -333,7 +333,7 @@ namespace cnoid {
     {
     public:
         GeneralDrawInterface() : GeneralDrawInterface(false) {}
-        GeneralDrawInterface(bool Root) {
+        GeneralDrawInterface(bool useRoot) {
             sv = SceneView::instance();
             sw = sv->sceneWidget();
             //lineSet.reset();
@@ -341,7 +341,7 @@ namespace cnoid {
             //colors.reset();
             posTrans = new SgPosTransform();
             posTrans->T().setIdentity();
-            if (Root) {
+            if (useRoot) {
                 root = (SgGroup *)sw->sceneRoot();
             } else {
                 root = (SgGroup *)sw->scene();

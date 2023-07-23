@@ -1,3 +1,4 @@
+## do not use cnoid.Base
 from cnoid.Util import SgPosTransform
 from cnoid.IRSLCoords import coordinates
 # from cnoid.DrawInterface import GeneralDrawInterface as GDI
@@ -30,15 +31,44 @@ from cnoid.IRSLCoords import coordinates
 class coordsWrapper(coordinates):
     """coordsWrapper(class)
     """
-    def __init__(self, child, init_coords=None):
-        self.__child = child
-        self.newcoords(init_coords)
+    def __init__(self, target, init_coords=None, update_callback=None):
+        super().__init__()
+        self.__target = target
+        ##if hasattr(target, 'coords'):
+        ##    target.coords = self
+        ##else:
+        ##    setattr(target, 'coords', self)
 
-    def __updateChild(self):
-        self.__child.T = self.T
+        self.__update_callback = update_callback
+
+        if init_coords is not None:
+            self.newcoords(init_coords)
+
+    def updateTarget(self):
+        """
+
+        Args:
+
+        Returns:
+
+        """
+        self.__target.T = self.cnoidPosition
+        if callable(self.__update_callback):
+            self.__update_callback()
 
     def revert(self): ##
-        self.T =  self.__child.T
+        self.cnoidPosition =  self.__target.T
+
+    def setUpdateCallback(self, func):
+        """
+
+        Args:
+
+        Returns:
+
+        """
+        if callable(func):
+            self.__update_callback = func
 
     def newcoords(self, cds):
         """
@@ -49,7 +79,7 @@ class coordsWrapper(coordinates):
 
         """
         super().newcoords(cds)
-        self.__updateChild()
+        self.updateTarget()
         return self
 
     def translate(self, pos, wrt = None):
@@ -61,10 +91,10 @@ class coordsWrapper(coordinates):
 
         """
         if wrt is None:
-            self.translate(pos)
+            super().translate(pos)
         else:
-            self.translate(pos, wrt)
-        self.__updateChild()
+            super().translate(pos, wrt)
+        self.updateTarget()
         return self
 
     def rotate(self, rot, wrt = None):
@@ -76,10 +106,10 @@ class coordsWrapper(coordinates):
 
         """
         if wrt is None:
-            self.rotate(rot)
+            super().rotate(rot)
         else:
-            self.rotate(rot, wrt)
-        self.__updateChild()
+            super().rotate(rot, wrt)
+        self.updateTarget()
         return self
 
     def transform(self, trs, wrt = None):
@@ -91,8 +121,20 @@ class coordsWrapper(coordinates):
 
         """
         if wrt is None:
-            self.transform(trs)
+            super().transform(trs)
         else:
-            self.transform(trs, wrt)
-        self.__updateChild()
+            super().transform(trs, wrt)
+        self.updateTarget()
         return self
+
+    def __repr__(self):
+        if self is self.target:
+            return 'Wrap {} : '.format(type(self)) + super().__repr__()
+        else:
+            return 'Wrap: ' + super().__repr__() + ' | ' + self.target.__repr__()
+
+    @property
+    def target(self):
+        """target
+        """
+        return self.__target

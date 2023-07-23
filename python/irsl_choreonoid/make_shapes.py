@@ -2,6 +2,8 @@ import numpy as np
 import cnoid.AssimpPlugin
 import cnoid.Util
 
+from .irsl_draw_object import *
+
 def __gets(klst, amap):
     for k in klst:
         if k in amap:
@@ -66,7 +68,46 @@ def parseMeshGeneratorOption(mg, **kwargs):
     if val is not None:
         mg.setBoundingBoxUpdateEnabled(val)
 
-def loadMesh(fname, **kwargs):
+def __extractShape(sg_node):
+    res = []
+    if type(sg_node) is cnoid.Util.SgShape:
+        res.append(sg_node)
+    elif hasattr(sg_node, 'numChildren'):
+        for idx in range(sg_node.numChildren):
+            res += __extractShape(sg_node.getChild(idx))
+    return res
+
+def loadScene(fname, wrapped=True, **kwargs):
+    """Loading scene(wrl, scene, ...) file
+
+    Args:
+
+    Returns:
+
+    """
+    ld = cnoid.Util.SceneLoader()
+    ld.setMessageSinkStdErr()
+
+    sg = ld.load(fname)
+    shapes = __extractShape(sg)
+
+    mat = generateMaterial(**kwargs)
+
+    if mat is not None:
+        for shape in shapes:
+            shape.setMaterial(mat)
+
+    ret = None
+    if type(sg) is cnoid.Util.SgPosTransform:
+        ret = sg
+    else:
+        ret = cnoid.Util.SgPosTransform()
+        ret.addChild(sg)
+    if wrapped:
+        ret = coordsWrapper(ret)
+    return ret
+
+def loadMesh(fname, wrapped=True, **kwargs):
     """Loading mesh file
 
     Args:
@@ -87,9 +128,11 @@ def loadMesh(fname, **kwargs):
 
     ret = cnoid.Util.SgPosTransform()
     ret.addChild(sg)
+    if wrapped:
+        ret = coordsWrapper(ret)
     return ret
 
-def __genShape(mesh, **kwargs):
+def __genShape(mesh, wrapped=True, **kwargs):
     sg = cnoid.Util.SgShape()
     sg.setMesh(mesh)
 
@@ -100,9 +143,11 @@ def __genShape(mesh, **kwargs):
 
     ret = cnoid.Util.SgPosTransform()
     ret.addChild(sg)
+    if wrapped:
+        ret = coordsWrapper(ret)
     return ret
 
-def makeBox(x, y = None, z = None, **kwargs):
+def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
     """make 'Box' shape
 
     Args:
@@ -111,7 +156,7 @@ def makeBox(x, y = None, z = None, **kwargs):
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     if type(x) is np.ndarray:
         mesh = mg.generateBox(x)
     elif y is not None and z is not None:
@@ -124,9 +169,9 @@ def makeBox(x, y = None, z = None, **kwargs):
     if mesh is None:
         raise Exception(f'Generating mesh was failed x: {x}, y: {y}, z: {z}')
 
-    return __genShape(mesh, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeCylinder(radius, height, **kwargs):
+def makeCylinder(radius, height, wrapped=True, **kwargs):
     """make 'Cylinder' shape
 
     Args:
@@ -137,9 +182,9 @@ def makeCylinder(radius, height, **kwargs):
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwrags)
     mesh = mg.generateCylinder(radius, height)
-    return __genShape(mesh, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeSphere(radius, **kwargs):
+def makeSphere(radius, wrapped=True, **kwargs):
     """make 'Sphere' shape
 
     Args:
@@ -150,9 +195,9 @@ def makeSphere(radius, **kwargs):
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwrags)
     mesh = mg.generateCylinder(radius)
-    return __genShape(mesh, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeCone(radius, height, **kwargs):
+def makeCone(radius, height, wrapped=True, **kwargs):
     """make 'Cone' shape
 
     Args:
@@ -163,9 +208,9 @@ def makeCone(radius, height, **kwargs):
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwrags)
     mesh = mg.generateCone(radius, height)
-    return __genShape(mesh, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeCapsule(radius, height, **kwargs):
+def makeCapsule(radius, height, wrapped=True, **kwargs):
     """make 'Capsule' shape
 
     Args:
@@ -176,9 +221,9 @@ def makeCapsule(radius, height, **kwargs):
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwrags)
     mesh = mg.generateCapsule(radius, height)
-    return __genShape(mesh, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, **kwargs):
+def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, **kwargs):
     """make 'Torus' shape
 
     Args:
@@ -192,7 +237,8 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, **
         mesh = mg.generateTorus(radius, corssSectionRadius, beginAngle, endAngle)
     else:
         mesh = mg.generateTorus(radius, corssSectionRadius)
-    return __genShape(mesh, **kwargs)
+
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 ### not implemented
 def makeExtrusion(**kwargs):
