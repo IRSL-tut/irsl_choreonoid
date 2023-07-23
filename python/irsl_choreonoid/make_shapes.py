@@ -68,6 +68,45 @@ def parseMeshGeneratorOption(mg, **kwargs):
     if val is not None:
         mg.setBoundingBoxUpdateEnabled(val)
 
+def __extractShape(sg_node):
+    res = []
+    if type(sg_node) is cnoid.Util.SgShape:
+        res.append(sg_node)
+    elif hasattr(sg_node, 'numChildren'):
+        for idx in range(sg_node.numChildren):
+            res += __extractShape(sg_node.getChild(idx))
+    return res
+
+def loadScene(fname, wrapped=True, **kwargs):
+    """Loading scene(wrl, scene, ...) file
+
+    Args:
+
+    Returns:
+
+    """
+    ld = cnoid.Util.SceneLoader()
+    ld.setMessageSinkStdErr()
+
+    sg = ld.load(fname)
+    shapes = __extractShape(sg)
+
+    mat = generateMaterial(**kwargs)
+
+    if mat is not None:
+        for shape in shapes:
+            shape.setMaterial(mat)
+
+    ret = None
+    if type(sg) is cnoid.Util.SgPosTransform:
+        ret = sg
+    else:
+        ret = cnoid.Util.SgPosTransform()
+        ret.addChild(sg)
+    if wrapped:
+        ret = coordsWrapper(ret)
+    return ret
+
 def loadMesh(fname, wrapped=True, **kwargs):
     """Loading mesh file
 
