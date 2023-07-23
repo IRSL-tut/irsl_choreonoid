@@ -23,4 +23,4 @@ gdi.setOrigin(cds)
 gdi.flush()
 
 # 画面から除く
-gdi.remove_object(sg_shape, True)
+gdi.removeObject(sg_shape, True)
