@@ -1,6 +1,9 @@
 import cnoid.DrawInterface as di
 import numpy as np
 
+from .irsl_draw_object import *
+from .robot_util import make_coordinates
+
 ###
 class DrawCoords(object):
 ##    """deprecated, use DrawCoordsList"""
@@ -155,7 +158,12 @@ class DrawCoordsList(object):
     def __del__(self):
         self.hide()
         self.__interface = None
-
+    @property
+    def T(self):
+        return self.__interface.T
+    @T.setter
+    def T(self, _in):
+        self.__interface.T = _in
     def setOrigin(self, coords):
         """setOrigin(self, coords):
 
@@ -306,3 +314,65 @@ class DrawCoordsList(object):
             cds_.setRPY(rpy)
             self.addCoords(cds_,flush=flush)
         return closure_func__
+
+class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
+    """GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
+    """
+    def __init__(self, **kwargs):
+        """__init__(self, **kwargs):
+
+        Args:
+
+        """
+        DrawCoordsList.__init__(self, **kwargs)
+        cds = None
+        if len(kwargs) > 0:
+            cds = make_coordinates(kwargs)
+        coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
+
+class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
+    """GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
+    """
+    def __init__(self, **kwargs):
+        """__init__(self, **kwargs):
+
+        Args:
+
+        """
+        di.GeneralDrawInterface.__init__(self)
+        cds = None
+        if len(kwargs) > 0:
+            cds = make_coordinates(kwargs)
+        coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
+
+    def addObject(self, obj, update=False):
+        self.addPyObject(obj, update=update)
+    def removeObject(self, obj, update=False):
+        self.removePyObject(obj, update=update)
+
+    def addPyObject(self, obj, update=False):
+        """addPyObject(self, obj, update=False):
+
+        Args:
+
+        Returns:
+
+        """
+        if type(obj) is coordsWrapper:
+            super().addPyObject(obj.target, update)
+            obj.setUpdateCallback( lambda : self.flush() )
+        else:
+            super().addPyObject(obj, update)
+
+    def removePyObject(self, obj, update=False):
+        """removePyObject(self, obj, update=False):
+
+        Args:
+
+        Returns:
+
+        """
+        if type(obj) is coordsWrapper:
+            super().removePyObject(obj.target, update)
+        else:
+            super().removePyObject(obj, update)
