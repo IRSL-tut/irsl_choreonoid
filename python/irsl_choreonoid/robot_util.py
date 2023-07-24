@@ -10,12 +10,23 @@ import numpy as np
 import random
 
 def make_coordinates(coords_map):
-    """make_coordinates
+    """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionay
 
     Args:
+        coords_map (dictionary) : dictionary of describing transformation
 
     Returns:
+        cnoid.IRSLCoords.coordinates : generated coordinates
 
+    Examples:
+
+        make_coordinates( {'position' : [1, 2, 3]} )
+
+        make_coordinates( {'pos' : [1, 2, 3], 'rot' : [math.pi/3, 0, 0]} )
+
+        make_coordinates( {'angle-axis' : [0, 1, 0, math.pi/4] })
+
+        make_coordinates( {'quaternion' : [0, 0, 0, 1] })
     """
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):
@@ -57,12 +68,17 @@ def make_coordinates(coords_map):
     raise Exception('{}'.format(coords_map))
 
 def make_coords_map(coords):
-    """make_coords_map
+    """Generating dictonary describing transformation
 
     Args:
+        coords (cnoid.IRSLCoords.coordinates) : input
 
     Returns:
+        dictionary : output, can be used by make_coordinates
 
+    Examples:
+
+        make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
     """
     return {'pos': cds.pos.tolist(), 'aa': cds.rotationAngle().tolist()}
 
