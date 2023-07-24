@@ -29,9 +29,7 @@ def parseURL(url):
     """parse URL with IRSL original scheme
 
     Args:
-        url (str): url
-
-        url is like 'scheme://netloc/xxx/yyy/zzz'
+        url (str): url [ url is like 'scheme://netloc/xxx/yyy/zzz' ]
 
     Returns:
         str: absolute path
@@ -93,16 +91,19 @@ def isInChoreonoid():
         None
 
     Returns:
+        boolean: True if this script running on python-console of Choreonoid
 
     """
     return (RootItem.instance is not None)
 
 def loadRobot(fname):
-    """loadRobot
+    """Loading robot model (.body, .vrml, .urdf??)
 
     Args:
+        fname (str): filename of robot-model
 
     Returns:
+        cnoid.Body: instance of cnoid.Body.Body
 
     """
     rb = BodyLoader().load(str(fname))
@@ -118,11 +119,13 @@ def flushRobotView(name):
     MessageView.instance.flush()
 
 def loadProject(project_file):
-    """loadProject
+    """Loading project file (currend project may be changed)
 
     Args:
+        project_file (str): filename of project file (.cnoid)
 
     Returns:
+        None
 
     """
     cnoid.Base.ProjectManager.instance.loadProject(filename=project_file)
@@ -131,12 +134,7 @@ def loadProject(project_file):
 ## cnoid Item
 ##
 def getItemTreeView():
-    """getItemTreeView (deprecated)
-
-    Args:
-
-    Returns:
-
+    """DEPRECATED: use cnoid.Base.ItemTreeView.instance
     """
     if callable(ItemTreeView.instance):
         return ItemTreeView.instance()
@@ -144,12 +142,7 @@ def getItemTreeView():
         return ItemTreeView.instance
 
 def getRootItem():
-    """getRootItem (deprecated)
-
-    Args:
-
-    Returns:
-
+    """DEPRECATED: use cnoid.Base.RootItem.instance
     """
     if callable(RootItem.instance):
         return RootItem.instance()
@@ -160,8 +153,10 @@ def getWorld(name = 'World'):
     """getWorld
 
     Args:
+        name (str): name of Item
 
     Returns:
+        cnoid.Base.WorldItem: added or found WorldItem
 
     """
     rI = getRootItem()
@@ -196,7 +191,7 @@ def loadRobotItem(fname, name = None, world = True):
     Args:
         fname (str): filename (or path)
         name (str, optional): name of loaded robot-model
-        world (bool, optional): WorldItem is added if True
+        world (bool, optional): if True, WorldItem is added
 
     Returns:
         cnoid.BodyPlugin.BodyItem : Loaded robot-model
@@ -301,11 +296,14 @@ def findRobot(name):
 ## cnoid Position
 ##
 def cnoidPosition(rotation = None, translation = None):
-    """cnoidPosition
+    """Concatnating translation part and rotation part
 
     Args:
+         translation(numpy.array, optional) : 1x3 vector
+         rotation(numpy.array, optional) : 3x3 matrix
 
     Returns:
+         numpy.array : 4x4 homogeneous transformation matrix
 
     """
     ret = np.identity(4)
@@ -316,21 +314,25 @@ def cnoidPosition(rotation = None, translation = None):
     return ret
 
 def cnoidRotation(cPosition):
-    """cnoidRotation
+    """Extracting rotation part of 4x4 matrix
 
     Args:
+         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
 
     Returns:
+         numpy.array : 3x3 matrix ( rotation part of cPosition )
 
     """
     return cPosition[:3, :3]
 
 def cnoidTranslation(cPosition):
-    """cnoidTranslation
+    """Extracting translation part of 4x4 matrix
 
     Args:
+         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
 
     Returns:
+         numpy.array : 1x3 vector ( translation part of cPosition )
 
     """
     return cPosition[:3, 3]
