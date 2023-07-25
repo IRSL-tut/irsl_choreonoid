@@ -18,15 +18,26 @@ def make_coordinates(coords_map):
     Returns:
         cnoid.IRSLCoords.coordinates : generated coordinates
 
+    Raises:
+        Exeption if there is not valid keyword
+
     Examples:
 
-        make_coordinates( {'position' : [1, 2, 3]} )
+        >>> make_coordinates( {'position' : [1, 2, 3]} )
+        <coordinates[address] 1 2 3 / 0 0 0 1 >
 
-        make_coordinates( {'pos' : [1, 2, 3], 'rot' : [math.pi/3, 0, 0]} )
+        >>> make_coordinates( {'pos' : [1, 2, 3], 'rpy' : [math.pi/3, 0, 0]} )
+        <coordinates[address] 1 2 3 / 0.5 0 0 0.866025 >
 
-        make_coordinates( {'angle-axis' : [0, 1, 0, math.pi/4] })
+        >>> make_coordinates({'rot' : [[0, -1, 0],[1, 0, 0], [0, 0, 1]]})
+        <coordinates[address] 0 0 0 / 0 0 0.707107 0.707107 >
 
-        make_coordinates( {'quaternion' : [0, 0, 0, 1] })
+        >>> make_coordinates( {'angle-axis' : [0, 1, 0, math.pi/4] })
+        <coordinates[address] 0 0 0 / 0 0.382683 0 0.92388 >
+
+        >>> make_coordinates( {'quaternion' : [0, 0, 0, 1] })
+        <coordinates[address] 0 0 0 / 0 0 0 1 >
+
     """
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):

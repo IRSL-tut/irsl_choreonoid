@@ -7,5 +7,6 @@ PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/pyth
 TEST_FILES=$(ls -1 *.py)
 
 for FLS_ in ${TEST_FILES}; do
+    echo "######## run ${FLS_} ########"
     python3 ${FLS_}
 done

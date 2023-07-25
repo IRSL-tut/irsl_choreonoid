@@ -145,15 +145,22 @@ class DrawCoordsList(object):
         """DrawCoordsList(initializer)
 
         Args:
+            x_color (numpy.array, default = [1, 0, 0] ) : color of x-axis
+            y_color (numpy.array, default = [0, 1, 0] ) : color of y-axis
+            z_color (numpy.array, default = [0, 0, 1] ) : color of z-axis
+            length  (float, default = 0.1) : length of axis
+            width   (float, optional) : width of axis
 
         """
-        self.x_color = x_color
-        self.y_color = y_color
-        self.z_color = z_color
-        self.length = length
+        self.__x_color = x_color
+        self.__y_color = y_color
+        self.__z_color = z_color
+        self.__length = length
+        if width is None:
+            self.__width = 1
+        else:
+            self.__width = width
         self.reset()
-        if width is not None:
-            self.__interface.setLineWidth(width)
 
     def __del__(self):
         self.hide()
@@ -164,6 +171,9 @@ class DrawCoordsList(object):
     @T.setter
     def T(self, _in):
         self.__interface.T = _in
+    @property
+    def interface(self):
+        return self.__interface
     def setOrigin(self, coords):
         """setOrigin(self, coords):
 
@@ -193,6 +203,7 @@ class DrawCoordsList(object):
 
         """
         self.__interface.setLineWidth(_width)
+        self.__width = _width
 
     def reset(self):
         """reset(self):
@@ -202,11 +213,12 @@ class DrawCoordsList(object):
         Returns:
 
         """
-        self.__interface = di.DrawInterface(self.x_color)
-        self.x_color_index = 0
-        self.y_color_index = self.__interface.addColor(self.y_color)
-        self.z_color_index = self.__interface.addColor(self.z_color)
-        self.count = 0
+        self.__interface = di.DrawInterface(self.__x_color)
+        self.__x_color_index = 0
+        self.__y_color_index = self.__interface.addColor(self.__y_color)
+        self.__z_color_index = self.__interface.addColor(self.__z_color)
+        self.__interface.setLineWidth(self.__width)
+        self.__count = 0
 
     def flush(self):
         """flush(self):
@@ -217,6 +229,7 @@ class DrawCoordsList(object):
 
         """
         self.__interface.flush()
+        self.__interface.render()
 
     def hide(self, start=0, length=0):
         """hide(self, start=0, length=0):
@@ -226,7 +239,7 @@ class DrawCoordsList(object):
         Returns:
 
         """
-        self.__interface.hide(False)
+        self.__interface.hide(True)
         self.flush()
 
     def show(self, start=0, length=0):
@@ -237,7 +250,7 @@ class DrawCoordsList(object):
         Returns:
 
         """
-        self.__interface.show(False)
+        self.__interface.show(True)
         self.flush()
 
     def clear(self):
@@ -248,7 +261,7 @@ class DrawCoordsList(object):
         Returns:
 
         """
-        self.__interface.hide(False)
+        self.__interface.hide(True)
         self.flush()
         self.reset()
 
@@ -262,11 +275,11 @@ class DrawCoordsList(object):
         """
         if flush:
             self.__interface.hide(False)
-        self.__interface.addAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
+        self.__interface.addAxis3(coords, self.__length, self.__x_color_index, self.__y_color_index, self.__z_color_index)
         if flush:
             self.__interface.show(True)
             self.flush()
-        self.count += 1
+        self.__count += 1
 
     def addCross(self, coords, flush=False):
         """addCross(self, coords, flush=False):
@@ -278,11 +291,11 @@ class DrawCoordsList(object):
         """
         if flush:
             self.__interface.hide(False)
-        self.__interface.addBDAxis3(coords, self.length, self.x_color_index, self.y_color_index, self.z_color_index)
+        self.__interface.addBDAxis3(coords, self.__length, self.__x_color_index, self.__y_color_index, self.__z_color_index)
         if flush:
             self.__interface.show(True)
             self.flush()
-        self.count += 1
+        self.__count += 1
 
     def generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
         """generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
@@ -316,7 +329,7 @@ class DrawCoordsList(object):
         return closure_func__
 
 class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
-    """GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
+    """DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
     """
     def __init__(self, **kwargs):
         """__init__(self, **kwargs):
@@ -327,7 +340,10 @@ class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
         DrawCoordsList.__init__(self, **kwargs)
         cds = None
         if len(kwargs) > 0:
-            cds = make_coordinates(kwargs)
+            try:
+                cds = make_coordinates(kwargs)
+            except Exception as e:
+                pass
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
 
 class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
@@ -342,8 +358,22 @@ class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
         di.GeneralDrawInterface.__init__(self)
         cds = None
         if len(kwargs) > 0:
-            cds = make_coordinates(kwargs)
+            try:
+                cds = make_coordinates(kwargs)
+            except Exception as e:
+                pass
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
+
+    def flush(self):
+        """flush(self):
+
+        Args:
+
+        Returns:
+
+        """
+        super().flush()
+        super().render()
 
     def addObject(self, obj, update=False):
         self.addPyObject(obj, update=update)

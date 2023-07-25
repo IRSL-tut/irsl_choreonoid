@@ -25,7 +25,16 @@ Matrix4RM mid_coords_pos_(const double p, ref_mat4 c1, ref_mat4 c2, const double
 
 PYBIND11_MODULE(IRSLCoords, m)
 {
-    m.doc() = "coordinates for choreonoid";
+    m.doc() = R"__IRSL__(
+    coordinates for choreonoid
+
+    .. currentmodule:: python_example
+
+    .. autosummary::
+        :toctree: _generate
+
+    )__IRSL__";
+
 
     py::module::import("cnoid.Body");
 
@@ -171,13 +180,69 @@ PYBIND11_MODULE(IRSLCoords, m)
         })
     .def_property("pos",
                   [](coordinates &self) { return self.pos; },
-                  [](coordinates &self, ref_vec3 vec) { self.pos = vec; })
+                  [](coordinates &self, ref_vec3 vec) { self.pos = vec; },
+                  R"__IRSL__(
+Translation part ( real vector with 3 elements, x, y, z ) of transformation matrix
+
+Returns:
+    numpy.array : 1x3 vector
+
+                 )__IRSL__")
     .def_property("rot",
                   [](coordinates &self) { return self.rot; },
-                  [](coordinates &self, ref_mat3 mat) { self.rot = mat; })
+                  [](coordinates &self, ref_mat3 mat) { self.rot = mat; }, R"__IRSL__(
+Rotation part of transformation ( Rotation matrix, 3x3 real matrix)
+
+Returns:
+    numpy.array : 3x3 matrix
+
+                 )__IRSL__")
     .def_property("cnoidPosition",
                   [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
-                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; })
+                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; },
+                  R"__IRSL__(
+Transformation matrix ( 4x4 homogeneous transformation matrix, using in Choreonoid )
+
+Returns:
+    numpy.array : 4x4 matrix
+
+                 )__IRSL__")
+    .def_property("angleAxis",
+                  [](const coordinates &self) {
+                      double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
+                      Vector4 ret; ret(0) = ax_(0); ret(1) = ax_(1); ret(2) = ax_(2); ret(3) = an_;
+                      return ret; },
+                  [](coordinates &self, const ref_vec4 ret) {
+                      double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
+                      self.setRotationAngle(an_, ax_);
+                      return &self; },
+                  R"__IRSL__(
+Rotation part of transformation ( Angle axis, real vector with 4 elements, ax, ay, az, rotation-angle [radian] )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
+    .def_property("RPY",
+                  [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; },
+                  [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); },
+                  R"__IRSL__(
+Rotation part of transformation ( RPY angle, real vector with 3 elements, roll [radian], pitch [radian], yaw [radian] )
+
+Returns:
+    numpy.array : 1x3 vector
+
+                 )__IRSL__")
+    .def_property("quaternion",
+                  [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.rot = Matrix3(q); },
+                  R"__IRSL__(
+Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
 #if 0 // just test (do not make instance and change value of passed instance) // not succeeded
     #include <iostream>
     .def("setCoordsToPosition",
@@ -198,7 +263,14 @@ PYBIND11_MODULE(IRSLCoords, m)
              // print _to, elements
          })
 #endif
-    .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); })
+    .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); },
+         R"__IRSL__(
+Creating new instance with the same value of this instance
+
+Returns:
+    cnoid.IRSLCoords.coordinates : copy of this instance (created new instance)
+
+                 )__IRSL__")
     .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
          [](const coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); })
@@ -313,7 +385,6 @@ PYBIND11_MODULE(IRSLCoords, m)
     .def_property_readonly("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
     .def_property_readonly("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
     .def_property_readonly("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
-    .def_property_readonly("RPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
     .def("getRPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
     .def("setRPY", [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); } )
     .def("setRPY", [](coordinates &self, double r, double p, double y) { self.setRPY(r,p,y); } )
