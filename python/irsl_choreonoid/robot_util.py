@@ -308,7 +308,13 @@ class IKWrapper(object):
                     print('constraint %d (%s) : converged'%(cntr, const))
                 else:
                     print('constraint %d (%s) : NOT converged'%(cntr, const))
-        return (const.checkConvergence(), loop)
+
+        conv = False
+        for cntr, const in enumerate(constraints):
+            if const.checkConvergence():
+                conv = True
+                break
+        return (conv, loop)
 
     #def angleVectorOrg(self, av = None):
     #    if av is not None:
