@@ -59,7 +59,7 @@ PYBIND11_MODULE(DrawInterface, m)
         .def("hide_and_show", &DrawInterface::hide_and_show)
         //
         .def("render", &DrawInterface::render, py::arg("doImmediately") = false)//should be class method
-        .def("flush", [](DrawInterface &self) { DrawInterface::flush(); })//should be class method
+        .def("flush", &DrawInterface::flush)
         .def("viewAll", &DrawInterface::viewAll)// Can we implement viewThis?
         ;
     //SgPlot
@@ -69,36 +69,37 @@ PYBIND11_MODULE(DrawInterface, m)
     py::class_< GeneralDrawInterface, GeneralDrawInterfacePtr, DrawInterface >(m, "GeneralDrawInterface")
         .def(py::init<>())
         .def(py::init<bool>())
+        .def("flush", &GeneralDrawInterface::flush)
         .def("addObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::add_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("addPyObject", [] (GeneralDrawInterface &self, py::object _o, bool _update) {
             SgNode *nd = _o.cast<SgNode *>();
             if (!!nd) {  SgNodePtr ptr(nd); self.add_object(ptr, _update); return true; }
-            return false; }, py::arg("object"), py::arg("update") = false)
+            return false; }, py::arg("obj"), py::arg("update") = false)
         //
         .def("removeObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("removeObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("removeObject", (void (GeneralDrawInterface::*)(SgTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("removeObject", (void (GeneralDrawInterface::*)(SgPosTransformPtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("removeObject", (void (GeneralDrawInterface::*)(SgShapePtr &, bool)) &GeneralDrawInterface::remove_object,
-             py::arg("object"), py::arg("update") = false)
+             py::arg("obj"), py::arg("update") = false)
         .def("removePyObject", [] (GeneralDrawInterface &self, py::object _o, bool _update) {
             SgNode *nd = _o.cast<SgNode *>();
             if (!!nd) {  SgNodePtr ptr(nd); self.remove_object(ptr, _update); return true; }
-            return false; }, py::arg("object"), py::arg("update") = false)
+            return false; }, py::arg("obj"), py::arg("update") = false)
         ;
 
-    m.def("flush", &DrawInterface::flush); //Deprecated??
+    m.def("flush", &DrawInterface::flushAll); //Deprecated??
 }

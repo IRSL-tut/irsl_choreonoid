@@ -27,12 +27,13 @@ namespace cnoid {
     // added by IRSL
     public:
         SgPosTransformPtr posTrans;
-    public: static void flush()
+    public: static void flushAll()
         {
             //update view??
             QCoreApplication::processEvents(QEventLoop::AllEvents);
             // TODO: How to notify for redrawing (SgUpdate::REMOVED | SgUpdate::ADDED | SgUpdate::MODIFIED)
-            SceneView::instance()->sceneWidget()->sceneRoot()->notifyUpdate();
+            //SceneView::instance()->sceneWidget()->sceneRoot()->notifyUpdate();
+            SceneView::instance()->sceneWidget()->scene()->notifyUpdate();
         }
     public: static void convertVector3(const Vector3 &_in, Vector3f &_out)
         {
@@ -43,6 +44,15 @@ namespace cnoid {
         void render(bool doImmediately) {
             // sw->sceneRoot() or sw->scene()
             sw->renderScene(doImmediately);
+        }
+        void flush() {
+            // SgUpdate::ADDED | SgUpdate::MODIFIED
+            if (!!lineSet) { // check parent??
+                lineSet->notifyUpdate();
+            }
+            if (!!posTrans) { // check parent??
+                posTrans->notifyUpdate();
+            }
         }
         void viewAll() {
             //SceneView::instance()->sceneWidget()->viewAll();
@@ -104,16 +114,28 @@ namespace cnoid {
         }
 
         void show(bool flush=true){
-            posTrans->addChildOnce(lineSet, flush);
+            if (flush) {
+                posTrans->addChildOnce(lineSet, SgUpdate::Added);
+            } else {
+                posTrans->addChildOnce(lineSet);
+            }
         }
 
         void hide(bool flush=true){
-            posTrans->removeChild(lineSet, flush);
+            if (flush) {
+                posTrans->removeChild(lineSet, SgUpdate::Added);
+            } else {
+                posTrans->removeChild(lineSet);
+            }
         }
 
         void hide_and_show(bool flush=true) {
             posTrans->removeChild(lineSet);
-            posTrans->addChildOnce(lineSet, flush);
+            if (flush) {
+                posTrans->addChildOnce(lineSet, SgUpdate::Added);
+            } else {
+                posTrans->addChildOnce(lineSet);
+            }
         }
 
         void drawLine(Vector3f startPos, Vector3f endPos){
@@ -351,6 +373,14 @@ namespace cnoid {
         ~GeneralDrawInterface() {
             posTrans->clearChildren();
             root->removeChild(posTrans, true);
+        }
+        void flush() {
+            // SgUpdate::ADDED | SgUpdate::MODIFIED
+            if (!!posTrans) {
+                posTrans->notifyUpdate();
+            } else if (!!root) {
+                root->notifyUpdate();
+            }
         }
         void add_object(SgNodePtr &obj, bool update) {
             posTrans->addChildOnce(obj, update);
