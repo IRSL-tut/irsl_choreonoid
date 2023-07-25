@@ -130,6 +130,7 @@ class IKWrapper(object):
             self.__default_joints = [ self.__parseJoint(j) for j in use_joints ]
         self.resetJointWeights()
         self.__default_pose = self.angleVector()
+        self.__default_coords = ic.coordinates(self.__robot.rootLink.T)
 
     def flush(self):
         """flush
@@ -155,6 +156,7 @@ class IKWrapper(object):
         """
         self.__default_joints = self.__current_joints
         self.__default_pose = self.angleVector()
+        self.__default_coords = ic.coordinates(self.__robot.rootLink.T)
         self.resetJointWeights()
 
     def __parseLink(self, id_name_link):
@@ -339,6 +341,16 @@ class IKWrapper(object):
             self.__robot.calcForwardKinematics()
         return np.array([ j.q for j in joint_list])
 
+    def rootCoords(self):
+        """resetPose(self):
+
+        Args:
+
+        Returns:
+
+        """
+        self.__robot.rootLink.T.getCoords()
+
     def resetPose(self):
         """resetPose(self):
 
@@ -348,6 +360,7 @@ class IKWrapper(object):
 
         """
         self.angleVector(self.__default_pose)
+        self.__robot.rootLink.T = self.__default_coords.cnoidPosition
 
     def addNoise(self, max_range = 0.1, joint_list = None):
         """addNoise(self, max_range = 0.1, joint_list = None):
@@ -437,6 +450,16 @@ class IKWrapper(object):
 
         """
         return self.__default_pose
+    @property
+    def default_coords(self):
+        """default_coords(self):
+
+        Args:
+
+        Returns:
+
+        """
+        return self.__default_coords
 
 ## add methods to choreonoid's class
 def __joint_list(self):
