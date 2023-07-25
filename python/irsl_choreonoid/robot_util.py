@@ -240,7 +240,8 @@ class IKWrapper(object):
             while joint_or_id in self.__current_joints:
                 self.__current_joints.remove(joint_or_id)
 
-    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False,
+                          base_weight = None, max_iteration = 32, threshold = 5e-5, **kwargs):
         """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
 
         Args:
@@ -277,6 +278,13 @@ class IKWrapper(object):
                 elif ss == 'Y':
                     weight[5] = 1
 
+        if base_weight == '2D':
+            base_weight = np.array([1, 1, 0, 0, 0, 1])
+        elif base_weight is not None:
+            base_weight = np.array(base_weight)
+        else:
+            base_weight = np.zeros(6)
+
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
         ra_constraint.A_link =     self.__tip_link
@@ -288,7 +296,7 @@ class IKWrapper(object):
 
         jlim_avoid_weight_old = np.zeros(6 + self.__robot.getNumJoints())
         ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
-        dq_weight_all = np.append(np.zeros(6), self.__joint_weights)
+        dq_weight_all = np.append(base_weight, self.__joint_weights)
 
         d_level = 0
         if debug:
