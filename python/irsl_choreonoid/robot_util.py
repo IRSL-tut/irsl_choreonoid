@@ -249,7 +249,7 @@ class IKWrapper(object):
             while joint_or_id in self.__current_joints:
                 self.__current_joints.remove(joint_or_id)
 
-    def inverseKinematics(self, target, revert_if_failed=True, retry=100, solver=None, **kwargs):
+    def inverseKinematics(self, target, revert_if_failed=True, retry=100, **kwargs):
         """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
 
         Args:
@@ -450,8 +450,7 @@ class IKWrapper(object):
             base_const = np.array(base_type)
         else:
             base_const = np.ones(6)
-        _base_weight = np.ones(6) - base_const
-        _bese_weight *= base_weight
+        _base_weight = base_weight * (np.ones(6) - base_const)
         ### constraints for IK
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
