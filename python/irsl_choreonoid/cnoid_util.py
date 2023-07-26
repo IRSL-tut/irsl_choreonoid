@@ -124,9 +124,6 @@ def loadProject(project_file):
     Args:
         project_file (str): filename of project file (.cnoid)
 
-    Returns:
-        None
-
     """
     cnoid.Base.ProjectManager.instance.loadProject(filename=project_file)
 
@@ -150,13 +147,13 @@ def getRootItem():
         return RootItem.instance
 
 def getWorld(name = 'World'):
-    """getWorld
+    """Getting or creating WorldItem
 
     Args:
-        name (str): name of Item
+        name (str, default = 'World') : name of WorldItem
 
     Returns:
-        cnoid.Base.WorldItem: added or found WorldItem
+        cnoid.Base.WorldItem : added or found WorldItem
 
     """
     rI = getRootItem()
@@ -169,11 +166,14 @@ def getWorld(name = 'World'):
     return ret
 
 def addSimulator(world = None, simulator_name = 'AISTSimulator'):
-    """addSimulator
+    """Adding SimulatorItem
 
     Args:
+        world (optional) : world item, simulator should be created under this world
+        simulator_name (str, default = 'AISTSimulator') :  name of SimulatorItem to be added
 
     Returns:
+        cnoid.BodyPlugin.AISTSimulatorItem : Added SimulatorItem
 
     """
     if world is None:
@@ -186,15 +186,16 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
     return sim_
 
 def loadRobotItem(fname, name = None, world = True):
-    """Load robot model and add it as Item
+    """Load robot model and add it as a BodyItem
 
     Args:
         fname (str): filename (or path)
         name (str, optional): name of loaded robot-model
-        world (bool, optional): if True, WorldItem is added
+        world (boolean or WorldItem, default = True): if True, WorldItem is added
 
     Returns:
         cnoid.BodyPlugin.BodyItem : Loaded robot-model
+
     """
     # print('loadRobot: %s'%(fname))
     bI = BodyItem()
@@ -225,41 +226,46 @@ def loadRobotItem(fname, name = None, world = True):
     return bI
 
 def findItem(name):
-    """findItem
+    """Finding item in ItemTreeView
 
     Args:
+        name (str) : name of item to be searched
 
     Returns:
+        cnoid.Base.Item : found item (first one)
 
     """
     return RootItem.instance.findItem(name)
 
 def findItems(name):
-    """findItems
+    """Finding item in ItemTreeView
 
     Args:
+        name (str) : name of item to be searched
 
     Returns:
+        list [ cnoid.Base.Item ] : all found items which has the name
 
     """
     return [ itm for itm in RootItem.instance.getDescendantItems() if itm.name == name ]
 
 def removeItem(item_):
-    """removeItem
+    """Removing item
 
     Args:
-
-    Returns:
+        item (cnoid.Base.Item) : item to be removed
 
     """
     item_.detachFromParentItem()
 
 def findBodyItem(name_or_body):
-    """findBodyItem
+    """Seaching BodyItem
 
     Args:
+        name_or_body (str or cnoid.Body.Body) : If type is str, searching BodyItem with the same name. If type is body, searching BodyItem which has identical body
 
     Returns:
+        cnoid.Base.Item : found BodyItem
 
     """
     ret = None
@@ -276,12 +282,7 @@ def findBodyItem(name_or_body):
     return ret
 
 def findRobot(name):
-    """findRobot
-
-    Args:
-
-    Returns:
-
+    """DEPRECATED: use findBodyItem
     """
     ret = findBodyItem(name)
     if ret is None:

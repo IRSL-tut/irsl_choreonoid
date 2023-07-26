@@ -9,11 +9,11 @@ import cnoid.IKSolvers as IK
 import numpy as np
 import random
 
-def make_coordinates(coords_map):
-    """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionay
+def make_coordinates(coords_dict):
+    """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
 
     Args:
-        coords_map (dictionary) : dictionary of describing transformation
+        coords_dict (dict[str, list[float]]) : dictionary of describing transformation
 
     Returns:
         cnoid.IRSLCoords.coordinates : generated coordinates
@@ -78,34 +78,42 @@ def make_coordinates(coords_map):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_map))
 
-def make_coords_map(coords):
+def make_coords_dict(coords):
     """Generating dictonary describing transformation
 
     Args:
-        coords (cnoid.IRSLCoords.coordinates) : input
+        coords (cnoid.IRSLCoords.coordinates) : Transformation
 
     Returns:
-        dictionary : output, can be used by make_coordinates
+        dict[str, list[float]] : Dictonary can be used by make_coordinates
 
     Examples:
-
-        make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
+        >>> make_coords_dict( make_coordinates( {'position' : [1, 2, 3]} ) )
+        {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
-    return {'pos': cds.pos.tolist(), 'aa': cds.rotationAngle().tolist()}
+    return {'pos': coords.pos.tolist(), 'aa': coords.rotationAngle().tolist()}
 
 ##
 ## IKWrapper
 ##
 class IKWrapper(object):
-    """IKWrapper(class)
-
+    """Utility class for solving inverse-kinematics
     """
-    def __init__(self, robot, tip_link, solver = 'QP', tip_to_eef = None, use_joints = None):
-        """IKWrapper(initializer)
-
+    def __init__(self, robot, tip_link, tip_to_eef = None, use_joints = None, solver = 'QP'):
+        """
         Args:
+            robot (cnoid.Body.Body) : robot model using this instance
+            tip_link (str, cnoid.Body.Link) : name or instance of tip_link
+            tip_to_eef (cnoid.IRSLCoords.coordinates, optional) : coordinates of end-effector relative to tip_link
+            use_joints (list[str, int, cnoid.Body.Link] , optional) : list of joint name, index or instance
+            solver (str, default = 'QP') : type of solver
 
-        Returns:
+        Note:
+            Coordinates system
+
+            world -> robot(root_link) -> (using joints) -> tip_link -> tip_to_eef -> end-effector < -- > target-coords(world)
+
+            Inverse-kinematics would be solved to make target-coords and end-effector at the same position.
 
         """
         self.__robot = robot
@@ -138,11 +146,10 @@ class IKWrapper(object):
             self.__inverseKinematics = self.__inverseKinematicsLM
 
     def flush(self):
-        """flush
+        """Updating the robot in scene
 
         Args:
-
-        Returns:
+            None
 
         """
         self.__robot.calcForwardKinematics()
@@ -152,11 +159,10 @@ class IKWrapper(object):
                 ret.notifyKinematicStateUpdate()
 
     def updateDefault(self):
-        """updateDefault(self):
+        """Updating default values (using joints, default_pose, default_coords)
 
         Args:
-
-        Returns:
+            None
 
         """
         self.__default_joints = self.__current_joints
@@ -183,11 +189,12 @@ class IKWrapper(object):
         return None
 
     def endEffector(self, **kwargs):
-        """endEffector(self, **kwargs):
+        """Returns current endEffector
 
         Args:
-
+            kwargs (dict[str, param]) : ignored
         Returns:
+            cnoid.IRSLCoords.coordinates : coordinates of current end-effector
 
         """
         return ic.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
@@ -203,14 +210,7 @@ class IKWrapper(object):
         self.__current_joints = [j for j in self.__default_joints]
         self.updateJointWeights()
 
-    def updateJointWeights(self):
-        """updateJointWeights(self):
-
-        Args:
-
-        Returns:
-
-        """
+    def updateJointWeights(self): ## internal method?
         jlst = self.__robot.jointList()
         for j in self.__current_joints:
             if not j in jlst:
@@ -221,11 +221,11 @@ class IKWrapper(object):
                 self.__joint_weights[idx] = 1
 
     def setJoints(self, jlist, enable = True):
-        """setJoints(self, jlist, enable = True):
+        """Adding or removing joints to/from using joint-list
 
         Args:
-
-        Returns:
+            jlist (list[str, int, cnoid.Body.Link]) : list of joint name, index or instance
+            enable (boolean, default = True) : if True, joints are added, else joint are removed from using joint-list
 
         """
         for j in jlist:
@@ -250,11 +250,27 @@ class IKWrapper(object):
                 self.__current_joints.remove(joint_or_id)
 
     def inverseKinematics(self, target, revert_if_failed=True, retry=100, **kwargs):
-        """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+        """Top method to solve inverse-kinematics
 
         Args:
+            target (cnoid.IRSLCoords.coordinates) : target coordinates of inverse-kinematics
+            revert_if_failed (boolean, default = True) : if True, no modification (moving joint and root-link) to robot-model when calculation of IK is failed
+            retry (int, defualt = 100) : number of retrying solving IK
+            constraint (str or list[float], optional) : '6D', 'position', 'rotation', 'xyzRPY'
+            weight (float, default = 1.0) : weight of constraint
+            base_type (str or list[float], optional) : '2D', 'planer', 'position', 'rotation'
+            base_weight (float, default = 1.0) : weight of base movement
+            max_iteration (int, defulat = 32) : number of iteration
+            threshold (float, default = 5e-5) : threshold for checking convergence
+            add_noise (float or boolean, optional) : if True or number, adding noise to angle of joint before solving IK
+            debug (boolean, default = False) : if True, printing debug message
 
         Returns:
+             (boolean, int) : IK was success or not, and total count of calculation
+
+        Note:
+              constraint : [1,1,1, 1,1,1]
+              base_type : [1,1,1, 1,1,1]
 
         """
         init_angle = self.angleVector()
@@ -495,24 +511,34 @@ class IKWrapper(object):
     #            self.__default_joints[idx].q = av[idx]
     #    return np.array([ j.q for j in self.__default_joints ])
     ##
-    def angleVector(self, av = None):
-        """angleVector(self, av = None):
+    def angleVector(self, _angle_vector = None):
+        """Returning current joint angle of self.robot
+        ロボット(self.robot)への関節角度の指定して現状の値を返す。
 
         Args:
+            _angle_vector (numpy.array, optional) : 1 x len(self.default_joints) vector
+            各エレメントが関節角度になっているvector(numpy.array)。要素数はself.default_jointと同じ。
 
         Returns:
+            numpy.array : 1 x len(self.default_joints) vector
+            現在のロボットの状態で、各エレメントが関節角度になっているvector(numpy.array)。要素数はself.default_jointと同じ。
 
         """
-        return self.__angleVector(av, self.__default_joints)
-    def currentAngleVector(self, av = None):
-        """currentAngleVector(self, av = None):
+        return self.__angleVector(_angle_vector, self.__default_joints)
+    def currentAngleVector(self, _angle_vector = None):
+        """Returning current joint angle of self.robot
 
         Args:
+            _angle_vector (numpy.array, optional) : 1 x len(self.current_joints) vector
 
         Returns:
+            numpy.array : 1 x len(self.current_joints) vector
+
+        Note:
+            self.current_joints would be changed by setJoints method
 
         """
-        return self.__angleVector(av, self.__current_joints)
+        return self.__angleVector(_angle_vector, self.__current_joints)
     def __angleVector(self, av, joint_list):
         if av is not None:
             for j, ang in zip(joint_list, av):
@@ -521,11 +547,13 @@ class IKWrapper(object):
         return np.array([ j.q for j in joint_list])
 
     def rootCoords(self, cds = None):
-        """resetPose(self):
+        """Setting and getting coordinates of rootLink
 
         Args:
+            cds (cnoid.IRSLCoords.coordinates, optional) : If argument is set, coordinates of rootLink is updated by it
 
         Returns:
+            cnoid.IRSLCoords.coordinates : coordinates of rootLink
 
         """
         if cds is not None:
@@ -534,11 +562,13 @@ class IKWrapper(object):
         return self.__robot.rootLink.getCoords()
 
     def resetPose(self):
-        """resetPose(self):
+        """Resetting pose (angleVector and rootCoords)
 
         Args:
+            None
 
         Returns:
+            numpy.array : current angleVector
 
         """
         self.__robot.rootLink.T = self.__default_coords.cnoidPosition
@@ -548,8 +578,8 @@ class IKWrapper(object):
         """addNoise(self, max_range = 0.1, joint_list = None):
 
         Args:
-
-        Returns:
+            max_range (float, default = 0.1) : range of adding noise
+            joint_list (list[str, int, cnoid.Body.Link], optional) : If argument is not set, self.default_joints would be used
 
         """
         if joint_list is None:
@@ -561,11 +591,10 @@ class IKWrapper(object):
     ## read-only
     @property
     def robot(self):
-        """robot(self):
-
-        Args:
+        """Robot model using this instance
 
         Returns:
+            cnoid.Body.Body : robot model
 
         """
         return self.__robot
@@ -574,71 +603,64 @@ class IKWrapper(object):
 #        self.__body = in_body
     @property
     def tip_link(self):
-        """tip_link(self):
-
-        Args:
+        """Tip link (direct parent of end-effector)
 
         Returns:
+            cnoid.Body.Link : tip link
 
         """
         return self.__tip_link
     @property
     def tip_to_eef(self):
-        """tip_to_eef(self):
-
-        Args:
+        """Transformation between origin of tip_link and end-effector
 
         Returns:
+           cnoid.IRSLCoords.coordinates : Transformation to end-effector at tip_link coordinates
 
         """
         return self.__tip_to_eef
     @property
     def joint_weights(self):
-        """joint_weights(self):
-
-        Args:
+        """
 
         Returns:
+            list[float] : weight of joints
 
         """
         return self.__joint_weights
     @property
     def current_joints(self):
-        """current_joints(self):
-
-        Args:
+        """Current joint-list
 
         Returns:
+            list[cnoid.Body.Link] : current_joints using IK, currentAngleVector
 
         """
         return self.__current_joints
     @property
     def default_joints(self):
-        """default_joints(self):
-
-        Args:
+        """Default joint-list (stored while initialization)
 
         Returns:
+            list[cnoid.Body.Link] : default_joints
 
         """
         return self.__default_joints
     @property
     def default_pose(self):
-        """default_pose(self):
-
-        Args:
+        """angleVector stored while initialization
 
         Returns:
+            numpy.array : 1 x len(self.default_joints) vector
 
         """
         return self.__default_pose
     @property
     def default_coords(self):
-        """default_coords(self):
-
-        Args:
+        """rootCoords stored while initialization
 
         Returns:
+            cnoid.IRSLCoords.coordinates : Transformation to end-effector at tip_link coordinates
 
         """
         return self.__default_coords
