@@ -100,7 +100,7 @@ class IKWrapper(object):
     """IKWrapper(class)
 
     """
-    def __init__(self, robot, tip_link, tip_to_eef = None, use_joints = None):
+    def __init__(self, robot, tip_link, solver = 'QP', tip_to_eef = None, use_joints = None):
         """IKWrapper(initializer)
 
         Args:
@@ -131,6 +131,11 @@ class IKWrapper(object):
         self.resetJointWeights()
         self.__default_pose = self.angleVector()
         self.__default_coords = ic.coordinates(self.__robot.rootLink.T)
+
+        if solver == 'QP':
+            self.__inverseKinematics = self.__inverseKinematicsQP
+        else:
+            self.__inverseKinematics = self.__inverseKinematicsLM
 
     def flush(self):
         """flush
@@ -206,6 +211,10 @@ class IKWrapper(object):
         Returns:
 
         """
+        jlst = self.__robot.jointList()
+        for j in self.__current_joints:
+            if not j in jlst:
+                print('### Warning ### joint: {} (id: {}, link_name: {}) is not a valid joint'.format(j.jointName, j.joint_id, j.name))
         self.__joint_weights = np.zeros(self.__robot.numJoints)
         for idx in range(self.__robot.numJoints):
             if self.__robot.joint(idx) in self.__current_joints:
@@ -240,8 +249,7 @@ class IKWrapper(object):
             while joint_or_id in self.__current_joints:
                 self.__current_joints.remove(joint_or_id)
 
-    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False,
-                          base_weight = None, max_iteration = 32, threshold = 5e-5, **kwargs):
+    def inverseKinematics(self, target, revert_if_failed=True, retry=100, solver=None, **kwargs):
         """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
 
         Args:
@@ -249,59 +257,218 @@ class IKWrapper(object):
         Returns:
 
         """
-        ##
+        init_angle = self.angleVector()
+        init_coords = self.rootCoords()
+
+        succ = False
+        _total = 0
+        while retry >= 0:
+            succ, _iter = self.__inverseKinematics(target, **kwargs)
+            _total += _iter
+            if succ:
+                break
+            retry -= 1
+        if (not succ) and revert_if_failed:
+            self.angleVector(init_angle)
+            self.rootCoords(init_coords)
+        return (succ, _total)
+
+    def __inverseKinematicsQP(self, target, constraint = None, weight = 1.0, add_noise = None, debug = False,
+                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5, **kwargs):
+        ## add_noise
         if add_noise is not None:
             if type(add_noise) is float:
                 self.addNoise(max_range = add_noise, joint_list = self.__current_joints)
             else:
                 self.addNoise(max_range = 0.2, joint_list = self.__current_joints)
-        ##
-        if weight == 'position':
-            weight = [1, 1, 1, 0, 0, 0]
-        elif weight == 'rotation':
-            weight = [0, 0, 0, 1, 1, 1]
-        elif type(weight) is str:
+        ## constraint
+        if constraint is None or constraint == '6D':
+            constraint = [1, 1, 1, 1, 1, 1]
+        elif constraint == 'position':
+            constraint = [1, 1, 1, 0, 0, 0]
+        elif constraint == 'rotation':
+            constraint = [0, 0, 0, 1, 1, 1]
+        elif type(constraint) is str:
             ## 'xyzRPY'
-            wstr = weight
-            weight = [0, 0, 0, 0, 0, 0]
+            wstr = constraint
+            constraint = [0, 0, 0, 0, 0, 0]
             for ss in wstr:
                 if ss == 'x':
-                    weight[0] = 1
+                    constraint[0] = 1
                 elif ss == 'y':
-                    weight[1] = 1
+                    constraint[1] = 1
                 elif ss == 'z':
-                    weight[2] = 1
+                    constraint[2] = 1
                 elif ss == 'R':
-                    weight[3] = 1
+                    constraint[3] = 1
                 elif ss == 'P':
-                    weight[4] = 1
+                    constraint[4] = 1
                 elif ss == 'Y':
-                    weight[5] = 1
+                    constraint[5] = 1
+        ## base_type
+        if base_type == '2D' or base_type == 'planer':
+            base_const = np.array([0, 0, 1, 1, 1, 0])
+        elif base_type == 'position':
+            base_const = np.array([0, 0, 0, 1, 1, 1])
+        elif base_type == 'rotation':
+            base_const = np.array([1, 1, 1, 0, 0, 0])
+        elif type(base_type) is str:
+            ## 'xyzRPY'
+            wstr = base_type
+            _bweight = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    _bweight[0] = 1
+                elif ss == 'y':
+                    _bweight[1] = 1
+                elif ss == 'z':
+                    _bweight[2] = 1
+                elif ss == 'R':
+                    _bweight[3] = 1
+                elif ss == 'P':
+                    _bweight[4] = 1
+                elif ss == 'Y':
+                    _bweight[5] = 1
+            base_const = np.array(_bweight)
+        elif base_type is not None:
+            base_const = np.array(base_type)
+        ##
+        if base_type is not None:
+            base_const = base_weight * base_const
 
-        if base_weight == '2D':
-            base_weight = np.array([1, 1, 0, 0, 0, 1])
-        elif base_weight is not None:
-            base_weight = np.array(base_weight)
+        ### constraints for IK
+        constraints0 = IK.Constraints()
+        a_constraint = IK.PositionConstraint()
+        a_constraint.A_link =     self.__tip_link
+        a_constraint.A_localpos = self.__tip_to_eef_cnoid
+        #constraint.B_link() = nullptr;
+        a_constraint.B_localpos = target.toPosition()
+        a_constraint.weight     = weight * np.array(constraint)
+        constraints0.push_back(a_constraint)
+        if base_type is not None:
+            if debug:
+                print('use base : {}'.format(base_const))
+            b_constraint = IK.PositionConstraint()
+            b_constraint.A_link =     self.__robot.rootLink
+            b_constraint.A_localpos = ic.coordinates().cnoidPosition
+            #constraint.B_link() = nullptr;
+            b_constraint.B_localpos = self.__robot.rootLink.T
+            b_constraint.weight     = np.array(base_const)
+            constraints0.push_back(b_constraint)
+        #
+        tasks = IK.Tasks()
+        dummy_const = IK.Constraints()
+        constraints = [ dummy_const, constraints0 ]
+        variables = []
+        if base_weight is not None:
+            variables.append(self.__robot.rootLink)
+        variables += self.__current_joints
+        if debug:
+            print('var: {}'.format(variables))
+        #
+        d_level = 0
+        if debug:
+            d_level = 1
+        loop = IK.prioritized_solveIKLoop(variables, constraints, tasks,
+                                          max_iteration, threshold, d_level)
+        if debug:
+            for cntr, consts in enumerate(constraints):
+                for idx, const in enumerate(consts):
+                    const.debuglevel = 1
+                    if const.checkConvergence():
+                        print('constraint {}-{} ({}) : converged'.format(cntr, idx, const))
+                    else:
+                        print('constraint {}-{} ({}) : NOT converged'.format(cntr, idx, const))
+        conv = True
+        for cntr, consts in enumerate(constraints):
+            for const in consts:
+                if not const.checkConvergence():
+                    conv = False
+                    break
+            if not conv:
+                break
+        return (conv, loop)
+
+    def __inverseKinematicsLM(self, target, constraint = None, weight = 1.0, add_noise = None, debug = False,
+                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5, **kwargs):
+        ## add_noise
+        if add_noise is not None:
+            if type(add_noise) is float:
+                self.addNoise(max_range = add_noise, joint_list = self.__current_joints)
+            else:
+                self.addNoise(max_range = 0.2, joint_list = self.__current_joints)
+        ## constraint
+        if constraint is None or constraint == '6D':
+            constraint = [1, 1, 1, 1, 1, 1]
+        elif constraint == 'position':
+            constraint = [1, 1, 1, 0, 0, 0]
+        elif constraint == 'rotation':
+            constraint = [0, 0, 0, 1, 1, 1]
+        elif type(constraint) is str:
+            ## 'xyzRPY'
+            wstr = constraint
+            constraint = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    constraint[0] = 1
+                elif ss == 'y':
+                    constraint[1] = 1
+                elif ss == 'z':
+                    constraint[2] = 1
+                elif ss == 'R':
+                    constraint[3] = 1
+                elif ss == 'P':
+                    constraint[4] = 1
+                elif ss == 'Y':
+                    constraint[5] = 1
+        ## base_type
+        if base_type == '2D' or base_type == 'planer':
+            base_const = np.array([0, 0, 1, 1, 1, 0])
+        elif base_type == 'position':
+            base_const = np.array([0, 0, 0, 1, 1, 1])
+        elif base_type == 'rotation':
+            base_const = np.array([1, 1, 1, 0, 0, 0])
+        elif type(base_type) is str:
+            ## 'xyzRPY'
+            wstr = base_type
+            _bweight = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    _bweight[0] = 1
+                elif ss == 'y':
+                    _bweight[1] = 1
+                elif ss == 'z':
+                    _bweight[2] = 1
+                elif ss == 'R':
+                    _bweight[3] = 1
+                elif ss == 'P':
+                    _bweight[4] = 1
+                elif ss == 'Y':
+                    _bweight[5] = 1
+            base_const = np.array(_bweight)
+        elif base_type is not None:
+            base_const = np.array(base_type)
         else:
-            base_weight = np.zeros(6)
-
+            base_const = np.ones(6)
+        _base_weight = np.ones(6) - base_const
+        _bese_weight *= base_weight
+        ### constraints for IK
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
         ra_constraint.A_link =     self.__tip_link
         ra_constraint.A_localpos = self.__tip_to_eef_cnoid
         #constraint->B_link() = nullptr;
-        ra_constraint.B_localpos = coords.toPosition()
-        ra_constraint.weight = np.array(weight)
+        ra_constraint.B_localpos = target.toPosition()
+        ra_constraint.weight = weight * np.array(constraint)
         constraints.push_back(ra_constraint)
-
+        ##
         jlim_avoid_weight_old = np.zeros(6 + self.__robot.getNumJoints())
         ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
-        dq_weight_all = np.append(base_weight, self.__joint_weights)
-
+        dq_weight_all = np.append(_base_weight, self.__joint_weights)
         d_level = 0
         if debug:
             d_level = 1
-
+        ## solve IK
         loop = IK.solveFullbodyIKLoopFast(self.__robot,
                                           constraints,
                                           jlim_avoid_weight_old,
@@ -316,7 +483,6 @@ class IKWrapper(object):
                     print('constraint %d (%s) : converged'%(cntr, const))
                 else:
                     print('constraint %d (%s) : NOT converged'%(cntr, const))
-
         conv = False
         for cntr, const in enumerate(constraints):
             if const.checkConvergence():
@@ -355,7 +521,7 @@ class IKWrapper(object):
             self.__robot.calcForwardKinematics()
         return np.array([ j.q for j in joint_list])
 
-    def rootCoords(self):
+    def rootCoords(self, cds = None):
         """resetPose(self):
 
         Args:
@@ -363,7 +529,10 @@ class IKWrapper(object):
         Returns:
 
         """
-        self.__robot.rootLink.T.getCoords()
+        if cds is not None:
+            self.__robot.rootLink.T = cds.cnoidPosition
+            self.__robot.calcForwardKinematics()
+        return self.__robot.rootLink.getCoords()
 
     def resetPose(self):
         """resetPose(self):
@@ -373,8 +542,8 @@ class IKWrapper(object):
         Returns:
 
         """
-        self.angleVector(self.__default_pose)
         self.__robot.rootLink.T = self.__default_coords.cnoidPosition
+        return self.angleVector(self.__default_pose)
 
     def addNoise(self, max_range = 0.1, joint_list = None):
         """addNoise(self, max_range = 0.1, joint_list = None):
