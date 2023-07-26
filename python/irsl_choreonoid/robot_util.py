@@ -130,6 +130,7 @@ class IKWrapper(object):
             self.__default_joints = [ self.__parseJoint(j) for j in use_joints ]
         self.resetJointWeights()
         self.__default_pose = self.angleVector()
+        self.__default_coords = ic.coordinates(self.__robot.rootLink.T)
 
     def flush(self):
         """flush
@@ -155,6 +156,7 @@ class IKWrapper(object):
         """
         self.__default_joints = self.__current_joints
         self.__default_pose = self.angleVector()
+        self.__default_coords = ic.coordinates(self.__robot.rootLink.T)
         self.resetJointWeights()
 
     def __parseLink(self, id_name_link):
@@ -238,7 +240,8 @@ class IKWrapper(object):
             while joint_or_id in self.__current_joints:
                 self.__current_joints.remove(joint_or_id)
 
-    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
+    def inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False,
+                          base_weight = None, max_iteration = 32, threshold = 5e-5, **kwargs):
         """inverseKinematics(self, coords, weight = [1,1,1, 1,1,1], add_noise = None, debug = False, max_iteration = 32, threshold = 5e-5, **kwargs):
 
         Args:
@@ -275,6 +278,13 @@ class IKWrapper(object):
                 elif ss == 'Y':
                     weight[5] = 1
 
+        if base_weight == '2D':
+            base_weight = np.array([1, 1, 0, 0, 0, 1])
+        elif base_weight is not None:
+            base_weight = np.array(base_weight)
+        else:
+            base_weight = np.zeros(6)
+
         constraints = IK.Constraints()
         ra_constraint = IK.PositionConstraint()
         ra_constraint.A_link =     self.__tip_link
@@ -286,7 +296,7 @@ class IKWrapper(object):
 
         jlim_avoid_weight_old = np.zeros(6 + self.__robot.getNumJoints())
         ##dq_weight_all = np.ones(6 + self.robot.getNumJoints())
-        dq_weight_all = np.append(np.zeros(6), self.__joint_weights)
+        dq_weight_all = np.append(base_weight, self.__joint_weights)
 
         d_level = 0
         if debug:
@@ -306,7 +316,13 @@ class IKWrapper(object):
                     print('constraint %d (%s) : converged'%(cntr, const))
                 else:
                     print('constraint %d (%s) : NOT converged'%(cntr, const))
-        return (const.checkConvergence(), loop)
+
+        conv = False
+        for cntr, const in enumerate(constraints):
+            if const.checkConvergence():
+                conv = True
+                break
+        return (conv, loop)
 
     #def angleVectorOrg(self, av = None):
     #    if av is not None:
@@ -339,6 +355,16 @@ class IKWrapper(object):
             self.__robot.calcForwardKinematics()
         return np.array([ j.q for j in joint_list])
 
+    def rootCoords(self):
+        """resetPose(self):
+
+        Args:
+
+        Returns:
+
+        """
+        self.__robot.rootLink.T.getCoords()
+
     def resetPose(self):
         """resetPose(self):
 
@@ -348,6 +374,7 @@ class IKWrapper(object):
 
         """
         self.angleVector(self.__default_pose)
+        self.__robot.rootLink.T = self.__default_coords.cnoidPosition
 
     def addNoise(self, max_range = 0.1, joint_list = None):
         """addNoise(self, max_range = 0.1, joint_list = None):
@@ -437,6 +464,16 @@ class IKWrapper(object):
 
         """
         return self.__default_pose
+    @property
+    def default_coords(self):
+        """default_coords(self):
+
+        Args:
+
+        Returns:
+
+        """
+        return self.__default_coords
 
 ## add methods to choreonoid's class
 def __joint_list(self):
