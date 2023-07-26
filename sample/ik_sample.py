@@ -1,6 +1,8 @@
+### sample for IKWrapper
 import irsl_choreonoid.robot_util as ru
 import irsl_choreonoid.cnoid_util as cu
 import numpy as np
+
 ##
 joints_a = [ 'LARM_SHOULDER_P', 'LARM_SHOULDER_R', 'LARM_SHOULDER_Y', 'LARM_ELBOW', 'LARM_WRIST_Y', 'LARM_WRIST_P', 'LARM_WRIST_R' ]
 joints_b = joints_a + ['WAIST_P', 'WAIST_R', 'CHEST']
@@ -16,23 +18,24 @@ else:
 ## ru.IKWrapper(instance-of-body, target-link(name, id, link))
 ## use_joints : optional, list of using joint(name, id, joint)
 ik = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_a)
-#
+#ik = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_a, solver = 'LM') ## here is original IK
+
 tgtorg = ik.endEffector() ## target coordinates
 tgt = ik.endEffector().translate(np.array([0, 0, 0.1])) ## moved target
 
 ## solve inverse-kinematics
 ## inverseKinematics(target-coords)
-## weight : 'xyzRPY' or [1, 1, 1, 1, 1, 1], 'xyz' is just position(3-axis), 'xyzRPY' is for 6-axis
+## constraint : 'xyzRPY' or [1, 1, 1, 1, 1, 1], 'xyz' is just position(3-axis), 'xyzRPY' is for 6-axis
 ## add_noise : noise [rad], noise is added to joints before solving IK
 ## debug: True or False, print debug message
-succ, iter = ik.inverseKinematics(tgt, debug = True, weight = 'xyz', add_noise=0.3)
+succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyz', add_noise=0.3)
 while succ is False: ## sometimes ik fails
-    succ, iter = ik.inverseKinematics(tgt, debug = True, weight = 'xyz', add_noise=0.45)
+    succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyz', add_noise=0.45)
 ik.flush()
 print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector()))
 
-## re-solving inverse-kinematics with different weight
-ik.inverseKinematics(tgt, debug = True, weight = 'xyzRPY', add_noise=0.4)
+## re-solving inverse-kinematics with different constraint
+succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyzRPY', add_noise=0.4)
 ik.flush()
 print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector()))
 
@@ -43,6 +46,6 @@ ik.flush()
 ik2 = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_b)
 tgtorg2 = ik2.endEffector()
 tgt2 = ik2.endEffector().translate(np.array([0, 0, 0.1]))
-ik2.inverseKinematics(tgt, debug = True, weight = [1,1,1, 1,1,1], add_noise=0.45)
+succ, _iter = ik2.inverseKinematics(tgt, debug = True, constraint = [1,1,1, 1,1,1], add_noise=0.45)
 ik2.flush()
 print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg2, tgt2, ik2.endEffector()))
