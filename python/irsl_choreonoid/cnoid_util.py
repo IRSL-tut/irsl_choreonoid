@@ -80,22 +80,9 @@ def parseURL(url):
         raise SyntaxError('not implemented scheme {} / {}'.format(res.scheme, url))
     else:
         raise SyntaxError('unkown scheme {} / {}'.format(res.scheme, url))
-
 ##
 ## cnoid Util
 ##
-def isInChoreonoid():
-    """isInChoreonoid
-
-    Args:
-        None
-
-    Returns:
-        boolean: True if this script running on python-console of Choreonoid
-
-    """
-    return (RootItem.instance is not None)
-
 def loadRobot(fname):
     """Loading robot model (.body, .vrml, .urdf??)
 
@@ -112,11 +99,70 @@ def loadRobot(fname):
     rb.calcForwardKinematics()
     return rb
 
-def flushRobotView(name):
-    #findItem(name).notifyKinematicStateChange()
-    findItem(name).notifyKinematicStateUpdate()
-    #MessageView.getInstance().flush()
-    MessageView.instance.flush()
+##
+## cnoid Position
+##
+def cnoidPosition(rotation = None, translation = None):
+    """Concatnating translation part and rotation part
+
+    Args:
+         translation(numpy.array, optional) : 1x3 vector
+         rotation(numpy.array, optional) : 3x3 matrix
+
+    Returns:
+         numpy.array : 4x4 homogeneous transformation matrix
+
+    """
+    ret = np.identity(4)
+    if not (rotation is None):
+        ret[:3, :3] = rotation
+    if not (translation is None):
+        ret[:3, 3] = translation
+    return ret
+
+def cnoidRotation(cPosition):
+    """Extracting rotation part of 4x4 matrix
+
+    Args:
+         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
+
+    Returns:
+         numpy.array : 3x3 matrix ( rotation part of cPosition )
+
+    """
+    return cPosition[:3, :3]
+
+def cnoidTranslation(cPosition):
+    """Extracting translation part of 4x4 matrix
+
+    Args:
+         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
+
+    Returns:
+         numpy.array : 1x3 vector ( translation part of cPosition )
+
+    """
+    return cPosition[:3, 3]
+
+## only this function use cnoid.Base module
+def isInChoreonoid():
+    """isInChoreonoid
+
+    Args:
+        None
+
+    Returns:
+        boolean: True if this script running on python-console of Choreonoid
+
+    """
+    return (RootItem.instance is not None)
+
+## DEPRECATED: use cnoid.Base.ItemTreeView.instance
+#def flushRobotView(name):
+#    #findItem(name).notifyKinematicStateChange()
+#    findItem(name).notifyKinematicStateUpdate()
+#    #MessageView.getInstance().flush()
+#    MessageView.instance.flush()
 
 def loadProject(project_file):
     """Loading project file (currend project may be changed)
@@ -128,7 +174,7 @@ def loadProject(project_file):
     cnoid.Base.ProjectManager.instance.loadProject(filename=project_file)
 
 ##
-## cnoid Item
+## cnoid Item (Base)
 ##
 def getItemTreeView():
     """DEPRECATED: use cnoid.Base.ItemTreeView.instance
@@ -146,7 +192,7 @@ def getRootItem():
     else:
         return RootItem.instance
 
-def getWorld(name = 'World'):
+def getOrAddWorld(name = 'World'):
     """Getting or creating WorldItem
 
     Args:
@@ -249,11 +295,47 @@ def findItems(name):
     """
     return [ itm for itm in RootItem.instance.getDescendantItems() if itm.name == name ]
 
+def findItemsByQuery(query):
+    """Finding item which is query returning True in ItemTreeView
+
+    Args:
+        query (callable, taking 1 argument, argtype cnoid.Base.Item) : Query function which rturns true if the item should be extracted
+
+    Returns:
+        list [ cnoid.Base.Item ] : all found items that query returns True
+
+    """
+    return [ itm for itm in RootItem.instance.getDescendantItems() if func(itm) ]
+
+def findItemsByName(name):
+    """Finding item with the same name in ItemTreeView
+
+    Args:
+        name (str) : name of item to be searched
+
+    Returns:
+        list [ cnoid.Base.Item ] : all found items which has the name
+
+    """
+    return findItemsByQuery( lambda itm : (itm.name == name) )
+
+def findItemsByClass(cls):
+    """Finding item with class given as the argument in ItemTreeView
+
+    Args:
+        cls (class) : class of item to be searched
+
+    Returns:
+        list [ cnoid.Base.Item ] : all found items which has the name
+
+    """
+    return findItemsByQuery( lambda itm : (type(itm) == cls) )
+
 def removeItem(item_):
     """Removing item
 
     Args:
-        item (cnoid.Base.Item) : item to be removed
+        item_ (cnoid.Base.Item) : item to be removed
 
     """
     item_.detachFromParentItem()
@@ -292,48 +374,3 @@ def findRobot(name):
         return ret.body()
     else:
         return ret.body
-
-##
-## cnoid Position
-##
-def cnoidPosition(rotation = None, translation = None):
-    """Concatnating translation part and rotation part
-
-    Args:
-         translation(numpy.array, optional) : 1x3 vector
-         rotation(numpy.array, optional) : 3x3 matrix
-
-    Returns:
-         numpy.array : 4x4 homogeneous transformation matrix
-
-    """
-    ret = np.identity(4)
-    if not (rotation is None):
-        ret[:3, :3] = rotation
-    if not (translation is None):
-        ret[:3, 3] = translation
-    return ret
-
-def cnoidRotation(cPosition):
-    """Extracting rotation part of 4x4 matrix
-
-    Args:
-         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
-
-    Returns:
-         numpy.array : 3x3 matrix ( rotation part of cPosition )
-
-    """
-    return cPosition[:3, :3]
-
-def cnoidTranslation(cPosition):
-    """Extracting translation part of 4x4 matrix
-
-    Args:
-         cPosition (numpy.array) : 4x4 homogeneous transformation matrix
-
-    Returns:
-         numpy.array : 1x3 vector ( translation part of cPosition )
-
-    """
-    return cPosition[:3, 3]
