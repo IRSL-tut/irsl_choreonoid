@@ -1,33 +1,8 @@
 ## do not use cnoid.Base
-from cnoid.Util import SgPosTransform
 from cnoid.IRSLCoords import coordinates
+# from cnoid.Util import SgPosTransform
 # from cnoid.DrawInterface import GeneralDrawInterface as GDI
 
-### newcoords
-### translate
-### rotate
-### transform
-#class HOGE(SgPosTransform, coordinates):
-#    def __init__(self, *args, **kwargs):
-#        coordinates.__init__(self, *args, **kwargs)
-#        SgPosTransform.__init__(self)
-#    def newcoords(self, cds):
-#        super().newcoords(cds)
-#        self.T = self.toPosition()
-
-# from cnoid.Util import SgPosTransform
-# from cnoid.IRSLCoords import coordinates
-# import numpy as np
-# sgp = SgPosTransform()
-# cds = coordinates()
-# cds1 = coordinates()
-# cds1.translate(np.array([0.1, 0.2, 0.3]))
-# sgp.T
-# cds1.cnoidPosition
-# sgp.T = cds1.cnoidPosition
-# sgp.T
-
-# setattr('coords')
 class coordsWrapper(coordinates):
     """class coordsWrapper(cnoid.IRSLCoords.coordinates)
 

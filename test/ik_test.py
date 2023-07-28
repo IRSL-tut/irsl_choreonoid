@@ -56,7 +56,7 @@ class TestRobotModel(unittest.TestCase):
         self.assertTrue(np.linalg.norm(diff_cds.pos) > 3.2)
 
         self.assertTrue(np.linalg.norm(cds_fix.pos) < 0.0001)
-        ang = cds_fix.rotationAngle()
+        ang = cds_fix.getRotationAngle()
         self.assertTrue(ang[3] < 0.0001)
 
     def test_move_centroid(self):

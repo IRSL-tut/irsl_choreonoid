@@ -11,6 +11,11 @@
 #include <cnoid/Body>
 #include <cnoid/Link>
 
+typedef Eigen::Ref<Matrix4RM> ref_noconst_mat4;
+typedef Eigen::Ref<Matrix3RM> ref_noconst_mat3;
+typedef Eigen::Ref<cnoid::Vector4>   ref_noconst_vec4;
+typedef Eigen::Ref<cnoid::Vector3>   ref_noconst_vec3;
+
 using namespace cnoid;
 namespace py = pybind11;
 
@@ -246,7 +251,7 @@ Returns:
                  )__IRSL__")
     .def_property("cnoidPosition",
                   [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
-                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; }, R"__IRSL__(
+                  [](coordinates &self, ref_mat4 T) { cnoidPosition p(T); self = p; }, R"__IRSL__(
 Transformation matrix ( 4x4 homogeneous transformation matrix, using in Choreonoid )
 
 Returns:
@@ -258,7 +263,7 @@ Returns:
                       double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
                       Vector4 ret; ret(0) = ax_(0); ret(1) = ax_(1); ret(2) = ax_(2); ret(3) = an_;
                       return ret; },
-                  [](coordinates &self, const ref_vec4 ret) {
+                  [](coordinates &self, ref_vec4 ret) {
                       double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
                       self.setRotationAngle(an_, ax_);
                       return &self; }, R"__IRSL__(
@@ -287,7 +292,7 @@ Returns:
 
                  )__IRSL__")
     .def("setCoordsToPosition",
-         [](coordinates &self, Eigen::Ref<Matrix4RM> position_to_be_set) {
+         [](coordinates &self, ref_noconst_mat4 position_to_be_set) {
              Isometry3 _T(Isometry3::Identity());
              _T.translation() = self.pos; _T.linear() = self.rot;
              position_to_be_set = _T.matrix(); }, R"__IRSL__(
@@ -373,19 +378,32 @@ Returns:
     .def("transform",
          [](coordinates &self, const coordinates &c, const coordinates &wrt)
          { self.transform(c, wrt); return &self; } )
+    //// in place version (modify input vec)
+    .def("rotateVector",
+         [](const coordinates &self, ref_noconst_vec3 vec) { Vector3 v(vec);
+             self.rotate_vector(v); vec = v; return vec; })
+    .def("inverseRotateVector",
+         [](const coordinates &self, ref_noconst_vec3 vec) { Vector3 v(vec);
+             self.inverse_rotate_vector(v); vec = v; return vec; })
+    .def("transformVector",
+         [](const coordinates &self, ref_noconst_vec3 vec) { Vector3 v(vec);
+             self.transform_vector(v); vec = v; return vec; })
+    .def("inverseTransformVector",
+         [](const coordinates &self, ref_noconst_vec3 vec) { Vector3 v(vec);
+             self.inverse_transform_vector(v); vec = v; return vec; })
     ////
     .def("rotate_vector",
-         [](const coordinates &self, Eigen::Ref<Vector3> vec) { Vector3 v(vec);
-             self.rotate_vector(v); vec = v; return vec; })
+         [](const coordinates &self, ref_vec3 vec) { Vector3 v(vec);
+             self.rotate_vector(v); return v; })
     .def("inverse_rotate_vector",
-         [](const coordinates &self, Eigen::Ref<Vector3> vec) { Vector3 v(vec);
-             self.inverse_rotate_vector(v); vec = v; return vec; })
+         [](const coordinates &self, ref_vec3 vec) { Vector3 v(vec);
+             self.inverse_rotate_vector(v); return v; })
     .def("transform_vector",
-         [](const coordinates &self, Eigen::Ref<Vector3> vec) { Vector3 v(vec);
-             self.transform_vector(v); vec = v; return vec; })
+         [](const coordinates &self, ref_vec3 vec) { Vector3 v(vec);
+             self.transform_vector(v); return v; })
     .def("inverse_transform_vector",
-         [](const coordinates &self, Eigen::Ref<Vector3> vec) { Vector3 v(vec);
-             self.inverse_transform_vector(v); vec = v; return vec; })
+         [](const coordinates &self, ref_vec3 vec) { Vector3 v(vec);
+             self.inverse_transform_vector(v); return v; })
     ///
     .def("translate",
          [](coordinates &self, ref_vec3 vec, coordinates::wrt wrt) {
@@ -407,11 +425,11 @@ Returns:
              self.move_to(vec, wrt); return &self; } )
     //
     .def("rotNormalize", &coordinates::rotNormalize)
-    .def("rotationAngle", [](const coordinates &self) {
+    .def("getRotationAngle", [](const coordinates &self) {
             double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
             Vector4 ret; ret(0) = ax_(0); ret(1) = ax_(1); ret(2) = ax_(2); ret(3) = an_;
             return ret; } )
-    .def("setRotationAngle", [](coordinates &self, const ref_vec4 ret) {
+    .def("setRotationAngle", [](coordinates &self, ref_vec4 ret) {
             double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
             self.setRotationAngle(an_, ax_);
             return &self; } )

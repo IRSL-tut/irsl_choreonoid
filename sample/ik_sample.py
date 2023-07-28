@@ -20,8 +20,8 @@ else:
 ik = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_a)
 #ik = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_a, solver = 'LM') ## here is original IK
 
-tgtorg = ik.endEffector() ## target coordinates
-tgt = ik.endEffector().translate(np.array([0, 0, 0.1])) ## moved target
+tgtorg = ik.getEndEffector() ## target coordinates
+tgt = ik.getEndEffector().translate(np.array([0, 0, 0.1])) ## moved target
 
 ## solve inverse-kinematics
 ## inverseKinematics(target-coords)
@@ -32,20 +32,20 @@ succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyz', add_no
 while succ is False: ## sometimes ik fails
     succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyz', add_noise=0.45)
 ik.flush()
-print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector()))
+print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector))
 
 ## re-solving inverse-kinematics with different constraint
 succ, _iter = ik.inverseKinematics(tgt, debug = True, constraint = 'xyzRPY', add_noise=0.4)
 ik.flush()
-print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector()))
+print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg, tgt, ik.endEffector))
 
 ik.resetPose() ## reset to initial-pose
 ik.flush()
 
 ## Changing use_joint
 ik2 = ru.IKWrapper(bd, 'LARM_WRIST_R', use_joints = joints_b)
-tgtorg2 = ik2.endEffector()
-tgt2 = ik2.endEffector().translate(np.array([0, 0, 0.1]))
+tgtorg2 = ik2.getEndEffector()
+tgt2 = ik2.getEndEffector().translate(np.array([0, 0, 0.1]))
 succ, _iter = ik2.inverseKinematics(tgt, debug = True, constraint = [1,1,1, 1,1,1], add_noise=0.45)
 ik2.flush()
-print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg2, tgt2, ik2.endEffector()))
+print('original: {}\n  target: {}\n  solved: {}'.format(tgtorg2, tgt2, ik2.endEffector))

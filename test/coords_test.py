@@ -60,6 +60,8 @@ class TestCoordinates(unittest.TestCase):
         self.assertTrue(cnoid_cds.equal(pr_cds))
         self.assertTrue(pr_cds.equal(pq_cds))
 
+        self.assertTrue(ic.eps_eq(pr_cds.quaternion, quat))
+
     def test_equal_pointer(self):
         tmp_cds = coordinates()
         pos0 = np.array([1.0, 2.0, 3.0])
@@ -68,6 +70,43 @@ class TestCoordinates(unittest.TestCase):
         self.assertTrue(ic.eps_eq(tmp_cds.pos[0], pos0[0])) ## true
         pos0[0] = 10.0
         self.assertFalse(ic.eps_eq(tmp_cds.pos[0], pos0[0])) ## false
+
+    def test_vector(self):
+        rot_a = ic.angleAxisNormalized(0.6, np.array([1.0, 2.0, 3.0]))
+        pos_a = np.array([1.0, 2.0, 3.0])
+        cds_a = coordinates(pos_a, rot_a)
+
+        vec = np.array([0.3, 0.2, 0.1])
+        res = cds_a.rotate_vector(vec)
+        self.assertFalse( ic.eps_eq(res, vec) )## not modify vec
+        self.assertTrue ( ic.eps_eq(rot_a.dot(vec), res) )
+
+        cds_a.rotateVector(vec)
+        self.assertTrue( ic.eps_eq(res, vec) )## vec modified
+
+        vec = np.array([0.3, 0.2, 0.1])
+        res = cds_a.inverse_rotate_vector(vec)
+        self.assertFalse( ic.eps_eq(res, vec) )## not modify vec
+        self.assertTrue ( ic.eps_eq(rot_a.transpose().dot(vec), res) )
+
+        cds_a.inverseRotateVector(vec)
+        self.assertTrue( ic.eps_eq(res, vec) )## vec modified
+
+        vec = np.array([0.3, 0.2, 0.1])
+        res = cds_a.transform_vector(vec)
+        self.assertFalse( ic.eps_eq(res, vec) )## not modify vec
+        self.assertTrue ( ic.eps_eq(rot_a.dot(vec) + pos_a, res) )
+
+        cds_a.transformVector(vec)
+        self.assertTrue( ic.eps_eq(res, vec) )## vec modified
+
+        vec = np.array([0.3, 0.2, 0.1])
+        res = cds_a.inverse_transform_vector(vec)
+        self.assertFalse( ic.eps_eq(res, vec) )## not modify vec
+        self.assertTrue ( ic.eps_eq(rot_a.transpose().dot(vec) -  rot_a.transpose().dot(pos_a), res) )
+
+        cds_a.inverseTransformVector(vec)
+        self.assertTrue( ic.eps_eq(res, vec) )## vec modified
 
     def test_rotate(self):
         rot_a = ic.angleAxisNormalized(0.6, np.array([1.0, 2.0, 3.0]))
@@ -249,7 +288,11 @@ class TestCoordinates(unittest.TestCase):
         rot_a = ic.angleAxisNormalized(0.6, np.array([1.0, 2.0, 3.0]))
         pos_a = np.array([1.0, 2.0, 3.0])
         cds_a = coordinates(pos_a, rot_a)
+        cds_org = cds_a.copy()
         inv_a = cds_a.inverse_transformation()
+
+        self.assertTrue( (cds_a is not cds_org) )
+        self.assertTrue(cds_a.equal(cds_org))
 
         self.assertTrue(ic.eps_eq(cds_a.toPosition().dot(inv_a.toPosition()), np.identity(4)))
 
@@ -257,6 +300,11 @@ class TestCoordinates(unittest.TestCase):
 
         self.assertTrue(ic.eps_eq(cds_a.pos, np.zeros(3)))
         self.assertTrue(ic.eps_eq(cds_a.rot, np.identity(3)))
+
+        self.assertFalse(cds_a.equal(cds_org))
+
+        cds_org.inverse() ## modify cds_org
+        self.assertTrue(inv_a.equal(cds_org))
 
     def test_transformation(self):
         rot_a = ic.angleAxisNormalized(0.6, np.array([1.0, 2.0, 3.0]))
