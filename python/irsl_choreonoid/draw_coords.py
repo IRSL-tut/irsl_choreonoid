@@ -3,6 +3,7 @@ import numpy as np
 
 from .irsl_draw_object import *
 from .robot_util import make_coordinates
+from cnoid.IRSLCoords import coordinates
 
 ###
 class DrawCoords(object):
@@ -139,7 +140,7 @@ class DrawCoords(object):
 #        return closure_func__
 
 class DrawCoordsList(object):
-    """DrawCoordsList(object):
+    """Drawing list of coordinates
     """
     def __init__(self, x_color=np.array([1,0,0]), y_color=np.array([0,1,0]), z_color=np.array([0,0,1]), length=0.1, width=None):
         """DrawCoordsList(initializer)
@@ -166,53 +167,63 @@ class DrawCoordsList(object):
         self.hide()
         self.__interface = None
     @property
+    def count(self):
+        """
+        Returns:
+            int : current number of coords stored in this instance
+        """
+        return self.__count
+    @property
     def T(self):
+        """
+        Returns:
+            numpy.array : 4x4 matrix, homogeneous transformation matrix (cnoidPosition)
+        """
         return self.__interface.T
     @T.setter
     def T(self, _in):
         self.__interface.T = _in
     @property
     def interface(self):
+        """
+        Returns:
+            cnoid.DrawInterface.DrawInterface : actual instance to draw lines
+
+        """
         return self.__interface
+
     def setOrigin(self, coords):
-        """setOrigin(self, coords):
+        """Setting new origin
 
         Args:
-
-        Returns:
+            coords (cnoid.IRSLCoords.coordinates) : new origin to be set
 
         """
         self.__interface.setOrigin(coords)
 
     def getOrigin(self):
-        """getOrigin(self):
+        """Getting current origin
 
         Args:
+            None
 
         Returns:
+            cnoid.IRSLCoords.coordinates : current origin
 
         """
         return self.__interface.getOrigin()
 
     def setLineWidth(self, _width):
-        """setLineWidth(self, _width):
+        """Set line width
 
         Args:
-
-        Returns:
+            _width (float) : line width to be set
 
         """
         self.__interface.setLineWidth(_width)
         self.__width = _width
 
     def reset(self):
-        """reset(self):
-
-        Args:
-
-        Returns:
-
-        """
         self.__interface = di.DrawInterface(self.__x_color)
         self.__x_color_index = 0
         self.__y_color_index = self.__interface.addColor(self.__y_color)
@@ -221,44 +232,28 @@ class DrawCoordsList(object):
         self.__count = 0
 
     def flush(self):
-        """flush(self):
+        """Force rendering coords
 
         Args:
-
-        Returns:
+            None
 
         """
         self.__interface.flush()
         self.__interface.render()
 
     def hide(self, start=0, length=0):
-        """hide(self, start=0, length=0):
-
-        Args:
-
-        Returns:
-
-        """
         self.__interface.hide(True)
         self.flush()
 
     def show(self, start=0, length=0):
-        """show(self, start=0, length=0):
-
-        Args:
-
-        Returns:
-
-        """
         self.__interface.show(True)
         self.flush()
 
     def clear(self):
-        """clear(self):
+        """Clear all drawn coords
 
         Args:
-
-        Returns:
+            None
 
         """
         self.__interface.hide(True)
@@ -266,11 +261,14 @@ class DrawCoordsList(object):
         self.reset()
 
     def addCoords(self, coords, flush=False):
-        """addCoords(self, coords, flush=False):
+        """Draw coordinates (3-axis, position and rotation)
 
         Args:
+            coords (cnoid.IRSLCoords.coordinates) : coordinates to be drawn
+            flush (boolean, default = False) : if True, rendering scene immediately
 
         Returns:
+            int : number of drawn coords
 
         """
         if flush:
@@ -280,13 +278,17 @@ class DrawCoordsList(object):
             self.__interface.show(True)
             self.flush()
         self.__count += 1
+        return self.__count
 
     def addCross(self, coords, flush=False):
-        """addCross(self, coords, flush=False):
+        """Draw cross (3-axis, line is crossing at center)
 
         Args:
+            coords (cnoid.IRSLCoords.coordinates) : coordinates to be drawn
+            flush (boolean, default = False) : if True, rendering scene immediately
 
         Returns:
+            int : number of drawn coords
 
         """
         if flush:
@@ -296,45 +298,58 @@ class DrawCoordsList(object):
             self.__interface.show(True)
             self.flush()
         self.__count += 1
+        return self.__count
 
-    def generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
-        """generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
+    def addPoint(self, point, flush=False):
+        """Draw point (cross with no rotation)
 
         Args:
+            point (numpy.array) : 1x3 vector, point to be drawn
+            flush (boolean, default = False) : if True, rendering scene immediately
 
         Returns:
+            int : number of drawn coords
 
         """
+        if flush:
+            self.__interface.hide(False)
+        coords = coordinates(point)
+        self.__interface.addBDAxis3(coords, self.__length, self.__x_color_index, self.__y_color_index, self.__z_color_index)
+        if flush:
+            self.__interface.show(True)
+            self.flush()
+        self.__count += 1
+        return self.__count
+
+    def generatePointFunction(self, length=0.1, maxlength=0, index=0, flush=True):
         def closure_func__(lst, **kwargs):
             pos = np.array(lst[index][1:])
-            cds_ = iu.coordinates(pos)
+            cds_ = coordinates(pos)
             self.addCross(cds_,flush=flush)
         return closure_func__
 
     def generateCoordsFunction(self, length=0.1, maxlength=0, index=0, flush=True):
-        """generateCoordsFunction(self, length=0.1, maxlength=0, index=0, flush=True):
-
-        Args:
-
-        Returns:
-
-        """
         def closure_func__(lst, **kwargs):
             lst = lst[index]
             pos = np.array(lst[1:4])
             rpy = np.array(lst[4:7])
-            cds_ = iu.coordinates(pos)
+            cds_ = coordinates(pos)
             cds_.setRPY(rpy)
             self.addCoords(cds_,flush=flush)
         return closure_func__
 
 class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
-    """DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
+    """DrawCoordsListWrapped(irsl_choreonoid.DrawCoordsList, irsl_choreonoid.irsl_draw_object.coordsWrapper):
+
+Wrapped version of irsl_choreonoid.DrawCoordsList
+
+Using for drawing coordinates interactively
     """
     def __init__(self, **kwargs):
-        """__init__(self, **kwargs):
+        """__init__(self, \*\*kwargs):
 
         Args:
+            kwargs (dict[str, param]) : this is passing to irsl_choreonoid.robot_util.make_coordinates for making initial_coords of coordsWrapper
 
         """
         DrawCoordsList.__init__(self, **kwargs)
@@ -347,12 +362,17 @@ class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
 
 class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
-    """GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
+    """class GeneralDrawInterfaceWrapped(cnoid.DrawInterface.GeneralDrawInterface, irsl_choreonoid.irsl_draw_object.coordsWrapper):
+
+Wrapped version of cnoid.DrawInterface.GeneralDrawInterface
+
+Using for drawing SceneGraph objects interactively
     """
     def __init__(self, **kwargs):
-        """__init__(self, **kwargs):
+        """__init__(self, \*\*kwargs):
 
         Args:
+            kwargs (dict[str, param]) : this is passing to irsl_choreonoid.robot_util.make_coordinates for making initial_coords of coordsWrapper
 
         """
         di.GeneralDrawInterface.__init__(self)
@@ -365,27 +385,31 @@ class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
 
     def flush(self):
-        """flush(self):
+        """Force rendering scene
 
         Args:
-
-        Returns:
+            None
 
         """
         super().flush()
         super().render()
 
     def addObject(self, obj, update=False):
+        """This method is overrided, just passing arguments to addPyObject
+        """
         self.addPyObject(obj, update=update)
+
     def removeObject(self, obj, update=False):
+        """This method is overrided, just passing arguments to removePyObject
+        """
         self.removePyObject(obj, update=update)
 
     def addPyObject(self, obj, update=False):
-        """addPyObject(self, obj, update=False):
+        """Adding object to be drawn
 
         Args:
-
-        Returns:
+            obj (cnoid.Util.SgNode) : object to be drawn
+            update (boolean, default = False) : if True, rendering scene immediately
 
         """
         if type(obj) is coordsWrapper:
@@ -395,11 +419,11 @@ class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
             super().addPyObject(obj, update)
 
     def removePyObject(self, obj, update=False):
-        """removePyObject(self, obj, update=False):
+        """Removing drawn object
 
         Args:
-
-        Returns:
+            obj (cnoid.Util.SgNode) : object to be removed
+            update (boolean, default = False) : if True, rendering scene immediately
 
         """
         if type(obj) is coordsWrapper:

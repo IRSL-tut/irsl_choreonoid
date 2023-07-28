@@ -25,16 +25,7 @@ Matrix4RM mid_coords_pos_(const double p, ref_mat4 c1, ref_mat4 c2, const double
 
 PYBIND11_MODULE(IRSLCoords, m)
 {
-    m.doc() = R"__IRSL__(
-    coordinates for choreonoid
-
-    .. currentmodule:: python_example
-
-    .. autosummary::
-        :toctree: _generate
-
-    )__IRSL__";
-
+    m.doc() = R"__IRSL__(Functions for manipulating 4x4 matrix as homogeneous transformation matrix)__IRSL__";
 
     py::module::import("cnoid.Body");
 
@@ -73,14 +64,62 @@ PYBIND11_MODULE(IRSLCoords, m)
             return true; }, py::arg("a"), py::arg("b"), py::arg("eps") = 0.00001);
 
     /// for cnoid::Position
-    m.def("PositionInverse", [](ref_mat4 in_p) -> Matrix4RM { cnoidPosition p(in_p); return p.inverse().matrix(); });
-    m.def("Position_translation", [](ref_mat4 in_p) { cnoidPosition p(in_p); return Vector3(p.translation()); });
-    m.def("Position_quaternion", [](ref_mat4 in_p) { Quaternion q(cnoidPosition(in_p).linear());
-            return Vector4(q.x(), q.y(), q.z(), q.w()); });
-    m.def("Position_rotation", [](ref_mat4 in_p) { cnoidPosition p(in_p); return Matrix3RM(p.linear()); });
+    m.def("PositionInverse", [](ref_mat4 _position) -> Matrix4RM { cnoidPosition p(_position); return p.inverse().matrix(); }, R"__IRSL__(
+Generating inverse transformation matrix
+
+Args:
+    _position (numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+Returns:
+    numpy.array : 4x4 matrix, inverse matrix of _position
+          )__IRSL__");
+    m.def("Position_translation", [](ref_mat4 _position) { cnoidPosition p(_position); return Vector3(p.translation()); }, R"__IRSL__(
+Extracting translation part of transformation matrix
+
+Args:
+    _position (numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+Returns:
+    numpy.array : 1x3 vector, translation part of _position
+          )__IRSL__");
+    m.def("Position_quaternion", [](ref_mat4 _position) { Quaternion q(cnoidPosition(_position).linear());
+            return Vector4(q.x(), q.y(), q.z(), q.w()); }, R"__IRSL__(
+Extracting rotation part of transformation matrix
+
+Args:
+    _position (numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+Returns:
+    numpy.array : 1x4 vector, quaternion(x,y,z,w), rotation part of _position
+          )__IRSL__");
+    m.def("Position_rotation", [](ref_mat4 _position) { cnoidPosition p(_position); return Matrix3RM(p.linear()); }, R"__IRSL__(
+Extracting rotation part of transformation matrix
+
+Args:
+    _position (numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+Returns:
+    numpy.array : 3x3 matrix, rotation matrix, rotation part of _position
+          )__IRSL__");
     m.def("rotationToQuaternion", [](ref_mat3 rot) { Quaternion q(rot);
-            return Vector4(q.x(), q.y(), q.z(), q.w()); });
-    m.def("quaternionToRotation", [](ref_vec4 q) { return Matrix3RM(Quaternion(q)); });
+            return Vector4(q.x(), q.y(), q.z(), q.w()); }, R"__IRSL__(
+Converting rotation matrix to quaternion
+
+Args:
+    rot (numpy.array) : 3x3, rotation matrix
+
+Returns:
+    numpy.array : 1x4 vector, quaternion(x,y,z,w)
+          )__IRSL__");
+    m.def("quaternionToRotation", [](ref_vec4 q) { return Matrix3RM(Quaternion(q)); }, R"__IRSL__(
+Converting quaternion to rotation matrix
+
+Args:
+    rot (numpy.array) : 1x4 vector, quaternion(x,y,z,w)
+
+Returns:
+    numpy.array : 3x3, rotation matrix
+          )__IRSL__");
 
     m.def("cnoidPosition", [](ref_mat3 rot, ref_vec3 trans) -> Matrix4RM {
             cnoidPosition ret; ret.setIdentity(); ret.linear() = rot; ret.translation() = trans; return ret.matrix(); });
@@ -97,7 +136,16 @@ PYBIND11_MODULE(IRSLCoords, m)
     m.def("normalizeVector", [](ref_vec4 v4) { return v4.normalized(); });
 
     m.def("angleAxisNormalized", [](double angle, ref_vec3 axis) {
-            Vector3 ax_ = axis.normalized(); return Matrix3RM(AngleAxis(angle, ax_)); });
+          Vector3 ax_ = axis.normalized(); return Matrix3RM(AngleAxis(angle, ax_)); }, R"__IRSL__(
+Converting AngleAxis to rotation matrix, axis is normalized
+
+Args:
+    angle (float) : rotation angle [radian]
+    axis (numpy.array) : 1x3 vector, rotation axis
+
+Returns:
+    numpy.array : 3x3, rotation matrix
+          )__IRSL__");
     m.def("Position_rotate_with_matrix", [](ref_mat4 cds, ref_mat3 mat, const std::string &wrt) -> Matrix4RM {
             cnoidPosition coords(cds);
             Matrix3 mat_(mat);
@@ -180,8 +228,7 @@ PYBIND11_MODULE(IRSLCoords, m)
         })
     .def_property("pos",
                   [](coordinates &self) { return self.pos; },
-                  [](coordinates &self, ref_vec3 vec) { self.pos = vec; },
-                  R"__IRSL__(
+                  [](coordinates &self, ref_vec3 vec) { self.pos = vec; }, R"__IRSL__(
 Translation part ( real vector with 3 elements, x, y, z ) of transformation matrix
 
 Returns:
@@ -199,8 +246,7 @@ Returns:
                  )__IRSL__")
     .def_property("cnoidPosition",
                   [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
-                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; },
-                  R"__IRSL__(
+                  [](coordinates &self, Eigen::Ref<const Matrix4RM> T) { cnoidPosition p(T); self = p; }, R"__IRSL__(
 Transformation matrix ( 4x4 homogeneous transformation matrix, using in Choreonoid )
 
 Returns:
@@ -215,8 +261,7 @@ Returns:
                   [](coordinates &self, const ref_vec4 ret) {
                       double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
                       self.setRotationAngle(an_, ax_);
-                      return &self; },
-                  R"__IRSL__(
+                      return &self; }, R"__IRSL__(
 Rotation part of transformation ( Angle axis, real vector with 4 elements, ax, ay, az, rotation-angle [radian] )
 
 Returns:
@@ -225,8 +270,7 @@ Returns:
                  )__IRSL__")
     .def_property("RPY",
                   [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; },
-                  [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); },
-                  R"__IRSL__(
+                  [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); }, R"__IRSL__(
 Rotation part of transformation ( RPY angle, real vector with 3 elements, roll [radian], pitch [radian], yaw [radian] )
 
 Returns:
@@ -235,36 +279,25 @@ Returns:
                  )__IRSL__")
     .def_property("quaternion",
                   [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
-                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.rot = Matrix3(q); },
-                  R"__IRSL__(
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.rot = Matrix3(q); }, R"__IRSL__(
 Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
 
 Returns:
     numpy.array : 1x4 vector
 
                  )__IRSL__")
-#if 0 // just test (do not make instance and change value of passed instance) // not succeeded
-    #include <iostream>
     .def("setCoordsToPosition",
-         [](coordinates &self, Isometry3::MatrixType &_to) {
-             // Isometry3 T(Isometry3::Identity());
-             // Isometry3::MatrixType &mt = T.matrix();
-             // Isometry3 U(mt);
-             // print _to, address, elements
-             std::cerr << "_to(a): " << (void *)&_to << std::endl;
-             std::cerr << "_to(e0): " << _to << std::endl;
-             //Isometry3 &_T(_to);
+         [](coordinates &self, Eigen::Ref<Matrix4RM> position_to_be_set) {
              Isometry3 _T(Isometry3::Identity());
-             // _T.matrix() = _to;
-             _T.translation() = self.pos;
-             _T.linear() = self.rot;
-             _to = _T.matrix();
-             std::cerr << "_to(e1): " << _to << std::endl;
-             // print _to, elements
-         })
-#endif
-    .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); },
-         R"__IRSL__(
+             _T.translation() = self.pos; _T.linear() = self.rot;
+             position_to_be_set = _T.matrix(); }, R"__IRSL__(
+Set transformation matrix (changing value of argument)
+
+Args:
+    position_to_be_set(numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+                 )__IRSL__")
+    .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); }, R"__IRSL__(
 Creating new instance with the same value of this instance
 
 Returns:
@@ -382,17 +415,47 @@ Returns:
             double an_ = ret(3); Vector3 ax_(ret(0), ret(1), ret(2));
             self.setRotationAngle(an_, ax_);
             return &self; } )
-    .def_property_readonly("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; } )
-    .def_property_readonly("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; } )
-    .def_property_readonly("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; } )
+    .def_property_readonly("x_axis", [](const coordinates &self) { Vector3 ret; self.x_axis(ret); return ret; }, R"__IRSL__(
+Extracting x-axis of rotation matrix (1st column vector)
+
+Returns:
+    numpy.array : 1x3 vector, x-axis of rotation matrix (1st column vector)
+                           )__IRSL__")
+    .def_property_readonly("y_axis", [](const coordinates &self) { Vector3 ret; self.y_axis(ret); return ret; }, R"__IRSL__(
+Extracting y-axis of rotation matrix (2nd column vector)
+
+Returns:
+    numpy.array : 1x3 vector, y-axis of rotation matrix (2nd column vector)
+                           )__IRSL__")
+    .def_property_readonly("z_axis", [](const coordinates &self) { Vector3 ret; self.z_axis(ret); return ret; }, R"__IRSL__(
+Extracting z-axis of rotation matrix (3rd column vector)
+
+Returns:
+    numpy.array : 1x3 vector, z-axis of rotation matrix (3rd column vector)
+                           )__IRSL__")
     .def("getRPY", [](const coordinates &self) { Vector3 ret; self.getRPY(ret); return ret; } )
     .def("setRPY", [](coordinates &self, ref_vec3 rpy) { self.setRPY(rpy); } )
     .def("setRPY", [](coordinates &self, double r, double p, double y) { self.setRPY(r,p,y); } )
-    .def("inverse", [](coordinates &self) { self.inverse(); return &self; } )
+    .def("inverse", [](coordinates &self) { self.inverse(); return &self; }, R"__IRSL__(
+Updating self transformation as an inverse transformation
+
+Returns:
+    cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+         )__IRSL__")
     .def("mid_coords", [](const coordinates &self, const double p, const coordinates &c2, const double eps) {
             coordinatesPtr ret(new coordinates());
             self.mid_coords(*ret, p, c2, eps);
-            return ret; }, py::arg("p"), py::arg("c2"), py::arg("eps") = 0.00001)
+            return ret; }, py::arg("p"), py::arg("c2"), py::arg("eps") = 0.00001, R"__IRSL__(
+Calculating interpolated coordinates
+
+Args:
+    p (float) : parameter 0.0 to 1.0, if p == 0.0, coords euqal to self is return. If p == 1.0, coords equal to c2 is return.
+    c2 (cnoid.IRSLCoords.coordinates) : target coordinates
+    eps (float, default = 0.00001) : precision
+
+Returns:
+    cnoid.IRSLCoords.coordinates : Interpolated coordinates
+         )__IRSL__")
     ;
 
     // add method to ..
