@@ -15,6 +15,7 @@ import cnoid.Util
 import numpy as np
 
 from urllib.parse import urlparse
+import os
 
 ##
 ## python utility
@@ -32,7 +33,7 @@ def parseURL(url):
         url (str): url [ url is like 'scheme://netloc/xxx/yyy/zzz' ]
 
     Returns:
-        str: absolute path
+        str: Absolute path
 
     Examples:
         >>> parseURL('choreonoid://share/dir/file')
@@ -49,6 +50,12 @@ def parseURL(url):
 
         >>> parseURL('file://~/dir/file')
         /home/user/dir/file
+
+    Note:
+    URL is like 'scheme://netloc/xxx/yyy/zzz'
+
+    Implemented scheme is 'choreonoid', 'env', 'file'
+
     """
 
     if not '://' in url:
