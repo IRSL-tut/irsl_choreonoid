@@ -286,26 +286,17 @@ Returns:
     numpy.array : 1x4 vector
 
                  )__IRSL__")
-#if 0 // just test (do not make instance and change value of passed instance) // not succeeded
-    #include <iostream>
     .def("setCoordsToPosition",
-         [](coordinates &self, Isometry3::MatrixType &_to) {
-             // Isometry3 T(Isometry3::Identity());
-             // Isometry3::MatrixType &mt = T.matrix();
-             // Isometry3 U(mt);
-             // print _to, address, elements
-             std::cerr << "_to(a): " << (void *)&_to << std::endl;
-             std::cerr << "_to(e0): " << _to << std::endl;
-             //Isometry3 &_T(_to);
+         [](coordinates &self, Eigen::Ref<Matrix4RM> position_to_be_set) {
              Isometry3 _T(Isometry3::Identity());
-             // _T.matrix() = _to;
-             _T.translation() = self.pos;
-             _T.linear() = self.rot;
-             _to = _T.matrix();
-             std::cerr << "_to(e1): " << _to << std::endl;
-             // print _to, elements
-         })
-#endif
+             _T.translation() = self.pos; _T.linear() = self.rot;
+             position_to_be_set = _T.matrix(); }, R"__IRSL__(
+Set transformation matrix (changing value of argument)
+
+Args:
+    position_to_be_set(numpy.array) : 4x4 homogeneous transformation matrix, using in Choreonoid
+
+                 )__IRSL__")
     .def("copy", [](const coordinates &self) { return new coordinates(self.pos, self.rot); }, R"__IRSL__(
 Creating new instance with the same value of this instance
 
