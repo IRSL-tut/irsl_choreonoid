@@ -188,23 +188,33 @@ class IKWrapper(object):
             return id_name_joint
         return None
 
-    def endEffector(self, **kwargs):
-        """Returns current endEffector
+    @property
+    def endEffector(self):
+        """Current 6DOF coordinates of end-effector
 
-        Args:
-            kwargs (dict[str, param]) : ignored
         Returns:
             cnoid.IRSLCoords.coordinates : coordinates of current end-effector
 
         """
         return ic.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
 
-    def resetJointWeights(self):
-        """resetJointWeights(self):
+    def getEndEffector(self, **kwargs):
+        """Getting end-effector (function version of self.endEffector)
 
         Args:
+            kwargs (dict[str, param]) : ignored
 
         Returns:
+            cnoid.IRSLCoords.coordinates : end-effector
+
+        """
+        return ic.coordinates(self.__tip_link.getPosition().dot(self.__tip_to_eef_cnoid))
+
+    def resetJointWeights(self):
+        """Reset current joint-list to default joint-list (reverting effects of using setJoints)
+
+        Args:
+            None
 
         """
         self.__current_joints = [j for j in self.__default_joints]
