@@ -209,7 +209,8 @@ namespace cnoid {
         void set(const Matrix3 &r) { rot = r; }
         void set(const Quaternion &q) { rot = q; }
         void set(const AngleAxis &ax) { rot = ax; }
-
+        void newcoords(const coordinates &c) { *this = c; }
+        void newcoords(const cnoidPosition &p) { *this = p; }
         bool equal(const coordinates &c, const double eps = 0.00001) const
         {
             if (!eps_eq(pos, c.pos, eps)) return false;

@@ -251,7 +251,7 @@ Returns:
                  )__IRSL__")
     .def_property("cnoidPosition",
                   [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
-                  [](coordinates &self, ref_mat4 T) { cnoidPosition p(T); self = p; }, R"__IRSL__(
+                  [](coordinates &self, ref_mat4 T) { cnoidPosition p(T); self.newcoords(p); }, R"__IRSL__(
 Transformation matrix ( 4x4 homogeneous transformation matrix, using in Choreonoid )
 
 Returns:
@@ -284,7 +284,7 @@ Returns:
                  )__IRSL__")
     .def_property("quaternion",
                   [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
-                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.rot = Matrix3(q); }, R"__IRSL__(
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.set(q); }, R"__IRSL__(
 Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
 
 Returns:
@@ -312,6 +312,7 @@ Returns:
     .def("equal", &coordinates::equal, py::arg("cds"), py::arg("eps") = 0.00001)
     .def("toPosition",
          [](const coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); })
+    .def("newcoords", [](coordinates &self, const coordinates &c) { self.newcoords(c); return &self; })
     .def("rotate_with_matrix",
          [](coordinates &self, ref_mat3 mat, coordinates::wrt wrt)
          {  self.rotate_with_matrix(mat, wrt); return &self; },
