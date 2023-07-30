@@ -41,42 +41,42 @@ def make_coordinates(coords_dict):
     """
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):
-        if key in coords_map:
-            pos = np.array(coords_map[key])
+        if key in coords_dict:
+            pos = np.array(coords_dict[key])
             break
     for key in ('q', 'quaternion'):
-        if key in coords_map:
-            q = np.array(coords_map[key])
+        if key in coords_dict:
+            q = np.array(coords_dict[key])
             if pos is None:
                 return ic.coordinates(q)
             else:
                 return ic.coordinates(pos, q)
     for key in ('angle-axis', 'aa'):
-        if key in coords_map:
-            aa = coords_map[key]
+        if key in coords_dict:
+            aa = coords_dict[key]
             rot = ic.angleAxisNormalized(aa[3], np.array(aa[:3]))
             if pos is None:
                 return ic.coordinates(rot)
             else:
                 return ic.coordinates(pos, rot)
     for key in ('rotation', 'matrix', 'mat', 'rot'):
-        if key in coords_map:
-            rot = np.array(coords_map[key])
+        if key in coords_dict:
+            rot = np.array(coords_dict[key])
             if pos is None:
                 return ic.coordinates(rot)
             else:
                 return ic.coordinates(pos, rot)
     for key in ('rpy', 'RPY', 'roll-pitch-yaw'):
-        if key in coords_map:
+        if key in coords_dict:
             if pos is None:
                 ret = ic.coordinates()
             else:
                 ret = ic.coordinates(pos)
-            ret.setRPY(np.array(coords_map[key]))
+            ret.setRPY(np.array(coords_dict[key]))
             return ret
     if pos is not None:
         return ic.coordinates(pos)
-    raise Exception('{}'.format(coords_map))
+    raise Exception('{}'.format(coords_dict))
 
 def make_coords_dict(coords):
     """Generating dictonary describing transformation
@@ -91,7 +91,7 @@ def make_coords_dict(coords):
         >>> make_coords_dict( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
-    return {'pos': coords.pos.tolist(), 'aa': coords.rotationAngle().tolist()}
+    return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
 
 ##
 ## IKWrapper
@@ -692,7 +692,7 @@ cnoid.Body.Link.setOffsetCoords = lambda self, cds: ic.setOffsetCoords(self, cds
 class RobotModel(object):
     def __init__(self, robot):
         self.item = None
-        if isinstance(robot, BodyItem):
+        if hasattr(robot, 'body'): ## check BodyItem
             self.robot = robot.body
             self.item = robot
         elif isinstance(robot, cnoid.Body.Body):
@@ -939,3 +939,6 @@ def merge_mask(tp1, tp2):
     return tuple([x or y for (x, y) in zip(tp1, tp2)])
 def invert_mask(tp1):
     return tuple([0 if x else 1 for x in tp1])
+
+if isInChoreonoid():
+    from .cnoid_base import *

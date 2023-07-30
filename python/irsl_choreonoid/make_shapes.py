@@ -180,7 +180,7 @@ def makeCylinder(radius, height, wrapped=True, **kwargs):
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCylinder(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
@@ -193,7 +193,7 @@ def makeSphere(radius, wrapped=True, **kwargs):
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCylinder(radius)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
@@ -206,7 +206,7 @@ def makeCone(radius, height, wrapped=True, **kwargs):
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCone(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
@@ -219,7 +219,7 @@ def makeCapsule(radius, height, wrapped=True, **kwargs):
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCapsule(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
@@ -232,7 +232,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
 
     """
     mg = cnoid.Util.MeshGenerator()
-    parseMeshGeneratorOption(mg, **kwrags)
+    parseMeshGeneratorOption(mg, **kwargs)
     if beginAngle is not None and endAngle is not None:
         mesh = mg.generateTorus(radius, corssSectionRadius, beginAngle, endAngle)
     else:
