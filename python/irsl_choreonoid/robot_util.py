@@ -940,5 +940,588 @@ def merge_mask(tp1, tp2):
 def invert_mask(tp1):
     return tuple([0 if x else 1 for x in tp1])
 
+from .irsl_draw_object import coordsWrapper
+class RobotModelWrapped(coordsWrapper): ## with wrapper
+    """RobotModel for programming Inteactively
+    """
+    def __init__(self, robot, **kwargs):
+        """
+        Args:
+            robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
+
+        """
+        super().__init__(target = self, update_callback = lambda : self.hook() )
+        self.__item = None
+        if hasattr(robot, 'body'): ## check BodyItem ##if isinstance(robot, BodyItem):
+            self.__robot = robot.body
+            self.__item  = robot
+        elif isinstance(robot, cnoid.Body.Body):
+            self.__robot = robot
+        else:
+            raise TypeError('')
+
+        self.pose_angle_map = {}
+        self.pose_coords_map = {}
+
+        self.__joint_list = self.__robot.jointList()
+        self.__joint_map = {}
+        for j in self.__joint_list:
+            self.__joint_map[j.jointName] = j
+
+        self.eef_map = {}
+        if isInChoreonoid():
+            self.mode = 1 ## 1: drawing
+        else:
+            self.mode = 0 ## 0: kinematics
+
+    def registerNamedPose(self, name, angles = None, root_coords = None):
+        """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
+
+        Args:
+            name (str) : Name of registered pose
+            angles (numpy.array) : Angle-vector to be able to pass irsl_choreonoid.robot_util.RobotModelWrapped.angleVector
+            root_coords (cnoid.IRSLCoords.coordinates) : Coordinates of Root
+
+        """
+        if angles is not None:
+            self.pose_angle_map[name] = angles
+        if root_coords is not None:
+            self.pose_coords_map[name] = root_coords
+
+    def registerEndEffector(self, name, tip_link, tip_link_to_eef=None, joint_list=None, joint_tuples=None):
+        """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.getLimb, etc.
+
+        Args:
+            name (str) : Name of limb as registered end-effector
+            tip_link (str or cnoid.Body.Link) : Link which is direct parent of coordinates of end-effector
+            tip_link_to_eef (cnoid.IRSLCoords.coordinates) : Coordinates tip_link to end_effector represented on link's coordinate
+            joint_list (list[str] or list[cnoid.Body.Link]) :
+            joint_tuples ( tuple((actual_name:str, nickname:str)) ) : Tuple of actual_name and nick_name
+
+        """
+        eef = self.EndEffector(self.__robot, name, tip_link, tip_link_to_eef, joint_list, joint_tuples,
+                               hook = lambda : self.hook() )
+        self.eef_map[name] = eef
+
+    class EndEffector(object):
+        """EndEffector class for manipulating end-effector, limb, joint-group
+        """
+        def __init__(self, robot, name, tip_link, tip_link_to_eef=None, joint_list=None, joint_tuples=None, hook=None):
+            """Use RobotModelWrapped.registerEndEffector
+            """
+            self.__robot = robot
+            self.__name = name
+            if type(tip_link) is str:
+                self.__tip_link = self.__robot.link(tip_link)
+            else:
+                self.__tip_link = tip_link
+            if tip_link_to_eef is None:
+                self.__tip_link_to_eef = ic.coordinates()
+            else:
+                self.__tip_link_to_eef = tip_link_to_eef
+            self.__joint_list = []
+            self.__joint_map = {}
+            self.__rename_map = {}
+            self.__hook = hook
+            ##
+            if joint_tuples is not None:
+                self.__genJointList(joint_tuples)
+            elif joint_list is not None:
+                for jnm in joint_list:
+                    j = self.__robot.joint(jnm)
+                    if j is None:
+                        ### warning
+                        pass
+                    else:
+                        self.__joint_map[jnm] = j
+                        self.__joint_list.append(j)
+            ##
+            self._ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
+                                  use_joints=self.__joint_list if self.__joint_list is not None else None)
+
+        def __genJointList(self, joint_tuples): ## joint_tuples is not None ((real_name, nick_name), ...
+            _lst = []
+            _jmap = {}
+            _rmap = {}
+            for jt in joint_tuples:
+                _rmap[jt[1]] = jt[0]
+                j = self.__robot.joint(jt[0])
+                if j is None:
+                    ### warning
+                    pass
+                else:
+                    _lst.append(j)
+                    _jmap[jt[0]] = j
+            self.__joint_list = _lst
+            self.__joint_map  = _jmap
+            self.__rename_map = _rmap
+
+        def rename(self, nick_name):
+            """Renaming using registered nick-name
+
+            Args:
+                nick_name (str) : nick-name
+
+            Returns:
+                str : actual name
+
+            """
+            if self.__rename_map is None:
+                return nick_name
+            if nick_name in self.__rename_map:
+                return self.__rename_map[nick_name]
+            else:
+                return nick_name
+
+        @property
+        def endEffector(self):
+            """Getting coordinate of the end-effector (return value is generated on demand)
+
+            Returns:
+                cnoid.IRSLCoords.coordinates : Coordinate of the end-effector
+
+            """
+            ret = self.__tip_link.getCoords()
+            ret.transform(self.__tip_link_to_eef)
+            return ret
+
+        def inverseKinematics(self, coords, **kwargs):
+            """Solving inverse kinematic on this limb
+
+            Args:
+                coords (cnoid.IRSLCoords.coordinates) : Coordinate of the target
+                \*\*kwargs ( dict ) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            result = self.__ikw.inverseKinematics(coords, **kwargs)
+            if self.__hook is not None:
+                self.__hook()
+            return result
+
+        def jointAngle(self, name, angle = None):
+            """Setting or getting angle of the joint (limb version)
+
+            Args:
+                name (str) : Name of a joint, 'nickname' is acceptable.
+                angle (float, optional) : Angle [radian] to be set
+
+            Returns:
+                float : Angle of the joint, if do not find the name, None would be returned
+
+            """
+            if self.__joint_list is None:
+                ### warning
+                return None
+            res_ = None
+            nm = self.rename(name)
+            if nm in self.__joint_map:
+                if angle is not None:
+                    self.__joint_map[nm].q = angle
+                    if self.__hook is not None:
+                        self.__hook()
+                res_ = self.__joint_map[nm].q
+            else:
+                pass
+                ### warning
+            return res_
+
+        def setAngleMap(self, angle_map):
+            """Setting angles of the joint (limb version)
+
+            Args:
+                angle_map (dict[str, float]) : Keyword is a joint name and value is a joint angle. 'nickname' is acceptable.
+
+            Returns:
+                boolean : If angles is set, returns True
+
+            """
+            if self.__joint_list is None:
+                ### warning
+                return False
+            res = True
+            for k, v in angle_map.items():
+                nm = self.rename(k)
+                if nm in self.__joint_map:
+                    self.__joint_map[nm].q = v
+                else:
+                    res = False
+            if self.__hook is not None:
+                self.__hook()
+            return res
+
+        def angleVector(self, angle_vector = None):
+            """Setting or getting angle-vector (limb version)
+
+            Args:
+                angle_vector (numpy.array) : Vector of angle[radian] to be set
+
+            Returns:
+                numpy.array : Vector of angle[radian]
+
+            """
+            if self.__joint_list is None:
+                ### warning
+                return None
+            if angle_vector is not None:
+                for j, ang in zip(self.__joint_list, angle_vector):
+                    j.q = ang
+            ret = [ j.q for j in self.__joint_list ]
+            if self.__hook is not None:
+                self.__hook()
+            return np.array(ret)
+
+    @property
+    def robot(self):
+        """
+
+        Returns:
+            cnoid.Body.Body : Instance of robot model currently using
+
+        """
+        return self.__robot
+
+    @property
+    def T(self):
+        return self.__robot.rootLink.T
+    @T.setter
+    def T(self, _in):
+        self.__robot.rootLink.T = _in
+
+    def setMode(self, mode = None):
+        """Set updating mode
+
+        Args:
+            mode (int, optional) : Mode to be set (0\: kinematics mode, 1\: rendering mode)
+
+        Returns:
+            int : Current mode (0\: kinematics mode, 1\: rendering mode)
+
+        """
+        if mode is not None:
+            self.__mode = mode
+        return self.__mode
+
+    @property
+    def linkList(self):
+        """
+        Returns:
+            list [cnoid.Body.Link] : List of links
+
+        """
+        return self.__robot.links
+
+    @property
+    def jointList(self):
+        """
+        Returns:
+            list [cnoid.Body.Link] : List of joints
+
+        """
+        return self.__joint_list
+
+    def angleVector(self, angles = None):
+        """Setting or getting angle-vector
+
+        Args:
+            angle_vector (numpy.array) : Vector of angle[radian] to be set
+
+        Returns:
+            numpy.array : Vector of angle[radian]
+        """
+        res_ = self.__robot.angleVector(angles)
+        if angles is not None:
+            self.hook()
+        return res_
+
+    def jointAngle(self, name, angle=None):
+        """Setting or getting angle of the joint
+
+        Args:
+            name (str) : Name of a joint
+            angle (float, optional) : Angle [radian] to be set
+
+        Returns:
+            float : Angle of the joint, if do not find the name, None would be returned
+
+        """
+        if self.__joint_list is None:
+            ### warning
+            return None
+        res_ = None
+        if name in self.__joint_map:
+            if angle is not None:
+                self.__joint_map[name].q = angle
+                self.hook()
+            res_ = self.__joint_map[name].q
+        return res_
+
+    def setAngleMap(self, angle_map):
+        """Setting angles of the joint
+
+        Args:
+            angle_map (dict[str, float]) : Keyword is a joint name and value is a joint angle. 'nickname' is acceptable.
+
+        Returns:
+            boolean : If angles is set, returns True
+
+        """
+        if self.__joint_list is None:
+            ### warning
+            return False
+        res = True
+        for k, v in angle_map.items():
+            if k in self.__joint_map:
+                self.__joint_map[k].q = v
+            else:
+                res = False
+        self.hook()
+        return res
+
+    def rootCoords(self, coords = None):
+        """Getting or setting coordinates of root link of robot
+
+        Args:
+            coords (cnoid.IRSLCoords.coordinates, optional) : Coordinate to be set
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of root link of robot
+
+        """
+        if coords is not None:
+            self.newcoords(coords)
+        return self.copy()
+
+    def hook(self):
+        if self.__mode == 0: ## kinematics only
+            self.__robot.calcForwardKinematics()
+        elif self.__mode == 1: ## render
+            self.flush()
+
+    def flush(self):
+        if self.__robot is not None:
+            self.__robot.calcForwardKinematics()
+        if self.__item is not None:
+            self.__item.notifyKinematicStateChange()
+            ## MessageView.instance.flush()## TODO []
+
+    def setDefaultPose(self):
+        """Setting default pose if registered
+        """
+
+        self.setNamedPose('default')
+
+    def setNamedPose(self, name):
+        """Setting named pose, name should be registered by irsl_choreonoid.robot_util.RobotModelWrapped.registerNamedPose
+
+        Args:
+            name (str) : Name of registered pose
+
+        """
+        if name in self.pose_angle_map:
+            self.angleVector(self.pose_angle_map[name])
+        if name in self.pose_coords_map:
+            self.rootCoords(self.pose_coords_map[name])
+
+    def getLimb(self, limb_name):
+        """Getting limb as end-effector, name should be registered by irsl_choreonoid.robot_util.RobotModelWrapped.registerEndEffector
+
+        Args:
+            limb_name (str) : Name of registered limb as end-effector
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector
+
+        Raise:
+
+        """
+        if limb_name in self.eef_map:
+            return self.eef_map[limb_name]
+        elif limb_name == 'default':
+            ret = None
+            for v in self.eef_map.values():
+                ret = v
+                break
+            return ret
+        else:
+            raise Exeption('unknown limb name{}'.format(limb_name))
+
+    def getEndEffector(self, limb_name):
+        """Getting coordinates of end-effector of limb (return value is generated on demand)
+
+        Args:
+            limb_name (str) : Name of registered limb as end-effector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb
+
+        """
+        return self.getLimb(limb_name).EndEffector
+
+    @property
+    def rleg(self):
+        """Pre defined accessor of limb, same as self.getLimb('rleg')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (rleg)
+
+        """
+        return self.getLimb('rleg')
+    @property
+    def lleg(self):
+        """Pre defined accessor of limb, same as self.getLimb('lleg')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (lleg)
+
+        """
+        return self.getLimb('lleg')
+    @property
+    def rarm(self):
+        """Pre defined accessor of limb, same as self.getLimb('rarm')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (rarm)
+
+        """
+        return self.getLimb('rarm')
+    @property
+    def larm(self):
+        """Pre defined accessor of limb, same as self.getLimb('larm')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (larm)
+
+        """
+        return self.getLimb('larm')
+    @property
+    def arm(self):
+        """Pre defined accessor of limb, same as self.getLimb('arm')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (arm)
+
+        """
+        return self.getLimb('arm')
+    @property
+    def head(self):
+        """Pre defined accessor of limb, same as self.getLimb('head')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (head)
+
+        """
+        return self.getLimb('head')
+    @property
+    def torso(self):
+        """Pre defined accessor of limb, same as self.getLimb('torso')
+
+        Returns:
+            irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector (torso)
+
+        """
+        return self.getLimb('torso')
+
+    @property
+    def rlegEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('rleg').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(rleg)
+
+        """
+        return self.getLimb('rleg').endEffector
+    @property
+    def llegEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('lleg').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(lleg)
+
+        """
+        return self.getLimb('lleg').endEffector
+    @property
+    def rarmEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('rarm').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(rarm)
+
+        """
+        return self.getLimb('rarm').endEffector
+    @property
+    def larmEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('larm').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(larm)
+
+        """
+        return self.getLimb('larm').EndEffector
+    @property
+    def armEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('arm').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(arm)
+
+        """
+        return self.getLimb('arm').endEffector
+    @property
+    def headEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('head').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(head)
+
+        """
+        return self.getLimb('head').endEffector
+    @property
+    def torsoEndEffector(self):
+        """Pre defined accessor to end-effector, same as self.getLimb('torso').endEffector
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb(torso)
+
+        """
+        return self.getLimb('torso').endEffector
+
+    def inverseKinematics(self, coords, limb_name='default', **kwargs):
+        """Solving inverse kinematic of the limb
+
+        Args:
+            coords (cnoid.IRSLCoords.coordinates) : Coordinate of the target
+            limb_name (str, default='default') : Name of the limb
+            \*\*kwargs ( dict ) : Just passing to IKWrapper
+
+        Returns:
+             (boolean, int) : IK was success or not, and total count of calculation
+
+        """
+        return self.getLimb(limb_name).inverseKinematics(coords, **kwargs)
+
+    def footMidCoords(self, p = 0.5):
+        cds = self.rlegEndEffector
+        return cds.mid_coords(p, self.llegEndEffector)
+
+    def fixLegToCoords(self, coords, p = 0.5):
+        mc = self.foot_mid_coords(p)
+        cds = mc.inverse_transformation()
+        cds.transform(coords)
+        cds.transform(self.__robot.rootLink.getCoords())
+        self.__robot.rootLink.setCoords(cds)
+        self.hook()
+
+    def fullbodyInverseKinematics(self, **kwargs):
+        ### not implemented yet
+        pass
+
+    def moveCentroidOnFoot(self, p = 0.5, debug = False):
+        ### not implemented yet
+        pass
+
+###
 if isInChoreonoid():
     from .cnoid_base import *
