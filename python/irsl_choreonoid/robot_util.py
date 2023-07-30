@@ -9,9 +9,6 @@ import cnoid.IKSolvers as IK
 import numpy as np
 import random
 
-if isInChoreonoid():
-    from .cnoid_base import *
-
 def make_coordinates(coords_dict):
     """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
 
@@ -942,3 +939,6 @@ def merge_mask(tp1, tp2):
     return tuple([x or y for (x, y) in zip(tp1, tp2)])
 def invert_mask(tp1):
     return tuple([0 if x else 1 for x in tp1])
+
+if isInChoreonoid():
+    from .cnoid_base import *
