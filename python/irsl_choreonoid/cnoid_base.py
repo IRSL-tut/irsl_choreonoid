@@ -2,6 +2,7 @@ from cnoid.Base import ItemTreeView
 from cnoid.Base import MessageView
 from cnoid.Base import SceneView
 from cnoid.Base import SceneWidget
+from cnoid.Base import ProjectManager
 
 from cnoid.BodyPlugin import AISTSimulatorItem
 from cnoid.BodyPlugin import BodyItem
@@ -28,7 +29,7 @@ def loadProject(project_file):
         project_file (str): filename of project file (.cnoid)
 
     """
-    cnoid.Base.ProjectManager.instance.loadProject(filename=project_file)
+    ProjectManager.instance.loadProject(filename=project_file)
 
 ##
 ## cnoid Item (Base)

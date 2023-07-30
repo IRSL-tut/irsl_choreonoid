@@ -9,6 +9,9 @@ import cnoid.IKSolvers as IK
 import numpy as np
 import random
 
+if isInChoreonoid():
+    from .cnoid_base import *
+
 def make_coordinates(coords_dict):
     """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
 
@@ -692,7 +695,7 @@ cnoid.Body.Link.setOffsetCoords = lambda self, cds: ic.setOffsetCoords(self, cds
 class RobotModel(object):
     def __init__(self, robot):
         self.item = None
-        if isinstance(robot, BodyItem):
+        if hasattr(robot, 'body'): ## check BodyItem
             self.robot = robot.body
             self.item = robot
         elif isinstance(robot, cnoid.Body.Body):

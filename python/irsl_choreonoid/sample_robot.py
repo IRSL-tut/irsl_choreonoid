@@ -1,5 +1,6 @@
 from . import robot_util as ru
 from . import cnoid_util as cu
+from . import cnoid_base as cb
 import cnoid.IRSLCoords as ic
 import cnoid.Util
 import numpy as np
@@ -10,8 +11,8 @@ def init_sample_robot(world = True):
     fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
     if cu.isInChoreonoid():
         ### in choreonoid
-        cu.loadRobotItem(fname, 'SampleRobot', world)
-        i = cu.findItem('SampleRobot')
+        cb.loadRobotItem(fname, 'SampleRobot', world)
+        i = cb.findItem('SampleRobot')
         return SampleRobot(i)
     else:
         ### not in choreonoid

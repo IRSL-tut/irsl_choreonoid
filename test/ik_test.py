@@ -2,7 +2,6 @@
 
 import cnoid.IRSLCoords as ic
 import irsl_choreonoid.sample_robot as sr
-import irsl_choreonoid.robot_util as ru
 import numpy as np
 import math
 
