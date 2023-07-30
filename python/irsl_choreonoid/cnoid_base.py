@@ -247,6 +247,9 @@ def cameraPositionLookingFor(eye, direction, up):
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
 
+    Note:
+        Refer cnoid.Util.SgCamera.positionLookingFor
+
     """
     return coordinates(SgCamera.positionLookingFor(npa(eye), npa(direction), npa(up)))
 
@@ -261,8 +264,48 @@ def cameraPositionLookingAt(eye, center, up):
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
 
+    Note:
+        Refer cnoid.Util.SgCamera.positionLookingAt
+
     """
     return coordinates(SgCamera.positionLookingAt(npa(eye), npa(center), npa(up)))
+
+def saveImageOfScene(filename):
+    """Saving scene as image file
+
+    Args:
+        filename (str) : Name of the file to be saved
+
+    Note:
+        Refer cnoid.Base.SceneWidget.saveImage
+
+    """
+    sw = currentSceneWidget()
+    sw.saveImage(filename)
+
+def currentSceneView():
+    """Returning the instance of SceneView
+
+    Args:
+        None
+
+    Returns:
+        cnoid.Base.SceneView : Current Instance of SceneView ( return cnoid.Base.SceneView.instance )
+
+    """
+    return SceneView.instance
+
+def currentSceneWidget():
+    """Returning the instance of SceneWidget
+
+    Args:
+        None
+
+    Returns:
+        cnoid.Base.SceneWidget : Current Instance of SceneWidget ( return cnoid.Base.SceneView.instance.sceneWidget )
+
+    """
+    return SceneView.instance.sceneWidget
 
 def getCameraCoords(withFOV=True):
     """Returning camera position of current scene
@@ -274,7 +317,7 @@ def getCameraCoords(withFOV=True):
         (cnoid.IRSLCoords.coordinates, float) : Tuple with camera coordinates and camera's filed of view
 
     """
-    sw = SceneView.instance.sceneWidget
+    sw = currentSceneWidget()
     cds = coordinates(sw.builtinCameraTransform.T)
     if withFOV:
         fov = sw.builtinPerspectiveCamera.fieldOfView
@@ -290,7 +333,7 @@ def setCameraCoords(cds, fov=None):
         fov (float, default = None) : Camera's filed of view to be set
 
     """
-    sw = SceneView.instance.sceneWidget
+    sw = currentSceneWidget()
     sw.builtinCameraTransform.setPosition(cds.cnoidPosition)
     if fov is not None:
         sw.builtinPerspectiveCamera.setFieldOfView(fov)
@@ -331,7 +374,7 @@ def setBackgroundColor(backgound_color):
         background_color (numpy.array or list[float]) : Vector with 3 elements. Eech element represents 'Red', 'Green', 'Blue'.
 
     """
-    SceneView.instance.sceneWidget.setBackgroundColor(npa(backgound_color))
+    currentSceneWidget().setBackgroundColor(npa(backgound_color))
 
 def disableGrid(plane = None):
     """Disabling to show grids
@@ -340,7 +383,7 @@ def disableGrid(plane = None):
         plane (int, optional) : ID of plane to be disabled. 0\: XY, 1\: XZ, 2\: YZ
 
     """
-    sw = SceneView.instance.sceneWidget
+    sw = currentSceneWidget()
     if type(plane) == int:
         sw.setGridEnabled(SceneWidget.GridPlane(plane), False)
     else:
@@ -356,6 +399,6 @@ def enableGrid(plane = 0):
         plane (int, default = 0) : ID of plane to show. 0\: XY, 1\: XZ, 2\: YZ
 
     """
-    sw = SceneView.instance.sceneWidget
+    sw = currentSceneWidget()
     sw.setGridEnabled(SceneWidget.GridPlane(plane), True)
     sw.updateGrids()
