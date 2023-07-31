@@ -3,6 +3,7 @@ from cnoid.Base import MessageView
 from cnoid.Base import SceneView
 from cnoid.Base import SceneWidget
 from cnoid.Base import ProjectManager
+from cnoid.Base import RootItem
 
 from cnoid.BodyPlugin import AISTSimulatorItem
 from cnoid.BodyPlugin import BodyItem
@@ -13,6 +14,8 @@ from numpy import array as npa
 
 from .robot_util import make_coordinates
 from .robot_util import make_coords_dict
+
+from cnoid.Body import Body
 
 from cnoid.Util import SgCamera
 ## DEPRECATED: use cnoid.Base.ItemTreeView.instance
@@ -60,7 +63,7 @@ def getOrAddWorld(name = 'World'):
         cnoid.Base.WorldItem : added or found WorldItem
 
     """
-    rI = getRootItem()
+    rI = RootItem.instance
     ret = rI.findItem(name)
     if ret == None:
         ret = WorldItem()
@@ -81,7 +84,7 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
 
     """
     if world is None:
-        world = getWorld()
+        world = getOrAddWorld()
     sim_ = world.findItem(simulator_name)
     if sim_ == None:
         sim_ = AISTSimulatorItem()
@@ -115,7 +118,7 @@ def loadRobotItem(fname, name = None, world = True):
     rr.calcForwardKinematics()
     bI.storeInitialState()
     if world == True:
-        wd = getWorld()
+        wd = getOrAddWorld()
         if callable(wd.childItem):
             wd.insertChildItem(bI, wd.childItem())
         else:
@@ -214,9 +217,9 @@ def findBodyItem(name_or_body):
             if type(itm) is cnoid.BodyPlugin.BodyItem:
                 ret = itm
                 break
-    elif type(name_or_body) is cnoid.Body.Body:
+    elif type(name_or_body) is Body:
         for itm in RootItem.instance.getDescendantItems():
-            if type(itm) is cnoid.BodyPlugin.BodyItem and itm.body == name_or_body:
+            if type(itm) is BodyItem and itm.body == name_or_body:
                 ret = itm
                 break
     return ret
