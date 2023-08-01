@@ -386,7 +386,7 @@ class IKWrapper(object):
         dummy_const = IK.Constraints()
         constraints = [ dummy_const, constraints0 ]
         variables = []
-        if base_weight is not None:
+        if base_type is not None:
             variables.append(self.__robot.rootLink)
         variables += self.__current_joints
         if debug:
