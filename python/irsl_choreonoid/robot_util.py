@@ -979,12 +979,12 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         Args:
             name (str) : Name of registered pose
-            angles (numpy.array) : Angle-vector to be able to pass irsl_choreonoid.robot_util.RobotModelWrapped.angleVector
+            angles (numpy.array or list[float]) : Angle-vector to be able to pass irsl_choreonoid.robot_util.RobotModelWrapped.angleVector
             root_coords (cnoid.IRSLCoords.coordinates) : Coordinates of Root
 
         """
         if angles is not None:
-            self.pose_angle_map[name] = angles
+            self.pose_angle_map[name] = np.array(angles)
         if root_coords is not None:
             self.pose_coords_map[name] = root_coords
 
