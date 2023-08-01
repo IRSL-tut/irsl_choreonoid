@@ -1036,8 +1036,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                         self.__joint_map[jnm] = j
                         self.__joint_list.append(j)
             ##
-            self._ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
-                                  use_joints=self.__joint_list if self.__joint_list is not None else None)
+            self.__ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
+                                   use_joints=self.__joint_list if self.__joint_list is not None else None)
 
         def __genJointList(self, joint_tuples): ## joint_tuples is not None ((real_name, nick_name), ...
             _lst = []
@@ -1084,6 +1084,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             ret = self.__tip_link.getCoords()
             ret.transform(self.__tip_link_to_eef)
             return ret
+
+        @property
+        def IK(self):
+            """Getting IKWrapper instance using this EndEffector
+
+            Returns:
+                irsl_choreonoid.robot_util.IKWrapper : IKWrapper instance using this EndEffector
+
+            """
+            return self.__ikw
 
         def inverseKinematics(self, coords, **kwargs):
             """Solving inverse kinematic on this limb
