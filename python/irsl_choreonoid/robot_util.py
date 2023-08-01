@@ -970,9 +970,9 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         self.eef_map = {}
         if isInChoreonoid():
-            self.mode = 1 ## 1: drawing
+            self.__mode = 1 ## 1: drawing
         else:
-            self.mode = 0 ## 0: kinematics
+            self.__mode = 0 ## 0: kinematics
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
         """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
