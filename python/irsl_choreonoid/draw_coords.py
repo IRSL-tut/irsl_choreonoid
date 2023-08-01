@@ -260,12 +260,12 @@ class DrawCoordsList(object):
         self.flush()
         self.reset()
 
-    def addCoords(self, coords, flush=False):
+    def addCoords(self, coords, flush=True):
         """Draw coordinates (3-axis, position and rotation)
 
         Args:
             coords (cnoid.IRSLCoords.coordinates) : coordinates to be drawn
-            flush (boolean, default = False) : if True, rendering scene immediately
+            flush (boolean, default = True) : if True, rendering scene immediately
 
         Returns:
             int : number of drawn coords
@@ -280,12 +280,12 @@ class DrawCoordsList(object):
         self.__count += 1
         return self.__count
 
-    def addCross(self, coords, flush=False):
+    def addCross(self, coords, flush=True):
         """Draw cross (3-axis, line is crossing at center)
 
         Args:
             coords (cnoid.IRSLCoords.coordinates) : coordinates to be drawn
-            flush (boolean, default = False) : if True, rendering scene immediately
+            flush (boolean, default = True) : if True, rendering scene immediately
 
         Returns:
             int : number of drawn coords
@@ -300,12 +300,12 @@ class DrawCoordsList(object):
         self.__count += 1
         return self.__count
 
-    def addPoint(self, point, flush=False):
+    def addPoint(self, point, flush=True):
         """Draw point (cross with no rotation)
 
         Args:
             point (numpy.array) : 1x3 vector, point to be drawn
-            flush (boolean, default = False) : if True, rendering scene immediately
+            flush (boolean, default = True) : if True, rendering scene immediately
 
         Returns:
             int : number of drawn coords
