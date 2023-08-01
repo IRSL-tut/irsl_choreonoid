@@ -92,14 +92,14 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
         getItemTreeView().checkItem(sim_)
     return sim_
 
-def loadRobotItem(fname, name = None, world = True):
+def loadRobotItem(fname, name = None, world = True, addItem = True):
     """Load robot model and add it as a BodyItem
 
     Args:
         fname (str): filename (or path)
         name (str, optional): name of loaded robot-model
         world (boolean or WorldItem, default = True): if True, WorldItem is added
-
+        addItem (boolean): if True and world if False, loaded item is added to RootItem
     Returns:
         cnoid.BodyPlugin.BodyItem : Loaded robot-model
 
@@ -123,13 +123,16 @@ def loadRobotItem(fname, name = None, world = True):
             wd.insertChildItem(bI, wd.childItem())
         else:
             wd.insertChildItem(bI, wd.childItem)
+        getItemTreeView().checkItem(bI)
     elif type(world) is WorldItem:
         if callable(world.childItem):
             world.insertChildItem(bI, world.childItem())
         else:
             world.insertChildItem(bI, world.childItem)
-
-    getItemTreeView().checkItem(bI)
+        getItemTreeView().checkItem(bI)
+    elif addItem:
+        RootItem.instance.addChildItem(bI)
+        getItemTreeView().checkItem(bI)
     return bI
 
 def findItem(name):
