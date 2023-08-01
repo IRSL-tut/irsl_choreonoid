@@ -78,7 +78,7 @@ def make_coordinates(coords_dict):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_dict))
 
-def make_coords_dict(coords):
+def make_coords_map(coords):
     """Generating dictonary describing transformation
 
     Args:
@@ -88,7 +88,7 @@ def make_coords_dict(coords):
         dict[str, list[float]] : Dictonary can be used by make_coordinates
 
     Examples:
-        >>> make_coords_dict( make_coordinates( {'position' : [1, 2, 3]} ) )
+        >>> make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
     return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
