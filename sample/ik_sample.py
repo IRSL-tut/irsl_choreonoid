@@ -1,6 +1,7 @@
 ### sample for IKWrapper
 import irsl_choreonoid.robot_util as ru
 import irsl_choreonoid.cnoid_util as cu
+import irsl_choreonoid.cnoid_base as cb
 import numpy as np
 
 ##
@@ -9,7 +10,7 @@ joints_b = joints_a + ['WAIST_P', 'WAIST_R', 'CHEST']
 ##
 if cu.isInChoreonoid():
     ## on choreonoid
-    bi = cu.loadRobotItem(cu.parseURL('choreonoid://share/model/SR1/SR1.body'))
+    bi = cb.loadRobotItem(cu.parseURL('choreonoid://share/model/SR1/SR1.body'))
     bd = bi.body
 else:
     ## on console
