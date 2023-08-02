@@ -13,7 +13,7 @@ from cnoid.IRSLCoords import coordinates
 from numpy import array as npa
 
 from .robot_util import make_coordinates
-from .robot_util import make_coords_dict
+from .robot_util import make_coords_map
 
 from cnoid.Body import Body
 
@@ -356,7 +356,7 @@ def getCameraCoordsParam(withFOV=True):
 
     """
     cds, fov = getCameraCoords(withFOV)
-    _ret = make_coords_dict(cds)
+    _ret = make_coords_map(cds)
     _ret['fov'] = fov
     return _ret
 

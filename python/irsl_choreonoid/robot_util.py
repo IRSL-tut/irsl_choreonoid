@@ -78,7 +78,7 @@ def make_coordinates(coords_dict):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_dict))
 
-def make_coords_dict(coords):
+def make_coords_map(coords):
     """Generating dictonary describing transformation
 
     Args:
@@ -88,7 +88,7 @@ def make_coords_dict(coords):
         dict[str, list[float]] : Dictonary can be used by make_coordinates
 
     Examples:
-        >>> make_coords_dict( make_coordinates( {'position' : [1, 2, 3]} ) )
+        >>> make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
     return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
@@ -386,7 +386,7 @@ class IKWrapper(object):
         dummy_const = IK.Constraints()
         constraints = [ dummy_const, constraints0 ]
         variables = []
-        if base_weight is not None:
+        if base_type is not None:
             variables.append(self.__robot.rootLink)
         variables += self.__current_joints
         if debug:
@@ -970,21 +970,21 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         self.eef_map = {}
         if isInChoreonoid():
-            self.mode = 1 ## 1: drawing
+            self.__mode = 1 ## 1: drawing
         else:
-            self.mode = 0 ## 0: kinematics
+            self.__mode = 0 ## 0: kinematics
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
         """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
 
         Args:
             name (str) : Name of registered pose
-            angles (numpy.array) : Angle-vector to be able to pass irsl_choreonoid.robot_util.RobotModelWrapped.angleVector
+            angles (numpy.array or list[float]) : Angle-vector to be able to pass irsl_choreonoid.robot_util.RobotModelWrapped.angleVector
             root_coords (cnoid.IRSLCoords.coordinates) : Coordinates of Root
 
         """
         if angles is not None:
-            self.pose_angle_map[name] = angles
+            self.pose_angle_map[name] = np.array(angles)
         if root_coords is not None:
             self.pose_coords_map[name] = root_coords
 
@@ -1036,8 +1036,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                         self.__joint_map[jnm] = j
                         self.__joint_list.append(j)
             ##
-            self._ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
-                                  use_joints=self.__joint_list if self.__joint_list is not None else None)
+            self.__ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
+                                   use_joints=self.__joint_list if self.__joint_list is not None else None)
 
         def __genJointList(self, joint_tuples): ## joint_tuples is not None ((real_name, nick_name), ...
             _lst = []
@@ -1084,6 +1084,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             ret = self.__tip_link.getCoords()
             ret.transform(self.__tip_link_to_eef)
             return ret
+
+        @property
+        def IK(self):
+            """Getting IKWrapper instance using this EndEffector
+
+            Returns:
+                irsl_choreonoid.robot_util.IKWrapper : IKWrapper instance using this EndEffector
+
+            """
+            return self.__ikw
 
         def inverseKinematics(self, coords, **kwargs):
             """Solving inverse kinematic on this limb
@@ -1310,8 +1320,12 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def setDefaultPose(self):
         """Setting default pose if registered
         """
-
         self.setNamedPose('default')
+
+    def setInitialPose(self):
+        """Setting default pose if registered
+        """
+        self.setNamedPose('initial')
 
     def setNamedPose(self, name):
         """Setting named pose, name should be registered by irsl_choreonoid.robot_util.RobotModelWrapped.registerNamedPose
