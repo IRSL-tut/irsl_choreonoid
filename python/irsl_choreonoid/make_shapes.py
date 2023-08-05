@@ -194,7 +194,7 @@ def makeSphere(radius, wrapped=True, **kwargs):
     """
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateCylinder(radius)
+    mesh = mg.generateSphere(radius)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCone(radius, height, wrapped=True, **kwargs):
