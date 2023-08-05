@@ -394,17 +394,17 @@ Using for drawing SceneGraph objects interactively
         super().flush()
         super().render()
 
-    def addObject(self, obj, update=False):
+    def addObject(self, obj, update=True):
         """This method is overrided, just passing arguments to addPyObject
         """
         self.addPyObject(obj, update=update)
 
-    def removeObject(self, obj, update=False):
+    def removeObject(self, obj, update=True):
         """This method is overrided, just passing arguments to removePyObject
         """
         self.removePyObject(obj, update=update)
 
-    def addPyObject(self, obj, update=False):
+    def addPyObject(self, obj, update=True):
         """Adding object to be drawn
 
         Args:
@@ -418,7 +418,7 @@ Using for drawing SceneGraph objects interactively
         else:
             super().addPyObject(obj, update)
 
-    def removePyObject(self, obj, update=False):
+    def removePyObject(self, obj, update=True):
         """Removing drawn object
 
         Args:
