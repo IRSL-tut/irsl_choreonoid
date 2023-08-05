@@ -56,6 +56,13 @@ PYBIND11_MODULE(DrawInterface, m)
         .def_property("T",
                       [](DrawInterface &self) -> Isometry3::MatrixType& { return self.T().matrix(); },
                       [](DrawInterface &self, Eigen::Ref<const Matrix4RM> T){ self.setPosition(T); })
+        .def_property_readonly("SgPosTransform",
+                               [](DrawInterface &self) { return self.posTrans; }, R"__IRSL__(
+Generating instance of cnoid.Util.SgPosTransform, which represents the root position of this instance
+
+Returns:
+    cnoid.Util.SgPosTransform : Root coordinates of drawn objects in this instance at SceneGraph
+          )__IRSL__")
         .def("hide_and_show", &DrawInterface::hide_and_show)
         //
         .def("render", &DrawInterface::render, py::arg("doImmediately") = false)//should be class method
@@ -70,6 +77,18 @@ PYBIND11_MODULE(DrawInterface, m)
         .def(py::init<>())
         .def(py::init<bool>())
         .def("flush", &GeneralDrawInterface::flush)
+        .def("cpp_clear", &GeneralDrawInterface::cpp_clear)
+        .def_property_readonly("objects", [] (GeneralDrawInterface &self) {
+            py::list _lst;
+            for(auto it = self.posTrans->begin(); it != self.posTrans->end(); it++) {
+                _lst.append( py::cast(*it) );
+            }
+            return _lst; }, R"__IRSL__(
+Getting list of drawn objects in this instance
+
+Returns:
+    list [ cnoid.Util.SgNode ] : List of drawn objects in this instance
+          )__IRSL__")
         .def("addObject", (void (GeneralDrawInterface::*)(SgNodePtr &, bool)) &GeneralDrawInterface::add_object,
              py::arg("obj"), py::arg("update") = false)
         .def("addObject", (void (GeneralDrawInterface::*)(SgGroupPtr &, bool)) &GeneralDrawInterface::add_object,
