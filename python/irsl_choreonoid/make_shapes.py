@@ -78,11 +78,15 @@ def __extractShape(sg_node):
     return res
 
 def loadScene(fname, wrapped=True, **kwargs):
-    """Loading scene(wrl, scene, ...) file
+    """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
     Args:
+        fname (str) : File name to be loaded
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
     ld = cnoid.Util.SceneLoader()
@@ -108,11 +112,15 @@ def loadScene(fname, wrapped=True, **kwargs):
     return ret
 
 def loadMesh(fname, wrapped=True, **kwargs):
-    """Loading mesh file
+    """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
+        fname (str) : File name to be loaded
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
     ld = cnoid.AssimpPlugin.AssimpSceneLoader()
@@ -148,11 +156,20 @@ def __genShape(mesh, wrapped=True, **kwargs):
     return ret
 
 def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
-    """make 'Box' shape
+    """Making 'Box' shape using cnoid.Util.MeshGenerator
 
     Args:
+        x (float) : Length of x-axis, if y and z is None, making 'cube'
+        y (float, optional) : Length of y-direction edge
+        z (float, optional) : Length of z-direction edge
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    Note:
+        Origin of generated shape is the center of it
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -172,11 +189,19 @@ def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCylinder(radius, height, wrapped=True, **kwargs):
-    """make 'Cylinder' shape
+    """Making 'Cylinder' shape using cnoid.Util.MeshGenerator
 
     Args:
+        radius (float) : Radius of the cylinder
+        height (float) : Height of the cylinder
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    Note:
+        Center circle with indicated radius on XZ-plane and sweep to both side with half of height, along y-direction
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -185,11 +210,18 @@ def makeCylinder(radius, height, wrapped=True, **kwargs):
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeSphere(radius, wrapped=True, **kwargs):
-    """make 'Sphere' shape
+    """Make 'Sphere' shape using cnoid.Util.MeshGenerator
 
     Args:
+        radius (float) : Radius of the sphere
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    Note:
+        Origin of generated shape is the center of it
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -198,11 +230,16 @@ def makeSphere(radius, wrapped=True, **kwargs):
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCone(radius, height, wrapped=True, **kwargs):
-    """make 'Cone' shape
+    """Making 'Cone' shape using cnoid.Util.MeshGenerator
 
     Args:
+        radius (float) : Radius of the cone
+        height (float) : Height of the cone
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -211,11 +248,19 @@ def makeCone(radius, height, wrapped=True, **kwargs):
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCapsule(radius, height, wrapped=True, **kwargs):
-    """make 'Capsule' shape
+    """Makeing 'Capsule' shape using cnoid.Util.MeshGenerator
 
     Args:
+        radius (float) : Radius of the cupsule
+        height (float, optional) : Height of the capsule
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    Note:
+        Similar dimensions to 'makeCylinder' (bottom cricle is at minus y, cone's tip is at plus y)
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -224,11 +269,18 @@ def makeCapsule(radius, height, wrapped=True, **kwargs):
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, **kwargs):
-    """make 'Torus' shape
+    """Makeing 'Torus' shape using cnoid.Util.MeshGenerator
 
     Args:
+        radius (float) : Outer radius of the torus
+        crossSectionRadius (float) : Radius of cross section
+        beginAngle (float, optional) : If beginAngle and endAngle is passed, part of whole torus is created
+        endAngle (float, optional) : 
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
     mg = cnoid.Util.MeshGenerator()
@@ -241,11 +293,17 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 ### not implemented
-def makeExtrusion(**kwargs):
-    pass
+def makeExtrusion(extrusion, wrapped=True, **kwargs):
+    mg = cnoid.Util.MeshGenerator()
+    parseMeshGeneratorOption(mg, **kwargs)
+    mesh = mg.generateExtrusion(extrusion)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeElevationGrid(**kwargs):
-    pass
+def makeElevationGrid(elevation_grid, wrapped=True, **kwargs):
+    mg = cnoid.Util.MeshGenerator()
+    parseMeshGeneratorOption(mg, **kwargs)
+    mesh = mg.generateElevationGrid(elevation_grid)
+    return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCoords(coords): ## LineArray
     pass

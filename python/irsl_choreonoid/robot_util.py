@@ -237,6 +237,9 @@ class IKWrapper(object):
             jlist (list[str, int, cnoid.Body.Link]) : list of joint name, index or instance
             enable (boolean, default = True) : if True, joints are added, else joint are removed from using joint-list
 
+        Raise:
+            Exception : If wrong joint is passed
+
         """
         for j in jlist:
             self.__setJoint(j, enable = enable)
@@ -249,6 +252,10 @@ class IKWrapper(object):
             if joint_or_id >= self.__robot.getNumJoints():
                 raise Exception('number of joints')
             joint_or_id = self.__robot.joint(joint_or_id)
+        elif type(joint_or_id) == str:
+            joint_or_id = self.__robot.joint(joint_or_id)
+            if joint_or_id is None:
+                raise Exception('wrong joint name : {}'.format(joint_or_id))
         else:
             raise Exception('wrong type')
 
@@ -1348,7 +1355,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         Returns:
             irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector
 
-        Raise:
+        Raises:
+            Exeption : If wrong limb name is passed
 
         """
         if limb_name in self.eef_map:
