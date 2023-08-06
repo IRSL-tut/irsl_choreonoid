@@ -292,17 +292,102 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
 
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-### not implemented
-def makeExtrusion(extrusion, wrapped=True, **kwargs):
+def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
+    """Generating cnoid.Util.MeshGenerator.Extrusion
+
+    Args:
+        crossSection ( list[list[float]],  N x 2 matrix) : 
+        spine ( list[list[float]], M x 3 matrix) : 
+        orientation (list[AngleAxis], optional) : 
+        scale ( list[list[float]],  N x 2 matrix, optional) : 
+        creaseAngle (float, optional) : 
+        beginCap (boolean, optional) : 
+        endCap (boolean, optional) : 
+
+    Returns:
+        cnoid.Util.MeshGenerator.Extrusion : Generated result
+
+    """
+    extconf = cnoid.Util.MeshGenerator.Extrusion()
+    extconf.crossSection = np.array(crossSection)
+    extconf.spine        = np.array(spine)
+    if orientation is not None:
+        extconf.orientation=orientation
+    if scale is not None:
+        extconf.scale=np.array(scale)
+    if creaseAngle is not None:
+        extconf.creaseAngle=creaseAngle
+    if beginCap is not None:
+        extconf.beginCap=beginCap
+    if endCap is not None:
+        extconf.endCap=endCap
+    return extconf
+
+def makeExtrusion(_extrusion=None, wrapped=True, **kwargs):
+    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
+
+    Args:
+        _extrusion (cnoid.Util.MeshGenerator.Extrusion, optional) : Adding parameters by cnoid.Util.MeshGenerator.Extrusion
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    if type(_extrusion) is not cnoid.Util.MeshGenerator.Extrusion:
+        _extrusion = makeExtrusionParam(**kwargs)
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateExtrusion(extrusion)
+    mesh = mg.generateExtrusion(_extrusion)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
-def makeElevationGrid(elevation_grid, wrapped=True, **kwargs):
+
+def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
+    """Generating cnoid.Util.MeshGenerator.ElevationGrid
+
+    Args:
+        xDimension (int) : Dimension of x-direction
+        zDimension (int) : Dimension of z-direction
+        xSpacing (float) : X length is (xDimension - 1) x xSpacing
+        zSpacing (float) : Z length is (zDimension - 1) x zSpacing
+        height (list[float]) : Size is ( xDimension x zDimension )
+        ccw (boolean, optional) :
+        creaseAngl (float, optional) :
+
+    Returns:
+        cnoid.Util.MeshGenerator.ElevationGrid : Generated result
+
+    """
+    eg = cnoid.Util.MeshGenerator.ElevationGrid()
+    eg.xDimension = xDimension
+    eg.zDimension = zDimension
+    eg.xSpacing = xSpacing
+    eg.zSpacing = zSpacing
+    eg.height = height
+    if ccw is not None:
+        eg.ccw = ccw
+    if creaseAngle is not None:
+        eg.creaseAngle = creaseAngle
+    return eg
+
+def makeElevationGrid(_elevation_grid=None, wrapped=True, **kwargs):
+    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
+
+    Args:
+        _elevation_grid (cnoid.Util.MeshGenerator.ElevationGrid, optional) : Adding parameters by cnoid.Util.MeshGenerator.ElevationGrid
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeElevationParam
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    if type(_elevation_grid) is not cnoid.Util.MeshGenerator.ElevationGrid:
+        _elevation_grid = makeElevationParam(**kwargs)
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateElevationGrid(elevation_grid)
+    mesh = mg.generateElevationGrid(_elevation_grid)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCoords(coords): ## LineArray
