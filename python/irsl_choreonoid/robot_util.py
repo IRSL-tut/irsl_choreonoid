@@ -9,17 +9,17 @@ import cnoid.IKSolvers as IK
 import numpy as np
 import random
 
-def make_coordinates(coords_dict):
+def make_coordinates(coords_map):
     """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
 
     Args:
-        coords_dict (dict[str, list[float]]) : dictionary of describing transformation
+        coords_map (dict[str, list[float]]) : dictionary of describing transformation
 
     Returns:
         cnoid.IRSLCoords.coordinates : generated coordinates
 
     Raises:
-        Exeption if there is not valid keyword
+        Exeption : If there is not valid keyword
 
     Examples:
 
@@ -41,42 +41,42 @@ def make_coordinates(coords_dict):
     """
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):
-        if key in coords_dict:
-            pos = np.array(coords_dict[key])
+        if key in coords_map:
+            pos = np.array(coords_map[key])
             break
     for key in ('q', 'quaternion'):
-        if key in coords_dict:
-            q = np.array(coords_dict[key])
+        if key in coords_map:
+            q = np.array(coords_map[key])
             if pos is None:
                 return ic.coordinates(q)
             else:
                 return ic.coordinates(pos, q)
     for key in ('angle-axis', 'aa'):
-        if key in coords_dict:
-            aa = coords_dict[key]
+        if key in coords_map:
+            aa = coords_map[key]
             rot = ic.angleAxisNormalized(aa[3], np.array(aa[:3]))
             if pos is None:
                 return ic.coordinates(rot)
             else:
                 return ic.coordinates(pos, rot)
     for key in ('rotation', 'matrix', 'mat', 'rot'):
-        if key in coords_dict:
-            rot = np.array(coords_dict[key])
+        if key in coords_map:
+            rot = np.array(coords_map[key])
             if pos is None:
                 return ic.coordinates(rot)
             else:
                 return ic.coordinates(pos, rot)
     for key in ('rpy', 'RPY', 'roll-pitch-yaw'):
-        if key in coords_dict:
+        if key in coords_map:
             if pos is None:
                 ret = ic.coordinates()
             else:
                 ret = ic.coordinates(pos)
-            ret.setRPY(np.array(coords_dict[key]))
+            ret.setRPY(np.array(coords_map[key]))
             return ret
     if pos is not None:
         return ic.coordinates(pos)
-    raise Exception('{}'.format(coords_dict))
+    raise Exception('{}'.format(coords_map))
 
 def make_coords_map(coords):
     """Generating dictonary describing transformation
