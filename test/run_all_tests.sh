@@ -2,7 +2,7 @@
 
 set -e
 
-PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python
+PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-2.0/python
 
 TEST_FILES=$(ls -1 *.py)
 

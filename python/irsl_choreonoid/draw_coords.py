@@ -339,15 +339,12 @@ class DrawCoordsList(object):
         return closure_func__
 
 class DrawCoordsListWrapped(DrawCoordsList, coordsWrapper):
-    """DrawCoordsListWrapped(irsl_choreonoid.DrawCoordsList, irsl_choreonoid.irsl_draw_object.coordsWrapper):
-
-Wrapped version of irsl_choreonoid.DrawCoordsList
+    """Wrapped version of irsl_choreonoid.DrawCoordsList
 
 Using for drawing coordinates interactively
     """
     def __init__(self, **kwargs):
-        """__init__(self, \*\*kwargs):
-
+        """
         Args:
             kwargs (dict[str, param]) : this is passing to irsl_choreonoid.robot_util.make_coordinates for making initial_coords of coordsWrapper
 
@@ -362,15 +359,12 @@ Using for drawing coordinates interactively
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
 
 class GeneralDrawInterfaceWrapped(di.GeneralDrawInterface, coordsWrapper):
-    """class GeneralDrawInterfaceWrapped(cnoid.DrawInterface.GeneralDrawInterface, irsl_choreonoid.irsl_draw_object.coordsWrapper):
-
-Wrapped version of cnoid.DrawInterface.GeneralDrawInterface
+    """Wrapped version of cnoid.DrawInterface.GeneralDrawInterface
 
 Using for drawing SceneGraph objects interactively
     """
     def __init__(self, **kwargs):
-        """__init__(self, \*\*kwargs):
-
+        """
         Args:
             kwargs (dict[str, param]) : this is passing to irsl_choreonoid.robot_util.make_coordinates for making initial_coords of coordsWrapper
 
@@ -394,17 +388,26 @@ Using for drawing SceneGraph objects interactively
         super().flush()
         super().render()
 
-    def addObject(self, obj, update=False):
+    def clear(self, flush = True):
+        """Clear all added objects
+
+        Args:
+            flush (boolean, default = True) : If it is False, the scene is not rendered
+
+        """
+        super().cpp_clear(flush)
+
+    def addObject(self, obj, update=True):
         """This method is overrided, just passing arguments to addPyObject
         """
         self.addPyObject(obj, update=update)
 
-    def removeObject(self, obj, update=False):
+    def removeObject(self, obj, update=True):
         """This method is overrided, just passing arguments to removePyObject
         """
         self.removePyObject(obj, update=update)
 
-    def addPyObject(self, obj, update=False):
+    def addPyObject(self, obj, update=True):
         """Adding object to be drawn
 
         Args:
@@ -418,7 +421,7 @@ Using for drawing SceneGraph objects interactively
         else:
             super().addPyObject(obj, update)
 
-    def removePyObject(self, obj, update=False):
+    def removePyObject(self, obj, update=True):
         """Removing drawn object
 
         Args:

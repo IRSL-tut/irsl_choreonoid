@@ -382,6 +382,11 @@ namespace cnoid {
                 root->notifyUpdate();
             }
         }
+        void cpp_clear(bool flush) {
+            posTrans->clearChildren();
+            if (flush) this->flush();
+            //root->removeChild(posTrans, true);
+        }
         void add_object(SgNodePtr &obj, bool update) {
             posTrans->addChildOnce(obj, update);
         }

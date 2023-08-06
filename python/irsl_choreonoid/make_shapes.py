@@ -21,14 +21,14 @@ def generateMaterial(**kwargs):
         mat.setAmbientIntensity(val)
         valueset = True
 
-    val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color'), kwargs)
+    val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color', 'diffuse'), kwargs)
     if val is not None:
-        mat.setDiffuseColor(val)
+        mat.setDiffuseColor(np.array(val))
         valueset = True
 
-    val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color'), kwargs)
+    val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color', 'emissive'), kwargs)
     if val is not None:
-        mat.setEmissiveColor(val)
+        mat.setEmissiveColor(np.array(val))
         valueset = True
 
     val = __gets(('SpecularExponent', 'specularexponent', 'specular-exponent'), kwargs)
@@ -36,9 +36,9 @@ def generateMaterial(**kwargs):
         mat.setSpecularExponent(val)
         valueset = True
 
-    val = __gets(('SpecularColor', 'specularcolor', 'specular-color'), kwargs)
+    val = __gets(('SpecularColor', 'specularcolor', 'specular-color', 'specular'), kwargs)
     if val is not None:
-        mat.setSpecularColor(val)
+        mat.setSpecularColor(np.array(val))
         valueset = True
 
     val = __gets(('Transparency', 'transparency', 'Transparent', 'transparent'), kwargs)
@@ -49,8 +49,8 @@ def generateMaterial(**kwargs):
     val = __gets(('color', 'Color'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(1.0)
-        mat.setDiffuseColor(val * 0.7)
-        mat.setEmissiveColor(val * 0.3)
+        mat.setDiffuseColor(np.array(val) * 0.7)
+        mat.setEmissiveColor(np.array(val) * 0.3)
         valueset = True
 
     if valueset:
@@ -194,7 +194,7 @@ def makeSphere(radius, wrapped=True, **kwargs):
     """
     mg = cnoid.Util.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateCylinder(radius)
+    mesh = mg.generateSphere(radius)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeCone(radius, height, wrapped=True, **kwargs):

@@ -1,6 +1,6 @@
 # exec(open('closed_link_ik.py').read()) in choreonoid Python Console
 # OR
-# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 closed_link_ik.py
+# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-2.0/python python3 closed_link_ik.py
 
 from cnoid.IRSLCoords import coordinates
 import irsl_choreonoid.robot_util as ru
