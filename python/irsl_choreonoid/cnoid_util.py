@@ -31,7 +31,7 @@ def parseURL(url):
 
     Examples:
         >>> parseURL('choreonoid://share/dir/file')
-        /choreonoid/share/choreonoid-1.8/dir/file
+        /choreonoid/share/choreonoid-2.0/dir/file
 
         >>> parseURL('env://HOME/dir/file')
         /home/user/dir/file

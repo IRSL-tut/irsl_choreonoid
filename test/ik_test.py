@@ -1,4 +1,4 @@
-# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-1.8/python python3 ik_test.py
+# PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-2.0/python python3 ik_test.py
 
 import cnoid.IRSLCoords as ic
 import irsl_choreonoid.sample_robot as sr
