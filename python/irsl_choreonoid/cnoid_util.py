@@ -15,19 +15,28 @@ import os
 ## python utility
 ##
 def load_script(filename):
+    """Loading a script file
+
+    Args:
+        filename (str): URL [ URL is like 'scheme://netloc/xxx/yyy/zzz' ]
+
+    """
     ### another way
     #import runpy
     #runpy.run_path(path_name=filename)
-    exec(open(filename).read())
+    exec(open(str(filename)).read())
 
 def parseURL(url):
-    """parse URL with IRSL original scheme
+    """Parsing URL with IRSL original scheme
 
     Args:
-        url (str): url [ url is like 'scheme://netloc/xxx/yyy/zzz' ]
+        url (str): URL
 
     Returns:
         str: Absolute path
+
+    Raises:
+        SyntaxError : Unknown scheme or netloc is passed
 
     Examples:
         >>> parseURL('choreonoid://share/dir/file')
