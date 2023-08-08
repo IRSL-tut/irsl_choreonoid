@@ -6,7 +6,7 @@
 
   <maintainer email="faculty@irsl.eiiris.tut.ac.jp"> IRSL at Toyohashi Tech </maintainer>
 
-  <license>BSD</license>
+  <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>choreonoid</depend>
