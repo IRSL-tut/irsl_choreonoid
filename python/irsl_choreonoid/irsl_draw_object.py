@@ -6,11 +6,11 @@ from cnoid.IRSLCoords import coordinates
 class coordsWrapper(coordinates):
     """class coordsWrapper(cnoid.IRSLCoords.coordinates)
 
-This class to wrap a cnoid Object which have position (SgPosTransform, Link, etc.)
+This class aims to wrap a cnoid Object which have position (SgPosTransform, Link, etc.)
 
 You can access to this object with methods in cnoid.IRSLCoords.coordinates,
 
-Some mthods (newcoords, translate, rotate, transform) to update itself are overrided to call callback_function.
+Some mthods (newcoords, translate, rotate, transform) to update itself are overrided to add calling callback_function.
 
 Then, you can run some process when the position of the target is updated.
     """

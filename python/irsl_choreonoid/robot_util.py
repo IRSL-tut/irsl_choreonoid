@@ -950,6 +950,8 @@ def invert_mask(tp1):
 from .irsl_draw_object import coordsWrapper
 class RobotModelWrapped(coordsWrapper): ## with wrapper
     """RobotModel for programming Inteactively
+
+    RobotModel is displayed as cnoid.Base.RobotItem
     """
     def __init__(self, robot, **kwargs):
         """
