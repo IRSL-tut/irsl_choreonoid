@@ -415,7 +415,7 @@ Using for drawing SceneGraph objects interactively
             update (boolean, default = False) : if True, rendering scene immediately
 
         """
-        if type(obj) is coordsWrapper:
+        if issubclass(type(obj), coordsWrapper):
             super().addPyObject(obj.target, update)
             obj.setUpdateCallback( lambda : self.flush() )
         else:
@@ -429,7 +429,7 @@ Using for drawing SceneGraph objects interactively
             update (boolean, default = False) : if True, rendering scene immediately
 
         """
-        if type(obj) is coordsWrapper:
+        if issubclass(type(obj), coordsWrapper):
             super().removePyObject(obj.target, update)
         else:
             super().removePyObject(obj, update)
