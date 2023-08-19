@@ -10,8 +10,8 @@ from cnoid.AssimpPlugin import *
 ## IRSL (not base)
 from cnoid.IRSLCoords import coordinates
 import cnoid.IRSLCoords as IC
-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DI
-from irsl_choreonoid.draw_coords import DrawCoordsListWrapped as DC
+from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
+from irsl_choreonoid.draw_coords import DrawCoordsListWrapped as DrawCoords
 import irsl_choreonoid.make_shapes as mkshapes
 import irsl_choreonoid.cnoid_util as iu
 import irsl_choreonoid.robot_util as ru
@@ -27,3 +27,9 @@ if iu.isInChoreonoid():
     ## in base
     import irsl_choreonoid.cnoid_base as ib
     import cnoid.Base as cbase
+## ROS
+try:
+    import irsl_choreonoid_ros.cnoid_ros_util as cru
+    import irsl_choreonoid_ros.RobotInterface as RobotInterface
+except ImportError:
+    pass
