@@ -30,6 +30,6 @@ if iu.isInChoreonoid():
 ## ROS
 try:
     import irsl_choreonoid_ros.cnoid_ros_util as cru
-    import irsl_choreonoid_ros.RobotInterface as RobotInterface
+    from irsl_choreonoid_ros.RobotInterface import RobotInterface
 except ImportError:
     pass
