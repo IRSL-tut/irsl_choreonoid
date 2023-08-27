@@ -969,6 +969,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         else:
             raise TypeError('')
 
+        self.newcoords(coordinates(self.__robot.rootLink.T))
+
         self.pose_angle_map = {}
         self.pose_coords_map = {}
 

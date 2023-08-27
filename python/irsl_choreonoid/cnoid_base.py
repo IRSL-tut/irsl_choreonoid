@@ -40,6 +40,7 @@ def loadProject(project_file):
 def getItemTreeView():
     """DEPRECATED: use cnoid.Base.ItemTreeView.instance
     """
+    return ItemTreeView.instance
     if callable(ItemTreeView.instance):
         return ItemTreeView.instance()
     else:
@@ -48,6 +49,7 @@ def getItemTreeView():
 def getRootItem():
     """DEPRECATED: use cnoid.Base.RootItem.instance
     """
+    return RootItem.instance
     if callable(RootItem.instance):
         return RootItem.instance()
     else:
@@ -69,7 +71,7 @@ def getOrAddWorld(name = 'World'):
         ret = WorldItem()
         ret.setName(name)
         rI.addChildItem(ret)
-        getItemTreeView().checkItem(ret)
+        ItemTreeView.instance.checkItem(ret)
     return ret
 
 def addSimulator(world = None, simulator_name = 'AISTSimulator'):
@@ -89,7 +91,7 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
     if sim_ == None:
         sim_ = AISTSimulatorItem()
         world.addChildItem(sim_)
-        getItemTreeView().checkItem(sim_)
+        ItemTreeView.instance.checkItem(sim_)
     return sim_
 
 def loadRobotItem(fname, name = None, world = True, addItem = True):
@@ -123,16 +125,16 @@ def loadRobotItem(fname, name = None, world = True, addItem = True):
             wd.insertChildItem(bI, wd.childItem())
         else:
             wd.insertChildItem(bI, wd.childItem)
-        getItemTreeView().checkItem(bI)
+        ItemTreeView.instance.checkItem(bI)
     elif type(world) is WorldItem:
         if callable(world.childItem):
             world.insertChildItem(bI, world.childItem())
         else:
             world.insertChildItem(bI, world.childItem)
-        getItemTreeView().checkItem(bI)
+        ItemTreeView.instance.checkItem(bI)
     elif addItem:
         RootItem.instance.addChildItem(bI)
-        getItemTreeView().checkItem(bI)
+        ItemTreeView.instance.checkItem(bI)
     return bI
 
 def findItem(name):
