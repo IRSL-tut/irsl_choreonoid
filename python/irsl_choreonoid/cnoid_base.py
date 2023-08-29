@@ -108,29 +108,21 @@ def loadRobotItem(fname, name = None, world = True, addItem = True):
     """
     # print('loadRobot: %s'%(fname))
     bI = BodyItem()
-    bI.load(str(fname))
+    if not bI.load(str(fname)):
+        return None
     if name:
         bI.setName(name)
-    if callable(bI.body):
-        rr = bI.body()
-    else:
-        rr = bI.body
+    rr = bI.body
     rr.updateLinkTree()
     rr.initializePosition()
     rr.calcForwardKinematics()
     bI.storeInitialState()
     if world == True:
         wd = getOrAddWorld()
-        if callable(wd.childItem):
-            wd.insertChildItem(bI, wd.childItem())
-        else:
-            wd.insertChildItem(bI, wd.childItem)
+        wd.insertChildItem(bI, wd.childItem)
         ItemTreeView.instance.checkItem(bI)
     elif type(world) is WorldItem:
-        if callable(world.childItem):
-            world.insertChildItem(bI, world.childItem())
-        else:
-            world.insertChildItem(bI, world.childItem)
+        world.insertChildItem(bI, world.childItem)
         ItemTreeView.instance.checkItem(bI)
     elif addItem:
         RootItem.instance.addChildItem(bI)
