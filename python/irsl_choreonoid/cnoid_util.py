@@ -103,7 +103,12 @@ def loadRobot(fname):
         cnoid.Body: instance of cnoid.Body.Body
 
     """
-    rb = BodyLoader().load(str(fname))
+    bl_ = BodyLoader()
+    if hasattr(bl_, 'setMessageSinkStdErr'):
+        bl_.setMessageSinkStdErr()
+    rb = bl_.load(str(fname))
+    if rb is None:
+        return None
     rb.updateLinkTree()
     rb.initializePosition()
     rb.calcForwardKinematics()
