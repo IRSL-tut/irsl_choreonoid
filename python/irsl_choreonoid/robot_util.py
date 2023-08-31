@@ -1056,14 +1056,21 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             _jmap = {}
             _rmap = {}
             for jt in joint_tuples:
-                _rmap[jt[1]] = jt[0]
-                j = self.__robot.joint(jt[0])
+                if type(jt) is tuple and len(jt) > 1:
+                    _rmap[jt[1]] = jt[0]
+                    jt = jt[0]
+                elif type(jt) is str:
+                    pass ## jt = jt
+                else:
+                    ### warning
+                    continue
+                j = self.__robot.joint(jt)
                 if j is None:
                     ### warning
                     pass
                 else:
                     _lst.append(j)
-                    _jmap[jt[0]] = j
+                    _jmap[jt] = j
             self.__joint_list = _lst
             self.__joint_map  = _jmap
             self.__rename_map = _rmap
@@ -1106,6 +1113,18 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
             """
             return self.__ikw
+
+        @property
+        def jointList(self):
+            return self.__joint_list
+
+        @property
+        def jointNames(self):
+            return [ j.jointName for j in self.__joint_list ]
+
+        @property
+        def renameMap(self):
+            return self.__rename_map
 
         def inverseKinematics(self, coords, **kwargs):
             """Solving inverse kinematic on this limb
