@@ -24,7 +24,7 @@ def simple_merge_without_time(lst):
 def create_writeLinkPositionFunction(_robot, link_index=0, link_name=None, offset=None):
     _link_idx = link_index
     if type(link_name) == str:
-        _link_idx = _robot.linkList().index(_robot.link(link_name))
+        _link_idx = _robot.links().index(_robot.link(link_name))
     ## def closure_func__(coordslst, angles): ## coordslst[pos(3), rot(9)] joint_angles(N)
     def closure_func__(lst, **kwargs): ## coordslst[pos(3), rot(9)] joint_angles(N)
         tm = lst[1][0:1] ## use tm in angles
