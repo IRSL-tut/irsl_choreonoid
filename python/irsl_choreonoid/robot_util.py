@@ -174,7 +174,11 @@ class IKWrapper(object):
         if type(id_name_link) is int:
             return self.__robot.link(id_name_link)
         elif type(id_name_link) is str:
-            return self.__robot.link(id_name_link)
+            res =  self.__robot.joint(id_name_link)
+            if res is None:
+                return self.__robot.link(id_name_link)
+            else:
+                return res
         elif type(id_name_link) is cnoid.Body.Link:
             return id_name_link
         return None
@@ -685,11 +689,11 @@ class IKWrapper(object):
 ## add methods to choreonoid's class
 def __joint_list(self):
     return [self.joint(idx) for idx in range(self.numJoints) ]
-def __link_list(self):
-    return [self.link(idx) for idx in range(self.numLinks) ]
+#def __link_list(self):
+#    return [self.link(idx) for idx in range(self.numLinks) ]
 
 cnoid.Body.Body.jointList = __joint_list
-cnoid.Body.Body.linkList = __link_list
+#cnoid.Body.Body.linkList = __link_list
 cnoid.Body.Body.angleVector = lambda self, vec = None: ic.angleVector(self) if vec is None else ic.angleVector(self, vec)
 cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
@@ -735,7 +739,7 @@ class RobotModel(object):
     #    num = self.robot.numLinks
     #    return [ self.robot.link(n) for n in range(num) ]
     def linkList(self):
-        return self.robot.linkList()
+        return self.robot.links()
     #def joint_list(self):
     #    num = self.robot.numJoints
     #    return [ self.robot.joint(n) for n in range(num) ]
@@ -1023,10 +1027,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             """
             self.__robot = robot
             self.__name = name
-            if type(tip_link) is str:
-                self.__tip_link = self.__robot.link(tip_link)
-            else:
-                self.__tip_link = tip_link
             if tip_link_to_eef is None:
                 self.__tip_link_to_eef = ic.coordinates()
             else:
@@ -1047,6 +1047,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                     else:
                         self.__joint_map[jnm] = j
                         self.__joint_list.append(j)
+            ##
+            if type(tip_link) is str:
+                lk = self.__robot.link(tip_link)
+                if lk is None:
+                    lk = self.__robot.joint(tip_link)
+                    if lk is None:
+                        lk = self.__robot.joint(self.rename(tip_link))
+                self.__tip_link = lk
+            else:
+                self.__tip_link = tip_link
             ##
             self.__ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
                                    use_joints=self.__joint_list if self.__joint_list is not None else None)
@@ -1249,19 +1259,55 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def linkList(self):
         """
         Returns:
-            list [cnoid.Body.Link] : List of links
+            list [cnoid.Body.Link] : List of link
 
         """
         return self.__robot.links
 
     @property
+    def linkNames(self):
+        """
+        Returns:
+            list [str] : List of link's name
+
+        """
+        return [ l.name for l in self.__robot.links ]
+
+    @property
     def jointList(self):
         """
         Returns:
-            list [cnoid.Body.Link] : List of joints
+            list [cnoid.Body.Link] : List of joint
 
         """
         return self.__joint_list
+
+    @property
+    def jointNames(self):
+        """
+        Returns:
+            list [cnoid.Body.Link] : List of joint's name
+
+        """
+        return [ j.jointName for j in self.__joint_list ]
+
+    @property
+    def deviceList(self):
+        """
+        Returns:
+            list [cnoid.Body.Device] : List of device
+
+        """
+        return self.__robot.devices
+
+    @property
+    def deviceNames(self):
+        """
+        Returns:
+            list [cnoid.Body.Device] : List of device's name
+
+        """
+        return [ d.name for d in self.__robot.devices ]
 
     def angleVector(self, angles = None):
         """Setting or getting angle-vector
@@ -1563,11 +1609,38 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def fullbodyInverseKinematics(self, **kwargs):
         ### not implemented yet
         pass
-
     def moveCentroidOnFoot(self, p = 0.5, debug = False):
         ### not implemented yet
         pass
-
+    ## wrappedMethod to cnoid.Body
+    def link(self, arg):
+        return self.__robot.link(arg)
+    def joint(self, arg):
+        return self.__robot.joint(arg)
+    def device(self, arg):
+        return self.__robot.device(arg)
+    @property
+    def mass(self):
+        return self.__robot.mass
+    @property
+    def centerOfMass(self):
+        self.__robot.calcCenterOfMass()
+        return self.__robot.centerOfMass
+    @property
+    def numJoints(self):
+        return self.__robot.numJoints
+    @property
+    def numVirtualJoints(self):
+        return self.__robot.numVirtualJoints
+    @property
+    def numAllJoints(self):
+        return self.__robot.numAllJoints
+    @property
+    def numLinks(self):
+        return self.__robot.numLinks
+    @property
+    def numDevices(self):
+        return self.__robot.numDevices
 ###
 if isInChoreonoid():
     from .cnoid_base import *
