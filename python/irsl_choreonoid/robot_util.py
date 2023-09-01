@@ -969,6 +969,11 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         else:
             raise TypeError('')
 
+        if isInChoreonoid():
+            self.__mode = 1 ## 1: drawing
+        else:
+            self.__mode = 0 ## 0: kinematics
+
         self.newcoords(coordinates(self.__robot.rootLink.T))
 
         self.pose_angle_map = {}
@@ -980,10 +985,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__joint_map[j.jointName] = j
 
         self.eef_map = {}
-        if isInChoreonoid():
-            self.__mode = 1 ## 1: drawing
-        else:
-            self.__mode = 0 ## 0: kinematics
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
         """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
@@ -1055,14 +1056,21 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             _jmap = {}
             _rmap = {}
             for jt in joint_tuples:
-                _rmap[jt[1]] = jt[0]
-                j = self.__robot.joint(jt[0])
+                if type(jt) is tuple and len(jt) > 1:
+                    _rmap[jt[1]] = jt[0]
+                    jt = jt[0]
+                elif type(jt) is str:
+                    pass ## jt = jt
+                else:
+                    ### warning
+                    continue
+                j = self.__robot.joint(jt)
                 if j is None:
                     ### warning
                     pass
                 else:
                     _lst.append(j)
-                    _jmap[jt[0]] = j
+                    _jmap[jt] = j
             self.__joint_list = _lst
             self.__joint_map  = _jmap
             self.__rename_map = _rmap
@@ -1105,6 +1113,18 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
             """
             return self.__ikw
+
+        @property
+        def jointList(self):
+            return self.__joint_list
+
+        @property
+        def jointNames(self):
+            return [ j.jointName for j in self.__joint_list ]
+
+        @property
+        def renameMap(self):
+            return self.__rename_map
 
         def inverseKinematics(self, coords, **kwargs):
             """Solving inverse kinematic on this limb
