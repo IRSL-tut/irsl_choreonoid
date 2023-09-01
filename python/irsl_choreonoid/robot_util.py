@@ -1259,19 +1259,55 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def linkList(self):
         """
         Returns:
-            list [cnoid.Body.Link] : List of links
+            list [cnoid.Body.Link] : List of link
 
         """
         return self.__robot.links
 
     @property
+    def linkNames(self):
+        """
+        Returns:
+            list [str] : List of link's name
+
+        """
+        return [ l.name for l in self.__robot.links ]
+
+    @property
     def jointList(self):
         """
         Returns:
-            list [cnoid.Body.Link] : List of joints
+            list [cnoid.Body.Link] : List of joint
 
         """
         return self.__joint_list
+
+    @property
+    def jointNames(self):
+        """
+        Returns:
+            list [cnoid.Body.Link] : List of joint's name
+
+        """
+        return [ j.jointName for j in self.__joint_list ]
+
+    @property
+    def deviceList(self):
+        """
+        Returns:
+            list [cnoid.Body.Device] : List of device
+
+        """
+        return self.__robot.devices
+
+    @property
+    def deviceNames(self):
+        """
+        Returns:
+            list [cnoid.Body.Device] : List of device's name
+
+        """
+        return [ d.name for d in self.__robot.devices ]
 
     def angleVector(self, angles = None):
         """Setting or getting angle-vector
@@ -1573,11 +1609,38 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def fullbodyInverseKinematics(self, **kwargs):
         ### not implemented yet
         pass
-
     def moveCentroidOnFoot(self, p = 0.5, debug = False):
         ### not implemented yet
         pass
-
+    ## wrappedMethod to cnoid.Body
+    def link(self, arg):
+        return self.__robot.link(arg)
+    def joint(self, arg):
+        return self.__robot.joint(arg)
+    def device(self, arg):
+        return self.__robot.device(arg)
+    @property
+    def mass(self):
+        return self.__robot.mass
+    @property
+    def centerOfMass(self):
+        self.__robot.calcCenterOfMass()
+        return self.__robot.centerOfMass
+    @property
+    def numJoints(self):
+        return self.__robot.numJoints
+    @property
+    def numVirtualJoints(self):
+        return self.__robot.numVirtualJoints
+    @property
+    def numAllJoints(self):
+        return self.__robot.numAllJoints
+    @property
+    def numLinks(self):
+        return self.__robot.numLinks
+    @property
+    def numDevices(self):
+        return self.__robot.numDevices
 ###
 if isInChoreonoid():
     from .cnoid_base import *
