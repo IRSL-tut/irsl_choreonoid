@@ -174,7 +174,11 @@ class IKWrapper(object):
         if type(id_name_link) is int:
             return self.__robot.link(id_name_link)
         elif type(id_name_link) is str:
-            return self.__robot.link(id_name_link)
+            res =  self.__robot.joint(id_name_link)
+            if res is None:
+                return self.__robot.link(id_name_link)
+            else:
+                return res
         elif type(id_name_link) is cnoid.Body.Link:
             return id_name_link
         return None
@@ -1023,10 +1027,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             """
             self.__robot = robot
             self.__name = name
-            if type(tip_link) is str:
-                self.__tip_link = self.__robot.link(tip_link)
-            else:
-                self.__tip_link = tip_link
             if tip_link_to_eef is None:
                 self.__tip_link_to_eef = ic.coordinates()
             else:
@@ -1047,6 +1047,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                     else:
                         self.__joint_map[jnm] = j
                         self.__joint_list.append(j)
+            ##
+            if type(tip_link) is str:
+                lk = self.__robot.link(tip_link)
+                if lk is None:
+                    lk = self.__robot.joint(tip_link)
+                    if lk is None:
+                        lk = self.__robot.joint(self.rename(tip_link))
+                self.__tip_link = lk
+            else:
+                self.__tip_link = tip_link
             ##
             self.__ikw = IKWrapper(self.__robot, self.__tip_link, tip_to_eef=self.__tip_link_to_eef,
                                    use_joints=self.__joint_list if self.__joint_list is not None else None)
