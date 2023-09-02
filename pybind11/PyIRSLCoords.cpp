@@ -231,6 +231,9 @@ Returns:
             ss << q.w(); ss << " >";
             return ss.str();
         })
+    .def_property_readonly_static("X", [](py::object /* cls */) { return Vector3::UnitX(); })
+    .def_property_readonly_static("Y", [](py::object /* cls */) { return Vector3::UnitY(); })
+    .def_property_readonly_static("Z", [](py::object /* cls */) { return Vector3::UnitZ(); })
     .def_property("pos",
                   [](coordinates &self) { return self.pos; },
                   [](coordinates &self, ref_vec3 vec) { self.pos = vec; }, R"__IRSL__(
