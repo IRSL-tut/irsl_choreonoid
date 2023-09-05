@@ -642,7 +642,7 @@ class IKWrapper(object):
         return self.__tip_to_eef
     @property
     def joint_weights(self):
-        """
+        """Weight of joints
 
         Returns:
             list[float] : weight of joints
@@ -669,7 +669,7 @@ class IKWrapper(object):
         return self.__default_joints
     @property
     def default_pose(self):
-        """angleVector stored while initialization
+        """AngleVector stored while initialization
 
         Returns:
             numpy.array : 1 x len(self.default_joints) vector
@@ -678,7 +678,7 @@ class IKWrapper(object):
         return self.__default_pose
     @property
     def default_coords(self):
-        """rootCoords stored while initialization
+        """RootCoords stored while initialization
 
         Returns:
             cnoid.IRSLCoords.coordinates : Transformation to end-effector at tip_link coordinates
@@ -1226,7 +1226,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
     @property
     def robot(self):
-        """
+        """Robot-model using wrapped by this instance
 
         Returns:
             cnoid.Body.Body : Instance of robot model currently using
@@ -1257,54 +1257,60 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
     @property
     def linkList(self):
-        """
+        """List of links
+
         Returns:
-            list [cnoid.Body.Link] : List of link
+            list [cnoid.Body.Link] : List of links
 
         """
         return self.__robot.links
 
     @property
     def linkNames(self):
-        """
+        """List of link names
+
         Returns:
-            list [str] : List of link's name
+            list [str] : List of link names
 
         """
         return [ l.name for l in self.__robot.links ]
 
     @property
     def jointList(self):
-        """
+        """List of joints
+
         Returns:
-            list [cnoid.Body.Link] : List of joint
+            list [cnoid.Body.Link] : List of joints
 
         """
         return self.__joint_list
 
     @property
     def jointNames(self):
-        """
+        """List of joint names
+
         Returns:
-            list [cnoid.Body.Link] : List of joint's name
+            list [cnoid.Body.Link] : List of joint names
 
         """
         return [ j.jointName for j in self.__joint_list ]
 
     @property
     def deviceList(self):
-        """
+        """List of devices
+
         Returns:
-            list [cnoid.Body.Device] : List of device
+            list [cnoid.Body.Device] : List of devices
 
         """
         return self.__robot.devices
 
     @property
     def deviceNames(self):
-        """
+        """List of device names
+
         Returns:
-            list [cnoid.Body.Device] : List of device's name
+            list [cnoid.Body.Device] : List of device names
 
         """
         return [ d.name for d in self.__robot.devices ]
@@ -1317,6 +1323,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         Returns:
             numpy.array : Vector of angle[radian]
+
         """
         res_ = self.__robot.angleVector(angles)
         if angles is not None:
