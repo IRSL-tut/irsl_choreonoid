@@ -978,7 +978,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         else:
             self.__mode = 0 ## 0: kinematics
 
-        self.newcoords(coordinates(self.__robot.rootLink.T))
+        self.newcoords(ic.coordinates(self.__robot.rootLink.T))
 
         self.pose_angle_map = {}
         self.pose_coords_map = {}
@@ -1648,6 +1648,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     @property
     def numDevices(self):
         return self.__robot.numDevices
-###
+
+### flush in Base, etc.
 if isInChoreonoid():
     from .cnoid_base import *
