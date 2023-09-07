@@ -1,6 +1,37 @@
+items: 
+  id: 0
+  name: "RootItem"
+  plugin: Base
+  class: RootItem
+  is_builtin_item: true
 views: 
   - 
     id: 0
+    plugin: Base
+    class: ItemPropertyView
+  - 
+    id: 1
+    plugin: Base
+    class: ItemTreeView
+    mounted: true
+    state: 
+      expanded: [  ]
+  - 
+    id: 2
+    plugin: Base
+    class: LocationView
+    state: 
+      show_rpy: true
+      unique_rpy: false
+      show_quaternion: false
+      show_rotation_matrix: false
+      coordinate: parent
+  - 
+    id: 3
+    plugin: Base
+    class: MessageView
+  - 
+    id: 4
     plugin: Base
     class: SceneView
     mounted: true
@@ -16,7 +47,7 @@ views:
           isCurrent: true
           eye: [ 3, 1.5, 1.2 ]
           direction: [ -0.880451, -0.440225, -0.17609 ]
-          up: [ -0.1575, -0.0787499, 0.984374 ]
+          up: [ -0.1575, -0.0787498, 0.984374 ]
         - 
           camera: [ System, Orthographic ]
           orthoHeight: 20
@@ -50,7 +81,59 @@ views:
       xy_grid_color: [ 0.9, 0.9, 0.9 ]
       xz_grid_color: [ 0.9, 0.9, 0.9 ]
       yz_grid_color: [ 0.9, 0.9, 0.9 ]
+  - 
+    id: 5
+    plugin: Body
+    class: JointDisplacementView
+    state: 
+      show_joint_ids: true
+      show_joint_names: false
+      overlap_joint_names: false
+      show_sliders: true
+      show_dials: false
+      show_phases: true
+      limit_ranges: false
+      show_selected_joints: false
+  - 
+    id: 6
+    plugin: Body
+    class: LinkDeviceListView
+    state: 
+      element_type: all
+      listing_mode: list
+  - 
+    id: 7
+    plugin: Body
+    class: LinkPositionView
+    state: 
+      coordinate_mode: world
+      preferred_coordinate_mode: base
+      show_rpy: true
+      unique_rpy: false
+      show_quaternion: false
+      show_rotation_matrix: false
+      target_link_type: ik_link
+  - 
+    id: 8
+    plugin: Body
+    class: LinkPropertyView
+  - 
+    id: 9
+    plugin: Python
+    class: PythonConsoleView
 toolbars: 
+  "TimeBar": 
+    current_time: 0
+    min_time: 0
+    max_time: 30
+    frame_rate: 1000
+    playback_frame_rate: 60
+    idle_loop_driven_mode: false
+    playback_speed_ratio: 1
+    sync_to_ongoing_updates: true
+    auto_expansion: true
+  "LeggedBodyBar": 
+    stanceWidth: 0.15
   "KinematicsBar": 
     forward_kinematics: true
     inverse_kinematics: true
@@ -61,12 +144,33 @@ toolbars:
     snapDistance: 0.025
     penetrationBlockDepth: 0.0005
     lazyCollisionDetectionMode: true
+Body: 
+  "KinematicFaultChecker": 
+    checkJointPositions: true
+    angleMargin: 0
+    translationMargin: 0
+    checkJointVelocities: true
+    velocityLimitRatio: 100
+    targetJoints: all
+    checkSelfCollisions: true
+    onlyTimeBarRange: false
+  "OperableSceneBody": { }
+  "SplineFilterDialog": 
+    isInputFrameRateSpecified: false
+    inputFrameRate: 200
+    isOutputFrameRateSpecified: false
+    outputFrameRate: 200
 viewAreas: 
   - 
     type: embedded
     tabs: true
     contents: 
       type: pane
-      views: [ 0 ]
+      views: [ 1, 4 ]
+      current: 4
 layoutOfToolBars: 
-  rows: [ ]
+  rows: 
+    - 
+      - { name: "FileBar", x: 0, priority: 0 }
+      - { name: "SceneBar", x: 49, priority: 0 }
+      - { name: "TimeBar", x: 592, priority: 0 }

@@ -168,14 +168,16 @@ class DrawCoordsList(object):
         self.__interface = None
     @property
     def count(self):
-        """
+        """Number of coords stored in this instance
+
         Returns:
             int : current number of coords stored in this instance
         """
         return self.__count
     @property
     def T(self):
-        """
+        """Transformation matrix
+
         Returns:
             numpy.array : 4x4 matrix, homogeneous transformation matrix (cnoidPosition)
         """
@@ -185,7 +187,8 @@ class DrawCoordsList(object):
         self.__interface.T = _in
     @property
     def interface(self):
-        """
+        """Actual interface instance
+
         Returns:
             cnoid.DrawInterface.DrawInterface : actual instance to draw lines
 
