@@ -987,7 +987,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.__joint_map = {}
         for j in self.__joint_list:
             self.__joint_map[j.jointName] = j
-
+## __link_list, __link_map
+## __device_list, __device_map
         self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
@@ -1315,6 +1316,38 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         return [ d.name for d in self.__robot.devices ]
 
+    def link(self, arg):
+        return self.__robot.link(arg)
+    def joint(self, arg):
+        return self.__robot.joint(arg)
+    def device(self, arg):
+        return self.__robot.device(arg)
+#    def link(self, str_idx_instance):
+#        pass
+#    def joint(self, str_idx_instance):
+#        pass
+#    def device(self, str_idx_instance):
+#        pass
+    def linkCoords(self, str_idx_instance):
+        lk = self.__parseLink(str_idx_instance)
+        if lk is None:
+            return None
+        return lk.getCoords()
+
+    def jointCoords(self, str_idx_instance):
+        jt = self.__parseJoint(str_idx_instance)
+        if jt is None:
+            return None
+        return jt.getCoords()
+
+    def deviceCoords(self, str_idx_instance):
+        dev = self.__parseDevice(str_idx_instance)
+        if dev is None:
+            return None
+        p_cds = dev.getLink().getCoords()
+        p_cds.transform(coordinates(dev.T_local))
+        return p_cds
+
     def angleVector(self, angles = None):
         """Setting or getting angle-vector
 
@@ -1620,12 +1653,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         ### not implemented yet
         pass
     ## wrappedMethod to cnoid.Body
-    def link(self, arg):
-        return self.__robot.link(arg)
-    def joint(self, arg):
-        return self.__robot.joint(arg)
-    def device(self, arg):
-        return self.__robot.device(arg)
     @property
     def mass(self):
         return self.__robot.mass
