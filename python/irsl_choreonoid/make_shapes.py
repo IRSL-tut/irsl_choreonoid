@@ -400,12 +400,154 @@ def makeElevationGrid(_elevation_grid=None, wrapped=True, coords=None, **kwargs)
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    if type(_elevation_grid) is not cnoid.Util.MeshGenerator.ElevationGrid:
+    if type(_elevation_grid) is not cutil.MeshGenerator.ElevationGrid:
         _elevation_grid = makeElevationParam(**kwargs)
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateElevationGrid(_elevation_grid)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeCoords(coords): ## LineArray
+def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, **kwargs):
+    R0=radius
+    if axisRatio is None:
+        ll=axisLength
+        rr=axisRadius
+    else:
+        ll = axisRatio * length
+        rr = ll
+    L0=length-ll
+
+    if color is None:
+        col = [0, 1, 0]
+    else:
+        col = color
+    bd0 = makeCylinder(R0, L0, color=col, **kwargs)
+    bd0.translate(npa([0,L0/2,0]))
+    a0 = makeCone(rr, ll, color=col, **kwargs)
+    a0.translate(npa([0,L0+ll/2,0]))
+    ##
+    if color is None:
+        col = [0, 0, 1]
+    else:
+        col = color
+    bd1 = makeCylinder(R0, L0, color=col, **kwargs)
+    bd1.rotate(PI/2, cutil.UnitX)
+    bd1.translate(npa([0,L0/2,0]))
+    a1 = makeCone(rr, ll, color=col, **kwargs)
+    a1.rotate(PI/2, cutil.UnitX)
+    a1.translate(npa([0,L0+ll/2,0]))
+    ##
+    if color is None:
+        col = [1, 0, 0]
+    else:
+        col = color
+    bd2 = makeCylinder(R0, L0, color=col, **kwargs)
+    bd2.rotate(-PI/2, cutil.UnitZ)
+    bd2.translate(npa([0,L0/2,0]))
+    a2 = makeCone(rr, ll, color=col, **kwargs)
+    a2.rotate(-PI/2, cutil.UnitZ)
+    a2.translate(npa([0,L0+ll/2,0]))
+    ##
+    res=cutil.SgPosTransform()
+    if scale is not None:
+        current = cutil.SgScaleTransform(scale)
+        res.addChild(current)
+    else:
+        current = res
+    current.addChild(bd0.target)
+    current.addChild(bd1.target)
+    current.addChild(bd2.target)
+    current.addChild(a0.target)
+    current.addChild(a1.target)
+    current.addChild(a2.target)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res)
+    return res
+
+def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, **kwargs):
+    RR=width
+    L0=length
+    if color is None:
+        col = [0, 1, 0]
+    else:
+        col = color
+    bd0 = makeBox(RR, L0, RR, color=col, **kwargs)
+    bd0.translate(npa([0, L0/2, 0]))
+    if color is None:
+        col = [0, 0, 1]
+    else:
+        col = color
+    bd1 = makeBox(RR, RR, L0, color=col, **kwargs)
+    bd1.translate(npa([0, 0, L0/2]))
+    if color is None:
+        col = [1, 0, 0]
+    else:
+        col = color
+    bd2 = makeBox(L0, RR, RR, color=col, **kwargs)
+    bd2.translate(npa([L0/2, 0, 0]))
+    ##
+    res=cutil.SgPosTransform()
+    if scale is not None:
+        current = cutil.SgScaleTransform(scale)
+        res.addChild(current)
+    else:
+        current = res
+    current.addChild(bd0.target)
+    current.addChild(bd1.target)
+    current.addChild(bd2.target)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res)
+    return res
+
+def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+    ### material??
+    ls=cutil.SgLineSet()
+    ls.lineWidth=lineWidth
+    ls.setVertices(npa([[0,0,0],[length,0,0],[0,length,0],[0,0,length]], dtype='float32'))
+    ls.addLine(0,1)
+    ls.addLine(0,2)
+    ls.addLine(0,3)
+    ls.setColors(npa([x_color, y_color, z_color], dtype='float32'))
+    ls.resizeColorIndicesForNumLines(ls.numLines)
+    ls.setLineColor(0, 0)
+    ls.setLineColor(1, 1)
+    ls.setLineColor(2, 2)
+    res=cutil.SgPosTransform()
+    res.addChild(ls)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res)
+    return res
+
+def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+    ### material??
+    if color is not None:
+        x_color = color
+        y_color = color
+        z_color = color
+    ls=cutil.SgLineSet()
+    ls.lineWidth=lineWidth
+    ls.setVertices(npa([[-length,0,0],[length,0,0],[0,-length,0],[0,length,0],[0,0,-length],[0,0,length]], dtype='float32'))
+    ls.addLine(0,1)
+    ls.addLine(2,3)
+    ls.addLine(4,5)
+    ls.setColors(npa([x_color, y_color, z_color], dtype='float32'))
+    ls.resizeColorIndicesForNumLines(ls.numLines)
+    ls.setLineColor(0, 0)
+    ls.setLineColor(1, 1)
+    ls.setLineColor(2, 2)
+    res=cutil.SgPosTransform()
+    res.addChild(ls)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res)
+    return res
+
+def makePoints(points=None, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):
     pass
