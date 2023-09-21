@@ -32,6 +32,8 @@ Then, you can run some process when the position of the target is updated.
 
         if init_coords is not None:
             self.newcoords(init_coords)
+        else:
+            self.cnoidPosition =  self.__target.T
 
     def updateTarget(self):
         """Updating self.target and call callback_function
