@@ -16,6 +16,7 @@ import irsl_choreonoid.make_shapes as mkshapes
 import irsl_choreonoid.cnoid_util as iu
 import irsl_choreonoid.robot_util as ru
 from irsl_choreonoid.robot_util import RobotModelWrapped as RobotModel
+from irsl_choreonoid.RobotBuilder import RobotBuilder
 ## etc
 import numpy as np
 from numpy import array as npa
