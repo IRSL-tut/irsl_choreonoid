@@ -27,6 +27,7 @@ if iu.isInChoreonoid():
     ## in base
     import irsl_choreonoid.cnoid_base as ib
     import cnoid.Base as cbase
+    import cnoid.BodyPlugin as BodyPlugin
 ## ROS
 try:
     import irsl_choreonoid_ros.cnoid_ros_util as cru

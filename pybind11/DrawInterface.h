@@ -9,6 +9,7 @@
 #include <cnoid/SceneWidget>
 #include <cnoid/SceneView>
 #include <cnoid/SceneDrawables>
+#include <cnoid/RootItem>
 
 #include <QCoreApplication>
 
@@ -27,6 +28,7 @@ namespace cnoid {
     // added by IRSL
     public:
         SgPosTransformPtr posTrans;
+        bool in_choreonoid;
     public: static void flushAll()
         {
             //update view??
@@ -42,6 +44,7 @@ namespace cnoid {
     public:
         // added by IRSL
         void render(bool doImmediately) {
+            if(!sw) return;
             // sw->sceneRoot() or sw->scene()
             sw->renderScene(doImmediately);
         }
@@ -55,6 +58,7 @@ namespace cnoid {
             }
         }
         void viewAll() {
+            if(!sw) return;
             //SceneView::instance()->sceneWidget()->viewAll();
             sw->viewAll();
         }
@@ -64,7 +68,9 @@ namespace cnoid {
         void getOrigin(coordinates &_res) {
             _res = posTrans->T();
         }
-        DrawInterface() { } // just using at GeneralDrawInterface
+        DrawInterface() {
+            sw = nullptr;
+        } // just using at GeneralDrawInterface
         // original settings
         DrawInterface(Vector3f colorVec){
             sv = SceneView::instance();
@@ -89,7 +95,9 @@ namespace cnoid {
                 lineSet->clear();
                 lineSet->clearLines();
             }
-            sw->sceneRoot()->removeChild(posTrans);
+            if(!!sw) {
+                sw->sceneRoot()->removeChild(posTrans);
+            }
             vertices = nullptr;
             colors   = nullptr;
             lineSet  = nullptr;
@@ -356,13 +364,16 @@ namespace cnoid {
     public:
         GeneralDrawInterface() : GeneralDrawInterface(false) {}
         GeneralDrawInterface(bool useRoot) {
-            sv = SceneView::instance();
-            sw = sv->sceneWidget();
-            //lineSet.reset();
-            //vetices.reset();
-            //colors.reset();
+            in_choreonoid = false;
+            root = nullptr;
             posTrans = new SgPosTransform();
             posTrans->T().setIdentity();
+            if (!RootItem::instance()) {
+                return;
+            }
+            in_choreonoid = true;
+            sv = SceneView::instance();
+            sw = sv->sceneWidget();
             if (useRoot) {
                 root = (SgGroup *)sw->sceneRoot();
             } else {
@@ -372,9 +383,10 @@ namespace cnoid {
         }
         ~GeneralDrawInterface() {
             posTrans->clearChildren();
-            root->removeChild(posTrans, true);
+            if(!!root) root->removeChild(posTrans, true);
         }
         void flush() {
+            if (!in_choreonoid) return;
             // SgUpdate::ADDED | SgUpdate::MODIFIED
             if (!!posTrans) {
                 posTrans->notifyUpdate();

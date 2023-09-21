@@ -32,6 +32,8 @@ Then, you can run some process when the position of the target is updated.
 
         if init_coords is not None:
             self.newcoords(init_coords)
+        else:
+            self.cnoidPosition =  self.__target.T
 
     def updateTarget(self):
         """Updating self.target and call callback_function
@@ -87,6 +89,23 @@ Then, you can run some process when the position of the target is updated.
         self.updateTarget()
         return self
 
+    def locate(self, pos, wrt = None):
+        """Wrapped method of locate in cnoid.IRSLCoords.coordinates
+
+        Args:
+            pos (numpy.array) : 1x3 vector, translation vector
+            wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+        """
+        if wrt is None:
+            super().locate(trs)
+        else:
+            super().locate(trs, wrt)
+        self.updateTarget()
+        return self
+
     def rotate(self, ang, axis, wrt = None):
         """Wrapped method of rotate in cnoid.IRSLCoords.coordinates
 
@@ -121,6 +140,24 @@ Then, you can run some process when the position of the target is updated.
             super().transform(trs)
         else:
             super().transform(trs, wrt)
+        self.updateTarget()
+        return self
+
+    def move_to(self, trs, wrt = None):
+        """Wrapped method of move_to in cnoid.IRSLCoords.coordinates
+
+        Args:
+            trs (cnoid.IRSLCoords.coordinates) : Transformation to be applied
+            wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+
+        """
+        if wrt is None:
+            super().move_to(trs)
+        else:
+            super().move_to(trs, wrt)
         self.updateTarget()
         return self
 
