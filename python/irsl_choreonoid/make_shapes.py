@@ -1,6 +1,8 @@
-import numpy as np
+import numpy
+from numpy import array as npa
 import cnoid.AssimpPlugin
-import cnoid.Util
+import cnoid.Util as cutil
+from math import pi as PI
 
 from .irsl_draw_object import *
 
@@ -15,7 +17,7 @@ def generateMaterial(**kwargs):
         return generateMaterial(**(kwargs['material']))
 
     valueset = False
-    mat = cnoid.Util.SgMaterial()
+    mat = cutil.SgMaterial()
     val = __gets(('AmbientIntensity', 'ambientintensity', 'Intensity', 'intensity', 'ambient-intensity'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(val)
@@ -23,12 +25,12 @@ def generateMaterial(**kwargs):
 
     val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color', 'diffuse'), kwargs)
     if val is not None:
-        mat.setDiffuseColor(np.array(val))
+        mat.setDiffuseColor(npa(val))
         valueset = True
 
     val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color', 'emissive'), kwargs)
     if val is not None:
-        mat.setEmissiveColor(np.array(val))
+        mat.setEmissiveColor(npa(val))
         valueset = True
 
     val = __gets(('SpecularExponent', 'specularexponent', 'specular-exponent'), kwargs)
@@ -38,7 +40,7 @@ def generateMaterial(**kwargs):
 
     val = __gets(('SpecularColor', 'specularcolor', 'specular-color', 'specular'), kwargs)
     if val is not None:
-        mat.setSpecularColor(np.array(val))
+        mat.setSpecularColor(npa(val))
         valueset = True
 
     val = __gets(('Transparency', 'transparency', 'Transparent', 'transparent'), kwargs)
@@ -49,8 +51,8 @@ def generateMaterial(**kwargs):
     val = __gets(('color', 'Color'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(1.0)
-        mat.setDiffuseColor(np.array(val) * 0.7)
-        mat.setEmissiveColor(np.array(val) * 0.3)
+        mat.setDiffuseColor(npa(val) * 0.7)
+        mat.setEmissiveColor(npa(val) * 0.3)
         valueset = True
 
     if valueset:
@@ -58,19 +60,19 @@ def generateMaterial(**kwargs):
     return None
 
 def parseMeshGeneratorOption(mg, **kwargs):
-    val = __gets(('DivisionNumber'), kwargs)
+    val = __gets(('DivisionNumber',), kwargs)
     if val is not None:
         mg.setDivisionNumber(val)
-    val = __gets(('NormalGenerationEnabled'), kwargs)
+    val = __gets(('NormalGenerationEnabled',), kwargs)
     if val is not None:
         mg.setNormalGenerationEnabled(val)
-    val = __gets(('setBoundingBoxUpdateEnabled'), kwargs)
+    val = __gets(('setBoundingBoxUpdateEnabled',), kwargs)
     if val is not None:
         mg.setBoundingBoxUpdateEnabled(val)
 
 def __extractShape(sg_node):
     res = []
-    if type(sg_node) is cnoid.Util.SgShape:
+    if type(sg_node) is cutil.SgShape:
         res.append(sg_node)
     elif hasattr(sg_node, 'numChildren'):
         for idx in range(sg_node.numChildren):
@@ -89,7 +91,7 @@ def loadScene(fname, wrapped=True, **kwargs):
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    ld = cnoid.Util.SceneLoader()
+    ld = cutil.SceneLoader()
     ld.setMessageSinkStdErr()
 
     sg = ld.load(fname)
@@ -102,10 +104,10 @@ def loadScene(fname, wrapped=True, **kwargs):
             shape.setMaterial(mat)
 
     ret = None
-    if type(sg) is cnoid.Util.SgPosTransform:
+    if type(sg) is cutil.SgPosTransform:
         ret = sg
     else:
-        ret = cnoid.Util.SgPosTransform()
+        ret = cutil.SgPosTransform()
         ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
@@ -134,14 +136,14 @@ def loadMesh(fname, wrapped=True, **kwargs):
     if mat is not None:
         sg.setMaterial(mat)
 
-    ret = cnoid.Util.SgPosTransform()
+    ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
     return ret
 
 def __genShape(mesh, wrapped=True, **kwargs):
-    sg = cnoid.Util.SgShape()
+    sg = cutil.SgShape()
     sg.setMesh(mesh)
 
     mat = generateMaterial(**kwargs)
@@ -149,7 +151,7 @@ def __genShape(mesh, wrapped=True, **kwargs):
     if mat is not None:
         sg.setMaterial(mat)
 
-    ret = cnoid.Util.SgPosTransform()
+    ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
@@ -172,14 +174,14 @@ def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
         Origin of generated shape is the center of it
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    if type(x) is np.ndarray:
+    if type(x) is numpy.ndarray:
         mesh = mg.generateBox(x)
     elif y is not None and z is not None:
-        mesh = mg.generateBox(np.array([x, y, z]))
+        mesh = mg.generateBox(npa([x, y, z]))
     elif type(x) is int or type(x) is float:
-        mesh = mg.generateBox(np.array([x, x, x]))
+        mesh = mg.generateBox(npa([x, x, x]))
     else:
         raise Exception(f'Invalid arguments x: {x}, y: {y}, z: {z}')
 
@@ -204,7 +206,7 @@ def makeCylinder(radius, height, wrapped=True, **kwargs):
         Center circle with indicated radius on XZ-plane and sweep to both side with half of height, along y-direction
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCylinder(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
@@ -224,7 +226,7 @@ def makeSphere(radius, wrapped=True, **kwargs):
         Origin of generated shape is the center of it
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateSphere(radius)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
@@ -242,7 +244,7 @@ def makeCone(radius, height, wrapped=True, **kwargs):
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCone(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
@@ -263,7 +265,7 @@ def makeCapsule(radius, height, wrapped=True, **kwargs):
         Similar dimensions to 'makeCylinder' (bottom cricle is at minus y, cone's tip is at plus y)
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCapsule(radius, height)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
@@ -283,7 +285,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     if beginAngle is not None and endAngle is not None:
         mesh = mg.generateTorus(radius, corssSectionRadius, beginAngle, endAngle)
@@ -293,7 +295,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
-    """Generating cnoid.Util.MeshGenerator.Extrusion
+    """Making parameters for generating Extrusion(cnoid.Util.MeshGenerator.Extrusion)
 
     Args:
         crossSection ( list[list[float]],  N x 2 matrix) : 
@@ -308,13 +310,13 @@ def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, crease
         cnoid.Util.MeshGenerator.Extrusion : Generated result
 
     """
-    extconf = cnoid.Util.MeshGenerator.Extrusion()
-    extconf.crossSection = np.array(crossSection)
-    extconf.spine        = np.array(spine)
+    extconf = cutil.MeshGenerator.Extrusion()
+    extconf.crossSection = npa(crossSection)
+    extconf.spine        = npa(spine)
     if orientation is not None:
         extconf.orientation=orientation
     if scale is not None:
-        extconf.scale=np.array(scale)
+        extconf.scale=npa(scale)
     if creaseAngle is not None:
         extconf.creaseAngle=creaseAngle
     if beginCap is not None:
@@ -335,16 +337,16 @@ def makeExtrusion(_extrusion=None, wrapped=True, **kwargs):
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    if type(_extrusion) is not cnoid.Util.MeshGenerator.Extrusion:
+    if type(_extrusion) is not cutil.MeshGenerator.Extrusion:
         _extrusion = makeExtrusionParam(**kwargs)
-    mg = cnoid.Util.MeshGenerator()
+    mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateExtrusion(_extrusion)
     return __genShape(mesh, wrapped=wrapped, **kwargs)
 
 
 def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
-    """Generating cnoid.Util.MeshGenerator.ElevationGrid
+    """Making parameters for generating ElevationGrid(cnoid.Util.MeshGenerator.ElevationGrid)
 
     Args:
         xDimension (int) : Dimension of x-direction
@@ -359,7 +361,7 @@ def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=N
         cnoid.Util.MeshGenerator.ElevationGrid : Generated result
 
     """
-    eg = cnoid.Util.MeshGenerator.ElevationGrid()
+    eg = cutil.MeshGenerator.ElevationGrid()
     eg.xDimension = xDimension
     eg.zDimension = zDimension
     eg.xSpacing = xSpacing
