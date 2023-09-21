@@ -79,7 +79,7 @@ def __extractShape(sg_node):
             res += __extractShape(sg_node.getChild(idx))
     return res
 
-def loadScene(fname, wrapped=True, **kwargs):
+def loadScene(fname, wrapped=True, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
     Args:
@@ -111,9 +111,14 @@ def loadScene(fname, wrapped=True, **kwargs):
         ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
+        if coords is not None:
+            ret.newcoords(coords)
+    else:
+        if coords is not None:
+            ret.setPosition(coords.cnoidPosition)
     return ret
 
-def loadMesh(fname, wrapped=True, **kwargs):
+def loadMesh(fname, wrapped=True, coords=None, **kwargs):
     """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
@@ -140,9 +145,14 @@ def loadMesh(fname, wrapped=True, **kwargs):
     ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
+        if coords is not None:
+            ret.newcoords(coords)
+    else:
+        if coords is not None:
+            ret.setPosition(coords.cnoidPosition)
     return ret
 
-def __genShape(mesh, wrapped=True, **kwargs):
+def __genShape(mesh, wrapped=True, coords=None, **kwargs):
     sg = cutil.SgShape()
     sg.setMesh(mesh)
 
@@ -155,9 +165,14 @@ def __genShape(mesh, wrapped=True, **kwargs):
     ret.addChild(sg)
     if wrapped:
         ret = coordsWrapper(ret)
+        if coords is not None:
+            ret.newcoords(coords)
+    else:
+        if coords is not None:
+            ret.setPosition(coords.cnoidPosition)
     return ret
 
-def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
+def makeBox(x, y = None, z = None, wrapped=True, coords=None, **kwargs):
     """Making 'Box' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -188,9 +203,9 @@ def makeBox(x, y = None, z = None, wrapped=True, **kwargs):
     if mesh is None:
         raise Exception(f'Generating mesh was failed x: {x}, y: {y}, z: {z}')
 
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeCylinder(radius, height, wrapped=True, **kwargs):
+def makeCylinder(radius, height, wrapped=True, coords=None, **kwargs):
     """Making 'Cylinder' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -209,9 +224,9 @@ def makeCylinder(radius, height, wrapped=True, **kwargs):
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCylinder(radius, height)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeSphere(radius, wrapped=True, **kwargs):
+def makeSphere(radius, wrapped=True, coords=None, **kwargs):
     """Make 'Sphere' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -229,9 +244,9 @@ def makeSphere(radius, wrapped=True, **kwargs):
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateSphere(radius)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeCone(radius, height, wrapped=True, **kwargs):
+def makeCone(radius, height, wrapped=True, coords=None, **kwargs):
     """Making 'Cone' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -247,9 +262,9 @@ def makeCone(radius, height, wrapped=True, **kwargs):
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCone(radius, height)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeCapsule(radius, height, wrapped=True, **kwargs):
+def makeCapsule(radius, height, wrapped=True, coords=None, **kwargs):
     """Makeing 'Capsule' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -268,9 +283,9 @@ def makeCapsule(radius, height, wrapped=True, **kwargs):
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateCapsule(radius, height)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, **kwargs):
+def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, coords=None, **kwargs):
     """Makeing 'Torus' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -292,7 +307,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
     else:
         mesh = mg.generateTorus(radius, corssSectionRadius)
 
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
 def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
     """Making parameters for generating Extrusion(cnoid.Util.MeshGenerator.Extrusion)
@@ -325,7 +340,7 @@ def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, crease
         extconf.endCap=endCap
     return extconf
 
-def makeExtrusion(_extrusion=None, wrapped=True, **kwargs):
+def makeExtrusion(_extrusion=None, wrapped=True, coords=None, **kwargs):
     """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -342,7 +357,7 @@ def makeExtrusion(_extrusion=None, wrapped=True, **kwargs):
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     mesh = mg.generateExtrusion(_extrusion)
-    return __genShape(mesh, wrapped=wrapped, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
 
 def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
@@ -373,7 +388,7 @@ def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=N
         eg.creaseAngle = creaseAngle
     return eg
 
-def makeElevationGrid(_elevation_grid=None, wrapped=True, **kwargs):
+def makeElevationGrid(_elevation_grid=None, wrapped=True, coords=None, **kwargs):
     """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
