@@ -422,11 +422,11 @@ Returns:
          [](coordinates &self, ref_vec3 vec, const coordinates &wrt) {
              self.locate(vec, wrt); return &self; } )
     .def("move_to",
-         [](coordinates &self, const coordinates &vec, coordinates::wrt wrt) {
-             self.move_to(vec, wrt); return &self; }, py::arg("vector"), py::arg("wrt") = coordinates::wrt::local )
+         [](coordinates &self, const coordinates &c, coordinates::wrt wrt) {
+             self.move_to(c, wrt); return &self; }, py::arg("coords"), py::arg("wrt") = coordinates::wrt::local )
     .def("move_to",
-         [](coordinates &self, const coordinates &vec, const coordinates &wrt) {
-             self.move_to(vec, wrt); return &self; } )
+         [](coordinates &self, const coordinates &c, const coordinates &wrt) {
+             self.move_to(c, wrt); return &self; } )
     //
     .def("rotNormalize", &coordinates::rotNormalize)
     .def("getRotationAngle", [](const coordinates &self) {
