@@ -35,6 +35,9 @@ Then, you can run some process when the position of the target is updated.
         else:
             self.cnoidPosition =  self.__target.T
 
+    #def __del__(self):
+    #    print('destruct: coordsWrapper')
+
     def updateTarget(self):
         """Updating self.target and call callback_function
 

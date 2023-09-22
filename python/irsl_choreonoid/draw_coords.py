@@ -381,6 +381,9 @@ Using for drawing SceneGraph objects interactively
                 pass
         coordsWrapper.__init__(self, self, cds, update_callback=lambda : self.flush())
 
+    #def __del__(self):
+    #    print('destruct: GeneralDrawInterfaceWrapped')
+
     def flush(self):
         """Force rendering scene
 
