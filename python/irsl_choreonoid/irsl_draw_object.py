@@ -100,9 +100,9 @@ Then, you can run some process when the position of the target is updated.
             cnoid.IRSLCoords.coordinates : identical instance which was called with this method
         """
         if wrt is None:
-            super().locate(trs)
+            super().locate(pos)
         else:
-            super().locate(trs, wrt)
+            super().locate(pos, wrt)
         self.updateTarget()
         return self
 
