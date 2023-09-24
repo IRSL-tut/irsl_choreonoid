@@ -111,10 +111,20 @@ class RobotBuilder(object):
             lk.q = 0
         self.notifyUpdate()
 
-    def newRobot(self):
-        ## not implemented yet ##
-        ## start with new robot intance ##
-        pass
+    def newRobot(self, robot=None, name=None):
+        """Restarting with new robot(item)
+
+        Args:
+            robot (str, optional) :
+            name (str, optional) : name of RobotItem
+
+        """
+        self.clear()
+        if self.bodyItem is not None:
+            cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
+            self.bodyItem.removeFromParentItem()
+            self.__setBodyItem(robot=robot, name=name)
+        self.__setBody(robot=robot)
 
     def clear(self):
         if self.__di is not None:
