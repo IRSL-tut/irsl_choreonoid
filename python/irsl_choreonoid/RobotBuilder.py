@@ -38,30 +38,43 @@ except Exception as e:
 
 ## add inertia on shape
 class RobotBuilder(object):
-    def __init__(self, robot=None, gui=True): ## item
-        self.bodyItem = None
+    def __init__(self, robot=None, gui=True, name=None): ## item
+        self.__bodyItem = None
         self.__di = None
+        self.__body = None
         if gui and iu.isInChoreonoid():
+            ## set self.__di
             self.__di=DrawInterface()
-            if isinstance(robot, BodyPlugin.BodyItem):
-                self.bodyItem = robot
-            elif type(robot) is str:
-                self.bodyItem = ib.loadRobotItem(robot, world=False, addItem=False)
-            else:
-                self.bodyItem=BodyPlugin.BodyItem()
-            self.bodyItem.setName('BodyBuilder')
-            cbase.RootItem.instance.addChildItem(self.bodyItem)
-            cbase.ItemTreeView.instance.checkItem(self.bodyItem)
+            self.__setBodyItem(robot=robot, name=name)
+        ## set self.__body
+        self.__setBody(robot=robot)
+        self.created_links = []
+
+    def __setBodyItem(self, robot, name):
+        ## set self.__bodyItem
+        if isinstance(robot, BodyPlugin.BodyItem):
+            self.__bodyItem = robot
+        elif type(robot) is str:
+            self.__bodyItem = ib.loadRobotItem(robot, world=False, addItem=False)
+        else:
+            self.__bodyItem = BodyPlugin.BodyItem()
+        if name is None:
+            name = 'BodyBuilder'
+        self.bodyItem.setName(name)
+        cbase.RootItem.instance.addChildItem(self.bodyItem)
+        cbase.ItemTreeView.instance.checkItem(self.bodyItem)
+
+    def __setBody(self, robot):
         if self.bodyItem is not None:
-            self.body = self.bodyItem.body
+            self.__body = self.bodyItem.body
         else:
             if isinstance(robot, Body):
-                self.body = robot
+                self.__body = robot
             elif type(robot) is str:
-                self.robot = iu.loadRobot(robot)
+                self.__robot = iu.loadRobot(robot)
             else:
-                self.body = Body()
-        self.created_links = []
+                self.__body = Body()
+
     def __del__(self):
         ## print('destruct builder')
         if self.__di is not None:
@@ -73,6 +86,12 @@ class RobotBuilder(object):
             # cbase.RootItem.instance.addChildItem(self.bodyItem)
             # del self.BodyItem
 
+    @property
+    def body(self):
+        return self.__body
+    @property
+    def bodyItem(self):
+        return self.__bodyItem
 ### start: GUI wrapper
     @property
     def draw(self):
