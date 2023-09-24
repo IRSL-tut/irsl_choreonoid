@@ -9,13 +9,13 @@ from cnoid.Body import Device
 ## IRSL (not base)
 from cnoid.IRSLCoords import coordinates
 #import cnoid.IRSLCoords as IC
-#-from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
+from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
+#-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
 ## from .draw_coords import DrawCoordsListWrapped as DrawCoords
-#-from . import make_shapes as mkshapes
-#-from . import cnoid_util as iu
-import irsl_choreonoid.make_shapes as mkshapes
-import irsl_choreonoid.cnoid_util as iu
+from . import make_shapes as mkshapes
+from . import cnoid_util as iu
+#-import irsl_choreonoid.make_shapes as mkshapes
+#-import irsl_choreonoid.cnoid_util as iu
 ## from . import robot_util as ru
 ## from .robot_util import RobotModelWrapped as RobotModel
 ## etc
@@ -27,8 +27,8 @@ from math import pi as PI
 ##
 if iu.isInChoreonoid():
     ## in base
-    #-from . import cnoid_base as ib
-    import irsl_choreonoid.cnoid_base as ib
+    from . import cnoid_base as ib
+    #-import irsl_choreonoid.cnoid_base as ib
     import cnoid.Base as cbase
     import cnoid.BodyPlugin as BodyPlugin
 try:
