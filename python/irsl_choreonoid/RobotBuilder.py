@@ -152,7 +152,10 @@ class RobotBuilder(object):
         groot=cutil.SgPosTransform(self.__di.SgPosTransform)
         res = RobotBuilder.searchSceneGraph(groot, 'joint_root')
         if len(res) == 0:
-            jtype='free'
+            if root:
+                jtype='free'
+            else:
+                jtype='fixed'
             jaxis=cutil.UnitZ
             cds_w_j = coordinates(groot.T)
         else:
@@ -209,6 +212,8 @@ class RobotBuilder(object):
             self.setRootLink(lk)
             if clear:
                 self.clear()
+        else:
+            self.appendLink(self.body.rootLink, lk)
         return lk
 
     def viewInfo(self, autoScale=False, **kwargs):
