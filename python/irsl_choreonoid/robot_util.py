@@ -963,7 +963,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
 
         """
-        super().__init__(target = self, update_callback = lambda : self.hook() )
         self.__item = None
         if hasattr(robot, 'body'): ## check BodyItem ##if isinstance(robot, BodyItem):
             self.__robot = robot.body
@@ -977,7 +976,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__mode = 1 ## 1: drawing
         else:
             self.__mode = 0 ## 0: kinematics
-
+        ## initialize super after setting __robot
+        super().__init__(target = self, update_callback = lambda : self.hook() )
         self.newcoords(ic.coordinates(self.__robot.rootLink.T))
 
         self.pose_angle_map = {}
