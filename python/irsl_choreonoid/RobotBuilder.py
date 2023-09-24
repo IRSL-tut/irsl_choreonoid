@@ -98,15 +98,21 @@ class RobotBuilder(object):
         return self.__di
 
     def hideRobot(self):
+        """Hiding robot model (uncheck RobotItem)
+        """
         if self.__di is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
 
     def showRobot(self):
+        """Showing robot model (check RobotItem)
+        """
         if self.__di is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem)
             self.notifyUpdate()
 
     def resetRobot(self):
+        """Resetting joint-angles of the robot
+        """
         for lk in self.body.links:
             lk.q = 0
         self.notifyUpdate()
@@ -127,22 +133,38 @@ class RobotBuilder(object):
         self.__setBody(robot=robot)
 
     def clear(self):
+        """Clearing showing geometries
+        """
         if self.__di is not None:
             self.__di.clear()
 
     def objects(self):
+        """Getting list of shown objects
+        """
         if self.__di is not None:
             return self.__di.objects()
 
     def addShape(self, shape):
+        """Adding a shape
+
+        Args:
+            shape (cnoid.Util.SgNode) : Shape to be added
+
+        """
         if self.__di is not None:
             self.__di.addObject(shape)
 
     def removeShape(self, shape):
+        """Removing a shape
+
+        Args:
+            shape (cnoid.Util.SgNode) : Shape to be removed
+
+        """
         if self.__di is not None:
             self.__di.removeObject(shape)
 
-    def createLinkFromShape(self, mass=None, density=1000.0, name=None, parentLink=None, root=False, clear=True, **kwargs):
+    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, **kwargs):
         if self.__di is None:
             return
         if name is None:
