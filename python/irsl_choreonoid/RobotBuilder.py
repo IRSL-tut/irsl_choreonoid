@@ -340,11 +340,6 @@ class RobotBuilder(object):
         ## not implemented yet
         self.notifyUpdate()
 
-    def resetRobot(self):
-        ## not implemented yet
-        if self.bodyItem is not None:
-            pass
-
     ### start: link visualization
     def __addShape(self, alink, shape):
         sh=alink.shape
