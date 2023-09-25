@@ -1284,7 +1284,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [str] : List of link names
 
         """
-        return self.__link_map.keys()
+        return list(self.__link_map.keys())
 
     @property
     def jointList(self):
@@ -1304,7 +1304,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Link] : List of joint names
 
         """
-        return self.__joint_map.keys()
+        return list(self.__joint_map.keys())
 
     @property
     def deviceList(self):
@@ -1324,7 +1324,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Device] : List of device names
 
         """
-        return self.__device_map.keys()
+        return list(self.__device_map.keys())
 
     def link(self, arg):
         """Instance of the link
