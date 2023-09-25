@@ -1345,7 +1345,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__link_list[arg]
         elif tp is str:
-            if tp in self.__link_map:
+            if arg in self.__link_map:
                 return self.__link_map[arg]
             else:
                 return self.__robot.link(arg)
@@ -1367,7 +1367,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__joint_list[arg]
         elif tp is str:
-            if tp in self.__joint_map:
+            if arg in self.__joint_map:
                 return self.__joint_map[arg]
             else:
                 self.__robot.joint(arg)
@@ -1390,7 +1390,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__device_list[arg]
         elif tp is str:
-            if tp in self.__device_map:
+            if arg in self.__device_map:
                 return self.__device_map[arg]
             else:
                 self.__robot.device(arg)
