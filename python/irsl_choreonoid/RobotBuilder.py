@@ -9,13 +9,13 @@ from cnoid.Body import Device
 ## IRSL (not base)
 from cnoid.IRSLCoords import coordinates
 #import cnoid.IRSLCoords as IC
-#-from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
+from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
+#-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
 ## from .draw_coords import DrawCoordsListWrapped as DrawCoords
-#-from . import make_shapes as mkshapes
-#-from . import cnoid_util as iu
-import irsl_choreonoid.make_shapes as mkshapes
-import irsl_choreonoid.cnoid_util as iu
+from . import make_shapes as mkshapes
+from . import cnoid_util as iu
+#-import irsl_choreonoid.make_shapes as mkshapes
+#-import irsl_choreonoid.cnoid_util as iu
 ## from . import robot_util as ru
 ## from .robot_util import RobotModelWrapped as RobotModel
 ## etc
@@ -27,8 +27,8 @@ from math import pi as PI
 ##
 if iu.isInChoreonoid():
     ## in base
-    #-from . import cnoid_base as ib
-    import irsl_choreonoid.cnoid_base as ib
+    from . import cnoid_base as ib
+    #-import irsl_choreonoid.cnoid_base as ib
     import cnoid.Base as cbase
     import cnoid.BodyPlugin as BodyPlugin
 try:
@@ -38,30 +38,43 @@ except Exception as e:
 
 ## add inertia on shape
 class RobotBuilder(object):
-    def __init__(self, robot=None, gui=True): ## item
-        self.bodyItem = None
+    def __init__(self, robot=None, gui=True, name=None): ## item
+        self.__bodyItem = None
         self.__di = None
+        self.__body = None
         if gui and iu.isInChoreonoid():
+            ## set self.__di
             self.__di=DrawInterface()
-            if isinstance(robot, BodyPlugin.BodyItem):
-                self.bodyItem = robot
-            elif type(robot) is str:
-                self.bodyItem = ib.loadRobotItem(robot, world=False, addItem=False)
-            else:
-                self.bodyItem=BodyPlugin.BodyItem()
-            self.bodyItem.setName('BodyBuilder')
-            cbase.RootItem.instance.addChildItem(self.bodyItem)
-            cbase.ItemTreeView.instance.checkItem(self.bodyItem)
+            self.__setBodyItem(robot=robot, name=name)
+        ## set self.__body
+        self.__setBody(robot=robot)
+        self.created_links = []
+
+    def __setBodyItem(self, robot, name):
+        ## set self.__bodyItem
+        if isinstance(robot, BodyPlugin.BodyItem):
+            self.__bodyItem = robot
+        elif type(robot) is str:
+            self.__bodyItem = ib.loadRobotItem(robot, world=False, addItem=False)
+        else:
+            self.__bodyItem = BodyPlugin.BodyItem()
+        if name is None:
+            name = 'BodyBuilder'
+        self.bodyItem.setName(name)
+        cbase.RootItem.instance.addChildItem(self.bodyItem)
+        cbase.ItemTreeView.instance.checkItem(self.bodyItem)
+
+    def __setBody(self, robot):
         if self.bodyItem is not None:
-            self.body = self.bodyItem.body
+            self.__body = self.bodyItem.body
         else:
             if isinstance(robot, Body):
-                self.body = robot
+                self.__body = robot
             elif type(robot) is str:
-                self.robot = iu.loadRobot(robot)
+                self.__robot = iu.loadRobot(robot)
             else:
-                self.body = Body()
-        self.created_links = []
+                self.__body = Body()
+
     def __del__(self):
         ## print('destruct builder')
         if self.__di is not None:
@@ -73,47 +86,85 @@ class RobotBuilder(object):
             # cbase.RootItem.instance.addChildItem(self.bodyItem)
             # del self.BodyItem
 
+    @property
+    def body(self):
+        return self.__body
+    @property
+    def bodyItem(self):
+        return self.__bodyItem
 ### start: GUI wrapper
     @property
     def draw(self):
         return self.__di
 
     def hideRobot(self):
+        """Hiding robot model (uncheck RobotItem)
+        """
         if self.__di is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
 
     def showRobot(self):
+        """Showing robot model (check RobotItem)
+        """
         if self.__di is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem)
             self.notifyUpdate()
 
     def resetRobot(self):
+        """Resetting joint-angles of the robot
+        """
         for lk in self.body.links:
             lk.q = 0
         self.notifyUpdate()
 
-    def newRobot(self):
-        ## not implemented yet ##
-        ## start with new robot intance ##
-        pass
+    def newRobot(self, robot=None, name=None):
+        """Restarting with new robot(item)
+
+        Args:
+            robot (str, optional) :
+            name (str, optional) : name of RobotItem
+
+        """
+        self.clear()
+        if self.bodyItem is not None:
+            cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
+            self.bodyItem.removeFromParentItem()
+            self.__setBodyItem(robot=robot, name=name)
+        self.__setBody(robot=robot)
 
     def clear(self):
+        """Clearing showing geometries
+        """
         if self.__di is not None:
             self.__di.clear()
 
     def objects(self):
+        """Getting list of shown objects
+        """
         if self.__di is not None:
             return self.__di.objects()
 
     def addShape(self, shape):
+        """Adding a shape
+
+        Args:
+            shape (cnoid.Util.SgNode) : Shape to be added
+
+        """
         if self.__di is not None:
             self.__di.addObject(shape)
 
     def removeShape(self, shape):
+        """Removing a shape
+
+        Args:
+            shape (cnoid.Util.SgNode) : Shape to be removed
+
+        """
         if self.__di is not None:
             self.__di.removeObject(shape)
 
-    def createLinkFromShape(self, mass=None, density=1000.0, name=None, parentLink=None, root=False, clear=True, **kwargs):
+    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, **kwargs):
         if self.__di is None:
             return
         if name is None:
@@ -123,7 +174,10 @@ class RobotBuilder(object):
         groot=cutil.SgPosTransform(self.__di.SgPosTransform)
         res = RobotBuilder.searchSceneGraph(groot, 'joint_root')
         if len(res) == 0:
-            jtype='free'
+            if root:
+                jtype='free'
+            else:
+                jtype='fixed'
             jaxis=cutil.UnitZ
             cds_w_j = coordinates(groot.T)
         else:
@@ -180,6 +234,8 @@ class RobotBuilder(object):
             self.setRootLink(lk)
             if clear:
                 self.clear()
+        else:
+            self.appendLink(self.body.rootLink, lk)
         return lk
 
     def viewInfo(self, autoScale=False, **kwargs):
@@ -339,11 +395,6 @@ class RobotBuilder(object):
     def removeLink(self, link):
         ## not implemented yet
         self.notifyUpdate()
-
-    def resetRobot(self):
-        ## not implemented yet
-        if self.bodyItem is not None:
-            pass
 
     ### start: link visualization
     def __addShape(self, alink, shape):

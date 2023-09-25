@@ -963,7 +963,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
 
         """
-        super().__init__(target = self, update_callback = lambda : self.hook() )
         self.__item = None
         if hasattr(robot, 'body'): ## check BodyItem ##if isinstance(robot, BodyItem):
             self.__robot = robot.body
@@ -977,18 +976,29 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__mode = 1 ## 1: drawing
         else:
             self.__mode = 0 ## 0: kinematics
-
+        ## initialize super after setting __robot
+        super().__init__(target = self, update_callback = lambda : self.hook() )
         self.newcoords(ic.coordinates(self.__robot.rootLink.T))
 
         self.pose_angle_map = {}
         self.pose_coords_map = {}
 
+        ##
         self.__joint_list = self.__robot.jointList()
         self.__joint_map = {}
         for j in self.__joint_list:
             self.__joint_map[j.jointName] = j
-## __link_list, __link_map
-## __device_list, __device_map
+        ##
+        self.__link_list = self.__robot.links
+        self.__link_map = {}
+        for lk in self.__link_list:
+            self.__link_map[lk.name] = lk
+        ##
+        self.__device_list = self.__robot.devices
+        self.__device_map = {}
+        for d in self.__device_list:
+            self.__device_map[d.name] = d
+
         self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
@@ -1264,7 +1274,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Link] : List of links
 
         """
-        return self.__robot.links
+        return self.__link_list
 
     @property
     def linkNames(self):
@@ -1274,7 +1284,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [str] : List of link names
 
         """
-        return [ l.name for l in self.__robot.links ]
+        return self.__link_map.keys()
 
     @property
     def jointList(self):
@@ -1294,7 +1304,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Link] : List of joint names
 
         """
-        return [ j.jointName for j in self.__joint_list ]
+        return self.__joint_map.keys()
 
     @property
     def deviceList(self):
@@ -1304,7 +1314,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Device] : List of devices
 
         """
-        return self.__robot.devices
+        return self.__device_list
 
     @property
     def deviceNames(self):
@@ -1314,34 +1324,116 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Device] : List of device names
 
         """
-        return [ d.name for d in self.__robot.devices ]
+        return self.__device_map.keys()
 
     def link(self, arg):
+        """Instance of the link
+
+        Args:
+            arg (str, int, object) : name or index of the link
+
+        Returns:
+            cnoid.Body.Link : instance of the link
+
+        """
+        tp = type(arg)
+        if tp is int:
+            return self.__link_list[arg]
+        elif tp is str:
+            if tp in self.__link_map:
+                return self.__link_map[arg]
+            else:
+                return self.__robot.link(arg)
+        elif tp is cnoid.Body.Link:
+            return arg
         return self.__robot.link(arg)
+
     def joint(self, arg):
+        """Instance of the joint
+
+        Args:
+            arg (str, int, object) : name or index of the joint
+
+        Returns:
+            cnoid.Body.Link : instance of the joint
+
+        """
+        tp = type(arg)
+        if tp is int:
+            return self.__joint_list[arg]
+        elif tp is str:
+            if tp in self.__joint_map:
+                return self.__joint_map[arg]
+            else:
+                self.__robot.joint(arg)
+        elif tp is cnoid.Body.Link:
+            if arg in self.__joint_list:
+                return arg
         return self.__robot.joint(arg)
+
     def device(self, arg):
+        """Instance of the device
+
+        Args:
+            arg (str, int, object) : name or index of the device
+
+        Returns:
+            cnoid.Body.Device : instance of the device
+
+        """
+        tp = type(arg)
+        if tp is int:
+            return self.__device_list[arg]
+        elif tp is str:
+            if tp in self.__device_map:
+                return self.__device_map[arg]
+            else:
+                self.__robot.device(arg)
+        elif tp is cnoid.Body.Device:
+            return arg
         return self.__robot.device(arg)
-#    def link(self, str_idx_instance):
-#        pass
-#    def joint(self, str_idx_instance):
-#        pass
-#    def device(self, str_idx_instance):
-#        pass
+
     def linkCoords(self, str_idx_instance):
-        lk = self.__parseLink(str_idx_instance)
+        """Coordinates of the link
+
+        Args:
+            str_index_instance (str, int, object) : name or index of the link
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : coordinate of the link
+
+        """
+        lk = self.link(str_idx_instance)
         if lk is None:
             return None
         return lk.getCoords()
 
     def jointCoords(self, str_idx_instance):
-        jt = self.__parseJoint(str_idx_instance)
+        """Coordinates of the joint
+
+        Args:
+            str_index_instance (str, int, object) : name or index of the joint
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : coordinate of the joint
+
+        """
+        jt = self.joint(str_idx_instance)
         if jt is None:
             return None
         return jt.getCoords()
 
     def deviceCoords(self, str_idx_instance):
-        dev = self.__parseDevice(str_idx_instance)
+        """Coordinates of the device
+
+        Args:
+            str_index_instance (str, int, object) : name or index of the device
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : coordinate of the device
+
+        """
+        dev = self.device(str_idx_instance)
         if dev is None:
             return None
         p_cds = dev.getLink().getCoords()
