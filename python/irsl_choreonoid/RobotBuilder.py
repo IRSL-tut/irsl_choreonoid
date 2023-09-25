@@ -629,19 +629,43 @@ class RobotBuilder(object):
         current.addChild(bd2.target)
         return res
 
-    def addDeviceShape(self, alink):
+    def addDeviceShape(self, alink, scale=1.0):
         ## TODO / not implemented yet ##
         pass
 
-    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, noLinkVisual=False, useCollision=False, useInertiaBox=False):
+    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, addDevice=True, addToLink=False, useCollision=False, useInertiaBox=False):
+        """
+        Args:
+            alink (cnoid.Body.Link) :
+            scale (float, default=0.1) :
+            wrapped (boolean, default=True) :
+            addCOM (boolean, default=True) :
+            addInertia (boolean, default=True) :
+            addJoint (boolean, default=True) :
+            addDevice (boolean, default=True) :
+            addToLink (boolean, default=False) :
+            useCollision (boolean, default=False) :
+            useInertiaBox (boolean, default=False) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         ## SgTransform(linkPos) / SgTransform(shapeBase)
-        cloned_lk = self.body.createLink(alink)
+        if addToLink:
+            cloneed_lk = alink
+        else:
+            cloned_lk = self.body.createLink(alink)
         if addCOM:
             self.addCOMShape(cloned_lk)
         if addInertia:
             self.addInertiaShape(cloned_lk, useBox=useInertiaBox)
         if addJoint:
             self.addJointShape(cloned_lk, scale=scale)
+        if addDevice:
+            self.addDeviceShape(clone_lk, scale=scale)
+        if addToLink:
+            return
         linkorg = cutil.SgPosTransform()
         linkorg.setName('linkPos')
         sh = cloned_lk.shape
