@@ -997,8 +997,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.__device_list = self.__robot.devices
         self.__device_map = {}
         for d in self.__device_list:
-            self.__device_map[d.name] = d
-
+            name = d.name
+            if len(name) < 1:
+                name = '{}{}_{}_{}'.format(d.typeName, d.id, d.index, d.link().name)
+            while name in self.__device_map:
+                name+='+'
+            self.__device_map[name] = d
+            #d.name=name
         self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
