@@ -384,7 +384,7 @@ Using for drawing SceneGraph objects interactively
     #def __del__(self):
     #    print('destruct: GeneralDrawInterfaceWrapped')
 
-    def flush(self):
+    def flush(self, doImmediately=False):
         """Force rendering scene
 
         Args:
@@ -392,7 +392,7 @@ Using for drawing SceneGraph objects interactively
 
         """
         super().flush()
-        super().render()
+        super().render(doImmediately)
 
     def clear(self, flush = True):
         """Clear all added objects
