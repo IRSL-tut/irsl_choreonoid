@@ -309,22 +309,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
 
     return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
-    """Making parameters for generating Extrusion(cnoid.Util.MeshGenerator.Extrusion)
-
-    Args:
-        crossSection ( list[list[float]],  N x 2 matrix) : 
-        spine ( list[list[float]], M x 3 matrix) : 
-        orientation (list[AngleAxis], optional) : 
-        scale ( list[list[float]],  N x 2 matrix, optional) : 
-        creaseAngle (float, optional) : 
-        beginCap (boolean, optional) : 
-        endCap (boolean, optional) : 
-
-    Returns:
-        cnoid.Util.MeshGenerator.Extrusion : Generated result
-
-    """
+def _makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
     extconf = cutil.MeshGenerator.Extrusion()
     extconf.crossSection = npa(crossSection)
     extconf.spine        = npa(spine)
@@ -340,18 +325,7 @@ def makeExtrusionParam(crossSection, spine, orientation=None, scale=None, crease
         extconf.endCap=endCap
     return extconf
 
-def makeExtrusion(_extrusion=None, wrapped=True, coords=None, **kwargs):
-    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
-
-    Args:
-        _extrusion (cnoid.Util.MeshGenerator.Extrusion, optional) : Adding parameters by cnoid.Util.MeshGenerator.Extrusion
-        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
-        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
-
-    Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
-
-    """
+def _makeExtrusion(_extrusion=None, wrapped=True, coords=None, **kwargs):
     if type(_extrusion) is not cutil.MeshGenerator.Extrusion:
         _extrusion = makeExtrusionParam(**kwargs)
     mg = cutil.MeshGenerator()
@@ -359,23 +333,28 @@ def makeExtrusion(_extrusion=None, wrapped=True, coords=None, **kwargs):
     mesh = mg.generateExtrusion(_extrusion)
     return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-
-def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
-    """Making parameters for generating ElevationGrid(cnoid.Util.MeshGenerator.ElevationGrid)
+def makeExtrusion(crossSection, spine, wrapped=True, coords=None, **kwargs):
+    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
-        xDimension (int) : Dimension of x-direction
-        zDimension (int) : Dimension of z-direction
-        xSpacing (float) : X length is (xDimension - 1) x xSpacing
-        zSpacing (float) : Z length is (zDimension - 1) x zSpacing
-        height (list[float]) : Size is ( xDimension x zDimension )
-        ccw (boolean, optional) :
-        creaseAngl (float, optional) :
+        crossSection ( list[list[float]],  N x 2 matrix) :  / arg for cnoid.Util.MeshGenerator.Extrusion
+        spine ( list[list[float]], M x 3 matrix) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        orientation (list[AngleAxis], optional) :  / arg for cnoid.Util.MeshGenerator.Extrusion
+        scale ( list[list[float]],  N x 2 matrix, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        creaseAngle (float, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        beginCap (boolean, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        endCap (boolean, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
 
     Returns:
-        cnoid.Util.MeshGenerator.ElevationGrid : Generated result
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
+    param=_makeExtrusionParam(crossSection, spine, **kwargs)
+    return _makeExtrusion(param, wrapped=wrapped, coords=coords, **kwargs)
+
+def _makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
     eg = cutil.MeshGenerator.ElevationGrid()
     eg.xDimension = xDimension
     eg.zDimension = zDimension
@@ -388,18 +367,7 @@ def makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=N
         eg.creaseAngle = creaseAngle
     return eg
 
-def makeElevationGrid(_elevation_grid=None, wrapped=True, coords=None, **kwargs):
-    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
-
-    Args:
-        _elevation_grid (cnoid.Util.MeshGenerator.ElevationGrid, optional) : Adding parameters by cnoid.Util.MeshGenerator.ElevationGrid
-        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
-        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeElevationParam
-
-    Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
-
-    """
+def _makeElevationGrid(_elevation_grid=None, wrapped=True, coords=None, **kwargs):
     if type(_elevation_grid) is not cutil.MeshGenerator.ElevationGrid:
         _elevation_grid = makeElevationParam(**kwargs)
     mg = cutil.MeshGenerator()
@@ -407,7 +375,46 @@ def makeElevationGrid(_elevation_grid=None, wrapped=True, coords=None, **kwargs)
     mesh = mg.generateElevationGrid(_elevation_grid)
     return __genShape(mesh, wrapped=wrapped, coords=coords, **kwargs)
 
-def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, **kwargs):
+def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, coords=None, **kwargs):
+    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
+
+    Args:
+        xDimension (int) : Dimension of x-direction / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        zDimension (int) : Dimension of z-direction / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        xSpacing (float) : X length is (xDimension - 1) x xSpacing / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        zSpacing (float) : Z length is (zDimension - 1) x zSpacing / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        height (list[float]) : Size is ( xDimension x zDimension ) / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        ccw (boolean, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        creaseAngl (float, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeElevationParam
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
+    return _makeElevationGrid(param, wrapped=wrapped, coords=coords, **kwargs)
+
+def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+    """Makeing '3D-axis' shape using cylinder and cone
+
+    Args:
+        radius (float, default=0.15) :
+        length (float, default=0.8) :
+        axisLength (float, default=0.3) :
+        axisRadius (float, default=0.25) :
+        axisRatio (float, optional) :
+        color ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
     R0=radius
     if axisRatio is None:
         ll=axisLength
@@ -418,7 +425,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     L0=length-ll
 
     if color is None:
-        col = [0, 1, 0]
+        col = y_color
     else:
         col = color
     bd0 = makeCylinder(R0, L0, color=col, **kwargs)
@@ -427,7 +434,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     a0.translate(npa([0,L0+ll/2,0]))
     ##
     if color is None:
-        col = [0, 0, 1]
+        col = z_color
     else:
         col = color
     bd1 = makeCylinder(R0, L0, color=col, **kwargs)
@@ -438,7 +445,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     a1.translate(npa([0,L0+ll/2,0]))
     ##
     if color is None:
-        col = [1, 0, 0]
+        col = x_color
     else:
         col = color
     bd2 = makeCylinder(R0, L0, color=col, **kwargs)
@@ -466,23 +473,38 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
         res = coordsWrapper(res)
     return res
 
-def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, **kwargs):
+def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+    """Makeing '3D-axis' shape using box
+
+    Args:
+        width (float, default=0.2) :
+        length (float, default=0.8) :
+        color ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
     RR=width
     L0=length
     if color is None:
-        col = [0, 1, 0]
+        col = y_color
     else:
         col = color
     bd0 = makeBox(RR, L0, RR, color=col, **kwargs)
     bd0.translate(npa([0, L0/2, 0]))
     if color is None:
-        col = [0, 0, 1]
+        col = z_color
     else:
         col = color
     bd1 = makeBox(RR, RR, L0, color=col, **kwargs)
     bd1.translate(npa([0, 0, L0/2]))
     if color is None:
-        col = [1, 0, 0]
+        col = x_color
     else:
         col = color
     bd2 = makeBox(L0, RR, RR, color=col, **kwargs)
@@ -504,6 +526,21 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
     return res
 
 def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+    """Makeing '3D-axis' shape using line
+
+    Args:
+        length (float, default=0.8) :
+        lineWidth (float, default=2.0) :
+        color ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
     ### material??
     ls=cutil.SgLineSet()
     ls.lineWidth=lineWidth
@@ -525,6 +562,21 @@ def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None,
     return res
 
 def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+    """Makeing '3D-axis' shape using crossing line
+
+    Args:
+        length (float, default=0.8) :
+        lineWidth (float, default=2.0) :
+        color ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
     ### material??
     if color is not None:
         x_color = color
@@ -549,5 +601,21 @@ def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, 
         res = coordsWrapper(res)
     return res
 
-def makePoints(points=None, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):
+def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):
+    """Makeing '3D point cloud' shape
+
+    Args:
+        points (numpy.array) : N x 3 matrix (N is number of points)
+        pointSize (float, default=1.0) :
+        color ( list[float], optional ) :
+        colorIndices ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
     pass

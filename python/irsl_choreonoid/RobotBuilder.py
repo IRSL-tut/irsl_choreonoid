@@ -38,7 +38,16 @@ except Exception as e:
 
 ## add inertia on shape
 class RobotBuilder(object):
+    """Building robot interactively
+    """
     def __init__(self, robot=None, gui=True, name=None): ## item
+        """
+        Args:
+            robot (,optional) :
+            gui (boolean, default=True) :
+            name (str, optional) :
+
+        """
         self.__bodyItem = None
         self.__di = None
         self.__body = None
@@ -88,13 +97,31 @@ class RobotBuilder(object):
 
     @property
     def body(self):
+        """Currently builded robot model
+
+        Returns:
+            cnoid.Body.Body : Currently builded robot model
+
+        """
         return self.__body
     @property
     def bodyItem(self):
+        """Currently displayed BodyItem
+
+        Returns:
+            cnoid.BodyPlugin.BodyItem : Currently displayed BodyItem
+
+        """
         return self.__bodyItem
 ### start: GUI wrapper
     @property
     def draw(self):
+        """DrawInterface for accessing raw-level display methods
+
+        Returns:
+            irsl_choreonoid.draw_coords.DrawInterfaceWrapped : DrawInterface
+
+        """
         return self.__di
 
     def hideRobot(self):
@@ -165,6 +192,21 @@ class RobotBuilder(object):
             self.__di.removeObject(shape)
 
     def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, **kwargs):
+        """Creating link from drawn shapes and appending to the other link
+
+        Args:
+            name (str, optional) :
+            mass (float, optional) :
+            density (float, default=1000.0) :
+            parentLink (cnoid.Body.Link, optional) :
+            root (boolean, default=False) :
+            clear (boolean, default=True) :
+            \*\*kwargs :
+
+        Returns:
+            cnoid.Body.Link : Created link
+
+        """
         if self.__di is None:
             return
         if name is None:
@@ -239,6 +281,15 @@ class RobotBuilder(object):
         return lk
 
     def viewInfo(self, autoScale=False, **kwargs):
+        """Showing information of links. (joint-type, joint-axis, mass, center-of-mass, inertia)
+        Args:
+            autoScale (boolean, default=False) :
+            \*\*kwargs :
+
+        Returns:
+            [] : Created shapes
+
+        """
         if autoScale:
             ## not implemented
             kwargs['scale']=0.1
@@ -250,6 +301,8 @@ class RobotBuilder(object):
         return res
 ### end: GUI wrapper
     def notifyUpdate(self):
+        """Notifying update for redrawing robot-model and shapes
+        """
         self.body.updateLinkTree()
         self.body.calcForwardKinematics()
         if self.bodyItem is not None:
@@ -259,6 +312,19 @@ class RobotBuilder(object):
             self.bodyItem.notifyKinematicStateUpdate()
 
     def createJointShape(self, jointType=Link.JointType.FreeJoint, wrapped=True, coords=None, add=True, scale=0.3, **kwargs):
+        """Creating and showing jointShape
+
+        Args:
+            jointType (cnoid.Body.Link.JointType, default=FreeJoint) :
+            wrapped (boolean, default=True) :
+            coords (cnoid.IRSLCoords.coordinates, optional) :
+            add (boolean, default=True) :
+            scale (float, default=0.3) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         kwargs['scale']=scale
         tp='fixed'
         if jointType == Link.JointType.FreeJoint:
@@ -296,6 +362,23 @@ class RobotBuilder(object):
 #JointEffortRange
 #EquivalentRotorInertia
     def createLink(self, name='', mass=0.1, COM=None, density=None, inertia=None, shape=None, visual=None, collision=None, **kwargs):
+        """Creating a link
+
+        Args:
+            name (str, default='') :
+            mass (float, default=0.1) :
+            COM (numpy.array, optional) :
+            density (float, optional) :
+            inertia (numpy.array, optional) :
+            shape (,optional) :
+            visual (,optional) :
+            collision (,optional) :
+            \*\*kwargs :
+
+        Returns:
+            cnoid.Body.Link : Created Link
+
+        """
         lk = self.createLinkBase(name=name, mass=mass, COM=COM, density=density, inertia=inertia, shape=shape, visual=visual, collision=collision)
         for k, v in kwargs.items():
             if type(v) is tuple or type(v) is list:
@@ -304,7 +387,23 @@ class RobotBuilder(object):
                 exec('lk.set{}(v)'.format(k))
         return lk
 
-    def createLinkBase(self, name='', mass=0.1, density=None, COM=None, inertia=None, shape=None, visual=None, collision=None, **kwargs):
+    def createRootLink(self, **kwargs):
+        """Creating a link and adding it as root-link
+
+        Args:
+            \*\*kwargs :
+
+        Returns:
+            cnoid.Body.Link : Created Link
+
+        """
+        lk=self.createLink(**kwargs)
+        lk.setJointType(Link.JointType.FreeJoint)
+        self.body.setRootLink(lk)
+        self.notifyUpdate()
+        return lk
+
+    def createLinkBase(self, name='', mass=0.1, density=None, COM=None, inertia=None, shape=None, visual=None, collision=None):
         baselk = self.body.createLink()
         baselk.setName(name)
         baselk.setMass(mass)
@@ -354,13 +453,6 @@ class RobotBuilder(object):
             baselk.addCollisionShapeNode(collision)
         self.created_links.append(baselk)
         return baselk
-
-    def createRootLink(self, **kwargs):
-        lk=self.createLinkBase(**kwargs)
-        lk.setJointType(Link.JointType.FreeJoint)
-        self.body.setRootLink(lk)
-        self.notifyUpdate()
-        return lk
 
     def updateMassParameterAsUniformDensity(self, alink, density=None, shape='visual'):
         if shape == 'visual':
@@ -629,19 +721,43 @@ class RobotBuilder(object):
         current.addChild(bd2.target)
         return res
 
-    def addDeviceShape(self, alink):
+    def addDeviceShape(self, alink, scale=1.0):
         ## TODO / not implemented yet ##
         pass
 
-    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, noLinkVisual=False, useCollision=False, useInertiaBox=False):
+    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, addDevice=True, addToLink=False, useCollision=False, useInertiaBox=False):
+        """
+        Args:
+            alink (cnoid.Body.Link) :
+            scale (float, default=0.1) :
+            wrapped (boolean, default=True) :
+            addCOM (boolean, default=True) :
+            addInertia (boolean, default=True) :
+            addJoint (boolean, default=True) :
+            addDevice (boolean, default=True) :
+            addToLink (boolean, default=False) :
+            useCollision (boolean, default=False) :
+            useInertiaBox (boolean, default=False) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         ## SgTransform(linkPos) / SgTransform(shapeBase)
-        cloned_lk = self.body.createLink(alink)
+        if addToLink:
+            cloneed_lk = alink
+        else:
+            cloned_lk = self.body.createLink(alink)
         if addCOM:
             self.addCOMShape(cloned_lk)
         if addInertia:
             self.addInertiaShape(cloned_lk, useBox=useInertiaBox)
         if addJoint:
             self.addJointShape(cloned_lk, scale=scale)
+        if addDevice:
+            self.addDeviceShape(clone_lk, scale=scale)
+        if addToLink:
+            return
         linkorg = cutil.SgPosTransform()
         linkorg.setName('linkPos')
         sh = cloned_lk.shape
@@ -656,6 +772,14 @@ class RobotBuilder(object):
         return res
     ### end: link visualization
     def writeBodyFile(self, fname, modelName=None, mode=0, **kwargs):
+        """Writing created robot-model to file as .body file
+
+        Args:
+            fname (str) : Name of file
+            modelName (str, optional) :
+            mode (int, default=0):
+
+        """
         #mode: 0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
         bw = cbody.StdBodyWriter()
         bw.setMessageSinkStdErr()
@@ -664,6 +788,14 @@ class RobotBuilder(object):
             self.body.setName(modelName)
         return bw.writeBody(self.body, fname)
     def writeURDF(self, fname, **kwargs):
+        """Writing created robot-model to file as .urdf file
+
+        Args:
+            fname (str) : Name of file
+            modelName (str, optional) :
+            mode (int, default=0):
+
+        """
         ubw = URDFBodyWriter()
         ubw.setMessageSinkStdErr()
         for k, v in kwargs.items():
@@ -671,75 +803,197 @@ class RobotBuilder(object):
         ubw.writeBody(self.body, fname)
     ### start: mkshapes wrapper
     def loadScene(self, fname, wrapped=True, add=True, **kwargs):
+        """Loading scene as a shape, see irsl_choreonoid.make_shapes.loadScene
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.loadScene(fname, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def loadMesh(self, fname, wrapped=True, add=True, **kwargs):
+        """Loading mesh as a shape, see irsl_choreonoid.make_shapes.loadMesh
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.loadMesh(fname, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeBox(self, x, y = None, z = None, wrapped=True, add=True, **kwargs):
+        """Making box shape, see irsl_choreonoid.make_shapes.makeBox
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeBox(x,y,z,wrapped,**kwargs)
         if add:
             self.addShape(res)
         return res
     def makeCylinder(self, radius, height, wrapped=True, add=True, **kwargs):
+        """Making cylinder shape, see irsl_choreonoid.make_shapes.makeCylinder
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeCylinder(radius, height, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeSphere(self, radius, wrapped=True, add=True, **kwargs):
+        """Making sphere shape, see irsl_choreonoid.make_shapes.makeSphere
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeSphere(radius, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeCone(self, radius, height, wrapped=True, add=True, **kwargs):
+        """Making cone shape, see irsl_choreonoid.make_shapes.makeCone
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeCone(radius, height, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeCapsule(self, radius, height, wrapped=True, add=True, **kwargs):
+        """Making capsule shape, see irsl_choreonoid.make_shapes.makeCapsule
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeCapsule(radius, height, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeTorus(self, radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, add=True, **kwargs):
+        """Making torus shape, see irsl_choreonoid.make_shapes.makeTorus
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeTorus(radius, corssSectionRadius, beginAngle, endAngle, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeExtrusion(self, crossSection, spine, wrapped=True, add=True, **kwargs):
-        ## crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None
-        param=mkshapes.makeExtrusionParam(crossSection, spine, **kwargs)
-        res = mkshapes.makeExtrusion(param, wrapped, **kwargs)
+        """Making extrusion shape, see irsl_choreonoid.make_shapes.makeExtrusion
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
+        res = mkshapes.makeExtrusion(crossSection, spine, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeElevationGrid(self, xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, add=True, **kwargs):
-        ## xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None
-        param=mkshapes.makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
-        res = mkshapes.makeElevationGrid(param, wrapped, **kwargs)
+        """Making elevation-grid shape, see irsl_choreonoid.make_shapes.makeElevationGrid
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
+        res = mkshapes.makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
     def make3DAxis(self, coords=None, add=True, **kwargs):
+        """Making 3D-axis shape, see irsl_choreonoid.make_shapes.make3DAxis
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.make3DAxis(coords, **kwargs)
         if add:
             self.addShape(res)
         return res
     def make3DAxisBox(self, coords=None, add=True, **kwargs):
+        """Making 3D-axis shape (type: box), see irsl_choreonoid.make_shapes.make3DAxisBox
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.make3DAxisBox(coords, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeCoords(self, coords=None, add=True, **kwargs):
+        """Making 3D-axis shape (type: line), see irsl_choreonoid.make_shapes.makeCoords
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeCoords(coords, **kwargs)
         if add:
             self.addShape(res)
         return res
     def makeCross(self, coords=None, add=True, **kwargs):
+        """Making 3D-axis shape (type: crossing-line), see irsl_choreonoid.make_shapes.makeCross
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
         res = mkshapes.makeCross(coords, **kwargs)
         if add:
             self.addShape(res)

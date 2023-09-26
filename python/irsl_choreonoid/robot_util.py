@@ -997,8 +997,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.__device_list = self.__robot.devices
         self.__device_map = {}
         for d in self.__device_list:
-            self.__device_map[d.name] = d
-
+            name = d.name
+            if len(name) < 1:
+                name = '{}{}_{}_{}'.format(d.typeName, d.id, d.index, d.link().name)
+            while name in self.__device_map:
+                name+='+'
+            self.__device_map[name] = d
+            #d.name=name
         self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
@@ -1284,7 +1289,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [str] : List of link names
 
         """
-        return self.__link_map.keys()
+        return list(self.__link_map.keys())
 
     @property
     def jointList(self):
@@ -1304,7 +1309,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Link] : List of joint names
 
         """
-        return self.__joint_map.keys()
+        return list(self.__joint_map.keys())
 
     @property
     def deviceList(self):
@@ -1324,7 +1329,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             list [cnoid.Body.Device] : List of device names
 
         """
-        return self.__device_map.keys()
+        return list(self.__device_map.keys())
 
     def link(self, arg):
         """Instance of the link
@@ -1340,7 +1345,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__link_list[arg]
         elif tp is str:
-            if tp in self.__link_map:
+            if arg in self.__link_map:
                 return self.__link_map[arg]
             else:
                 return self.__robot.link(arg)
@@ -1362,7 +1367,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__joint_list[arg]
         elif tp is str:
-            if tp in self.__joint_map:
+            if arg in self.__joint_map:
                 return self.__joint_map[arg]
             else:
                 self.__robot.joint(arg)
@@ -1385,7 +1390,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if tp is int:
             return self.__device_list[arg]
         elif tp is str:
-            if tp in self.__device_map:
+            if arg in self.__device_map:
                 return self.__device_map[arg]
             else:
                 self.__robot.device(arg)
