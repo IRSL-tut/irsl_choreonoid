@@ -1261,10 +1261,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """Set updating mode
 
         Args:
-            mode (int, optional) : Mode to be set (0\: kinematics mode, 1\: rendering mode)
+            mode (int, optional) : Mode to be set (0\: kinematics mode, 1\: rendering mode, 2\: rendering immediately mode)
 
         Returns:
-            int : Current mode (0\: kinematics mode, 1\: rendering mode)
+            int : Current mode (0\: kinematics mode, 1\: rendering mode, 2\: rendering immediately mode)
 
         """
         if mode is not None:
@@ -1523,13 +1523,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__robot.calcForwardKinematics()
         elif self.__mode == 1: ## render
             self.flush()
+        elif self.__mode == 2: ## render Immediately
+            self.flush(True)
 
-    def flush(self):
+    def flush(self, updateGui=False):
         if self.__robot is not None:
             self.__robot.calcForwardKinematics()
         if self.__item is not None:
             self.__item.notifyKinematicStateChange()
-            ## MessageView.instance.flush()## TODO []
+            if updateGui:
+                cnoid.Base.App.updateGui()
 
     def setDefaultPose(self):
         """Setting default pose if registered
@@ -1776,3 +1779,4 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 ### flush in Base, etc.
 if isInChoreonoid():
     from .cnoid_base import *
+    import cnoid.Base

@@ -755,7 +755,7 @@ class RobotBuilder(object):
         if addJoint:
             self.addJointShape(cloned_lk, scale=scale)
         if addDevice:
-            self.addDeviceShape(clone_lk, scale=scale)
+            self.addDeviceShape(cloned_lk, scale=scale)
         if addToLink:
             return
         linkorg = cutil.SgPosTransform()
