@@ -114,6 +114,109 @@ def loadRobot(fname):
     rb.calcForwardKinematics()
     return rb
 
+def castValueNode(_valuenode):
+    """Casting cnoid.Util.ValueNode type to python primitive type
+
+    Args:
+        _valuenode (cnoid.Util.ValueNode) : ValueNode
+
+    Returns:
+        dict, list, int, float, bool, str : Instance of python primitive type
+
+    """
+    if _valuenode.isMapping():
+        return mappingToDict(_valuenode.toMapping())
+    elif _valuenode.isListing():
+        return listingToList(_valuenode.toListing())
+    elif _valuenode.isScalar():
+        instr = _valuenode.toString()
+        try:
+            res = int(instr)
+        except Exception as e:
+            try:
+                res = float(instr)
+            except Exception as e:
+                lowerstr = instr.lower()
+                if lowerstr == 'true':
+                    return True
+                elif lowerstr == 'false':
+                    return False
+                else:
+                    return instr
+        return res
+
+def mappingToDict(mapping):
+    """Converting cnoid.Util.Mapping to dict
+
+    Args:
+        mapping (cnoid.Util.Mapping) : Instance of mapping to be converted
+
+    Returns:
+        dict : Converted dictionary
+
+    """
+    res = {}
+    for key in mapping.keys():
+        res[key] = castValueNode(mapping[key])
+    return res
+
+def listingToList(listing):
+    """Converting cnoid.Util.Listing to list
+
+    Args:
+        listing (cnoid.Util.Listing) : Instance of listing to be converted
+
+    Returns:
+        list : Converted list
+
+    """
+    res = []
+    for idx in range(len(listing)):
+        res.append(castValueNode(listing[idx]))
+    return res
+
+def dictToMapping(indict):
+    """Converting dict to cnoid.Util.Mapping
+
+    Args:
+        indict (dict) : Dict to be converted
+
+    Returns:
+        cnoid.Util.Mapping : Converted mapping
+
+    """
+    res = cnoid.Util.Mapping()
+    for k, v in indict.items():
+        if type(v) is dict:
+            res.insert(k, dictToMapping(v))
+        elif type(v) is list or type(v) is tuple:
+            res.insert(k, listToListing(v))
+        else:
+            res.write(k, v)
+    return res
+
+def listToListing(inlist):
+    """Converting list to cnoid.Util.Mapping
+
+    Args:
+        inlist (list) : List to be converted
+
+    Returns:
+        cnoid.Util.Mapping : Converted mapping
+
+    """
+    res = cnoid.Util.Listing()
+    for v in inlist:
+        if type(v) is dict:
+            res.append(dictToMapping(v))
+        elif type(v) is list or type(v) is tuple:
+            res.append(listToListing(v))
+        elif type(v) is bool:
+            res.append(str(v).lower())
+        else:
+            res.append(v)
+    return res
+
 ##
 ## cnoid Position
 ##
