@@ -110,7 +110,7 @@ def loadScene(fname, wrapped=True, coords=None, **kwargs):
         ret = cutil.SgPosTransform()
         ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -144,7 +144,7 @@ def loadMesh(fname, wrapped=True, coords=None, **kwargs):
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -164,7 +164,7 @@ def __genShape(mesh, wrapped=True, coords=None, **kwargs):
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -470,7 +470,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=current)
     return res
 
 def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
@@ -522,7 +522,7 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=current)
     return res
 
 def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
@@ -558,7 +558,7 @@ def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None,
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=ls)
     return res
 
 def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
@@ -598,7 +598,7 @@ def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, 
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=ls)
     return res
 
 def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):

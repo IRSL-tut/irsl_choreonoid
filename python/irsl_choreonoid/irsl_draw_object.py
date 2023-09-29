@@ -14,7 +14,7 @@ Some mthods (newcoords, translate, rotate, transform) to update itself are overr
 
 Then, you can run some process when the position of the target is updated.
     """
-    def __init__(self, target, init_coords=None, update_callback=None):
+    def __init__(self, target, init_coords=None, update_callback=None, original_object=None):
         """
         Args:
             target (object) : wrapped target which have property 'T' for setting cnoidPosition
@@ -23,6 +23,7 @@ Then, you can run some process when the position of the target is updated.
         """
         super().__init__()
         self.__target = target
+        self._original_object=original_object
         ##if hasattr(target, 'coords'):
         ##    target.coords = self
         ##else:
@@ -234,3 +235,17 @@ Then, you can run some process when the position of the target is updated.
 
         """
         return self.__target
+
+    @property
+    def object(self):
+        """Wrapped object of this instance, which was manipulated by methods of this class
+
+        Returns:
+            object : Utility slot set while initializing
+
+        Note:
+            target is a transformed target such as cnoid.Util.SgPosTransform
+            object is a utility slot for handling a child of the target (Shape, etc...)
+
+        """
+        return self._original_object
