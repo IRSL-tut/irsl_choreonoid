@@ -25,22 +25,22 @@ def generateMaterial(**kwargs):
 
     val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color', 'diffuse'), kwargs)
     if val is not None:
-        mat.setDiffuseColor(npa(val))
+        mat.setDiffuseColor(npa(val, dtype='float64'))
         valueset = True
 
     val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color', 'emissive'), kwargs)
     if val is not None:
-        mat.setEmissiveColor(npa(val))
+        mat.setEmissiveColor(npa(val, dtype='float64'))
         valueset = True
 
     val = __gets(('SpecularExponent', 'specularexponent', 'specular-exponent'), kwargs)
     if val is not None:
-        mat.setSpecularExponent(val)
+        mat.setSpecularExponent(val, dtype='float64')
         valueset = True
 
     val = __gets(('SpecularColor', 'specularcolor', 'specular-color', 'specular'), kwargs)
     if val is not None:
-        mat.setSpecularColor(npa(val))
+        mat.setSpecularColor(npa(val, dtype='float64'))
         valueset = True
 
     val = __gets(('Transparency', 'transparency', 'Transparent', 'transparent'), kwargs)
@@ -51,8 +51,8 @@ def generateMaterial(**kwargs):
     val = __gets(('color', 'Color'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(1.0)
-        mat.setDiffuseColor(npa(val) * 0.7)
-        mat.setEmissiveColor(npa(val) * 0.3)
+        mat.setDiffuseColor(npa(val, dtype='float64') * 0.7)
+        mat.setEmissiveColor(npa(val, dtype='float64') * 0.3)
         valueset = True
 
     if valueset:
@@ -110,7 +110,7 @@ def loadScene(fname, wrapped=True, coords=None, **kwargs):
         ret = cutil.SgPosTransform()
         ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -144,7 +144,7 @@ def loadMesh(fname, wrapped=True, coords=None, **kwargs):
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -164,7 +164,7 @@ def __genShape(mesh, wrapped=True, coords=None, **kwargs):
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
     if wrapped:
-        ret = coordsWrapper(ret)
+        ret = coordsWrapper(ret, original_object=sg)
         if coords is not None:
             ret.newcoords(coords)
     else:
@@ -191,12 +191,12 @@ def makeBox(x, y = None, z = None, wrapped=True, coords=None, **kwargs):
     """
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    if type(x) is numpy.ndarray:
-        mesh = mg.generateBox(x)
+    if type(x) is numpy.ndarray or type(x) is list:
+        mesh = mg.generateBox(npa(x, dtype='float64'))
     elif y is not None and z is not None:
-        mesh = mg.generateBox(npa([x, y, z]))
+        mesh = mg.generateBox(npa([x, y, z], dtype='float64'))
     elif type(x) is int or type(x) is float:
-        mesh = mg.generateBox(npa([x, x, x]))
+        mesh = mg.generateBox(npa([x, x, x], dtype='float64'))
     else:
         raise Exception(f'Invalid arguments x: {x}, y: {y}, z: {z}')
 
@@ -311,12 +311,12 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
 
 def _makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creaseAngle=None, beginCap=None, endCap=None, **kwargs):
     extconf = cutil.MeshGenerator.Extrusion()
-    extconf.crossSection = npa(crossSection)
-    extconf.spine        = npa(spine)
+    extconf.crossSection = npa(crossSection, dtype='float64')
+    extconf.spine        = npa(spine, dtype='float64')
     if orientation is not None:
         extconf.orientation=orientation
     if scale is not None:
-        extconf.scale=npa(scale)
+        extconf.scale=npa(scale, dtype='float64')
     if creaseAngle is not None:
         extconf.creaseAngle=creaseAngle
     if beginCap is not None:
@@ -396,7 +396,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
     param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
     return _makeElevationGrid(param, wrapped=wrapped, coords=coords, **kwargs)
 
-def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using cylinder and cone
 
     Args:
@@ -407,6 +407,9 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
         axisRatio (float, optional) :
         color ( list[float], optional ) :
         scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -429,7 +432,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     else:
         col = color
     bd0 = makeCylinder(R0, L0, color=col, **kwargs)
-    bd0.translate(npa([0,L0/2,0]))
+    bd0.translate(npa([0,L0/2.0,0]))
     a0 = makeCone(rr, ll, color=col, **kwargs)
     a0.translate(npa([0,L0+ll/2,0]))
     ##
@@ -470,10 +473,10 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=current)
     return res
 
-def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+def make3DAxisBox(width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using box
 
     Args:
@@ -481,6 +484,9 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
         length (float, default=0.8) :
         color ( list[float], optional ) :
         scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -522,17 +528,19 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=current)
     return res
 
-def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using line
 
     Args:
         length (float, default=0.8) :
         lineWidth (float, default=2.0) :
         color ( list[float], optional ) :
-        scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -558,17 +566,19 @@ def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None,
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=ls)
     return res
 
-def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+def makeCross(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using crossing line
 
     Args:
         length (float, default=0.8) :
         lineWidth (float, default=2.0) :
         color ( list[float], optional ) :
-        scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -598,18 +608,17 @@ def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, 
     if coords is not None:
         res.setPosition(coords.cnoidPosition)
     if wrapped:
-        res = coordsWrapper(res)
+        res = coordsWrapper(res, original_object=ls)
     return res
 
-def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):
+def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, coords=None, wrapped=True, **kwargs):
     """Makeing '3D point cloud' shape
 
     Args:
         points (numpy.array) : N x 3 matrix (N is number of points)
         pointSize (float, default=1.0) :
-        color ( list[float], optional ) :
+        colors ( list[float], optional ) :
         colorIndices ( list[float], optional ) :
-        scale (float, optional ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -618,4 +627,51 @@ def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, co
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    pass
+    ps=cutil.SgPointSet()
+    ps.pointSize=pointSize
+    if type(points) is list:
+        ps.setVertices(npa(points, dtype='float32'))
+    else:
+        ps.setVertices(points)
+    if colors is not None:
+        if type(colors) is list:
+            ps.setColors(npa(colors, dtype='float32'))
+        else:
+            ps.setColors(colors)
+    if colorIndices is not None:
+        ps.colorIndices = colorIndices
+    res=cutil.SgPosTransform()
+    res.addChild(ps)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=ps)
+    return res
+
+def makeText(text, textHeight=1.0, color=None, coords=None, wrapped=True, **kwargs):
+    """Makeing 'Text' shape
+
+    Args:
+        text (str) : String to be displayed
+        textHeight (float, default=1.0) :
+        color ( list[float], optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    tx = cutil.SgText()
+    tx.text = text
+    tx.textHeight = textHeight
+    if color is not None:
+        tx.color = npa(color, dtype='float32')
+    res=cutil.SgPosTransform()
+    res.addChild(tx)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=tx)
+    return res

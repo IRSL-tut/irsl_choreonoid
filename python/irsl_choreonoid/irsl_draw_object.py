@@ -14,7 +14,7 @@ Some mthods (newcoords, translate, rotate, transform) to update itself are overr
 
 Then, you can run some process when the position of the target is updated.
     """
-    def __init__(self, target, init_coords=None, update_callback=None):
+    def __init__(self, target, init_coords=None, update_callback=None, original_object=None):
         """
         Args:
             target (object) : wrapped target which have property 'T' for setting cnoidPosition
@@ -23,6 +23,7 @@ Then, you can run some process when the position of the target is updated.
         """
         super().__init__()
         self.__target = target
+        self._original_object=original_object
         ##if hasattr(target, 'coords'):
         ##    target.coords = self
         ##else:
@@ -128,6 +129,61 @@ Then, you can run some process when the position of the target is updated.
         self.updateTarget()
         return self
 
+    def orient(self, ang, axis, wrt = None):
+        """Wrapped method of orient in cnoid.IRSLCoords.coordinates
+
+        Args:
+            ang (float) : angle to rotate [radian]
+            aixs (numpy.array) : 1x3 vector, axis to rotate around
+            wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+
+        """
+        if wrt is None:
+            super().orient(ang, axis)
+        else:
+            super().orient(ang, axis, wrt)
+        self.updateTarget()
+        return self
+
+    def rotate_with_matrix(self, rot, wrt = None):
+        """Wrapped method of rotate_with_matrix in cnoid.IRSLCoords.coordinates
+
+        Args:
+            rot (numpy.array) : 3x3 matrix, matrix applied to rotate
+            wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+
+        """
+        if wrt is None:
+            super().rotate_with_matrix(rot)
+        else:
+            super().rotate_with_matrix(rot, wrt)
+        self.updateTarget()
+        return self
+
+    def orient_with_matrix(self, rot, wrt = None):
+        """Wrapped method of orient_with_matrix in cnoid.IRSLCoords.coordinates
+
+        Args:
+        rot (numpy.array) : 3x3 matrix, matrix applied to rotate
+            wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : identical instance which was called with this method
+
+        """
+        if wrt is None:
+            super().orient_with_matrix(rot)
+        else:
+            super().orient_with_matrix(rot, wrt)
+        self.updateTarget()
+        return self
+
     def transform(self, trs, wrt = None):
         """Wrapped method of transform in cnoid.IRSLCoords.coordinates
 
@@ -179,3 +235,17 @@ Then, you can run some process when the position of the target is updated.
 
         """
         return self.__target
+
+    @property
+    def object(self):
+        """Wrapped object of this instance, which was manipulated by methods of this class
+
+        Returns:
+            object : Utility slot set while initializing
+
+        Note:
+            target is a transformed target such as cnoid.Util.SgPosTransform
+            object is a utility slot for handling a child of the target (Shape, etc...)
+
+        """
+        return self._original_object

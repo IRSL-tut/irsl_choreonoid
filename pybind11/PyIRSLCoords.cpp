@@ -234,6 +234,10 @@ Returns:
     .def_property_readonly_static("X", [](py::object /* cls */) { return Vector3::UnitX(); })
     .def_property_readonly_static("Y", [](py::object /* cls */) { return Vector3::UnitY(); })
     .def_property_readonly_static("Z", [](py::object /* cls */) { return Vector3::UnitZ(); })
+    .def_static("normalizeVector", [](ref_noconst_vec3 v3) { v3.normalize(); return v3; })
+    .def_static("normalizeVector", [](ref_noconst_vec4 v4) { v4.normalize(); return v4; })
+    .def_static("normalized", [](ref_vec3 v3) { return v3.normalized(); })
+    .def_static("normalized", [](ref_vec4 v4) { return v4.normalized(); })
     .def_property("pos",
                   [](coordinates &self) { return self.pos; },
                   [](coordinates &self, ref_vec3 vec) { self.pos = vec; }, R"__IRSL__(
