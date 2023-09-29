@@ -220,7 +220,7 @@ class RobotBuilder(object):
                 jtype='free'
             else:
                 jtype='fixed'
-            jaxis=cutil.UnitZ
+            jaxis=coordinates.Z
             cds_w_j = coordinates(groot.T)
         else:
             if len(res) > 1:
@@ -566,9 +566,9 @@ class RobotBuilder(object):
             sh=self.__revoluteJointShape(**kwargs)
             ### align y-axis to alink.axis
             v1 = alink.jointAxis / norm(alink.jointAxis)
-            v0 = np.cross(v1, cutil.UnitY)
+            v0 = np.cross(v1, coordinates.Y)
             if norm(v0) < 0.5:
-                v0 = np.cross(v1, cutil.UnitZ)
+                v0 = np.cross(v1, coordinates.Z)
             v0 /= norm(v0)
             v2 = np.cross(v0, v1)
             rot=np.column_stack([v0, v1, v2])
@@ -577,9 +577,9 @@ class RobotBuilder(object):
             sh=self.__prismaticJointShape(**kwargs)
             ### align y-axis to alink.axis
             v1 = alink.jointAxis / norm(alink.jointAxis)
-            v0 = np.cross(v1, cutil.UnitY)
+            v0 = np.cross(v1, coordinates.Y)
             if norm(v0) < 0.5:
-                v0 = np.cross(v1, cutil.UnitZ)
+                v0 = np.cross(v1, coordinates.Z)
             v0 /= norm(v0)
             v2 = np.cross(v0, v1)
             rot=np.column_stack([v0, v1, v2])
@@ -625,7 +625,7 @@ class RobotBuilder(object):
         bd0.translate(npa([0, -l0/2, 0]))
         bd1.translate(npa([0,  l1/2, 0]))
         bd2 = mkshapes.makeCone(w1, w1, color=color, transparent=transparent, DivisionNumber=4)
-        bd2.rotate(PI/2, cutil.UnitY)
+        bd2.rotate(PI/2, coordinates.Y)
         bd2.translate(npa([0, l1+w1/2, 0]))
         res=cutil.SgPosTransform()
         if scale is not None:
@@ -657,10 +657,10 @@ class RobotBuilder(object):
         else:
             col = color
         bd1 = mkshapes.makeCylinder(R0, L0, color=col, transparent=transparent)
-        bd1.rotate(PI/2, cutil.UnitX)
+        bd1.rotate(PI/2, coordinates.X)
         bd1.translate(npa([0,L0/2,0]))
         a1 = mkshapes.makeCone(rr, ll, color=col, transparent=transparent)
-        a1.rotate(PI/2, cutil.UnitX)
+        a1.rotate(PI/2, coordinates.X)
         a1.translate(npa([0,L0+ll/2,0]))
         ##
         if color is None:
@@ -668,10 +668,10 @@ class RobotBuilder(object):
         else:
             col = color
         bd2 = mkshapes.makeCylinder(R0, L0, color=col, transparent=transparent)
-        bd2.rotate(-PI/2, cutil.UnitZ)
+        bd2.rotate(-PI/2, coordinates.Z)
         bd2.translate(npa([0,L0/2,0]))
         a2 = mkshapes.makeCone(rr, ll, color=col, transparent=transparent)
-        a2.rotate(-PI/2, cutil.UnitZ)
+        a2.rotate(-PI/2, coordinates.Z)
         a2.translate(npa([0,L0+ll/2,0]))
         ##
         res=cutil.SgPosTransform()
