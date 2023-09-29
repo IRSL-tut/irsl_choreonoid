@@ -396,7 +396,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
     param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
     return _makeElevationGrid(param, wrapped=wrapped, coords=coords, **kwargs)
 
-def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using cylinder and cone
 
     Args:
@@ -407,6 +407,9 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
         axisRatio (float, optional) :
         color ( list[float], optional ) :
         scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -429,7 +432,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
     else:
         col = color
     bd0 = makeCylinder(R0, L0, color=col, **kwargs)
-    bd0.translate(npa([0,L0/2,0]))
+    bd0.translate(npa([0,L0/2.0,0]))
     a0 = makeCone(rr, ll, color=col, **kwargs)
     a0.translate(npa([0,L0+ll/2,0]))
     ##
@@ -473,7 +476,7 @@ def make3DAxis(coords=None, wrapped=True, radius=0.15, length=0.8, axisLength=0.
         res = coordsWrapper(res, original_object=current)
     return res
 
-def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], **kwargs):
+def make3DAxisBox(width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using box
 
     Args:
@@ -481,6 +484,9 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
         length (float, default=0.8) :
         color ( list[float], optional ) :
         scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -525,14 +531,16 @@ def make3DAxisBox(coords=None, wrapped=True, width=0.2, length=0.8, color=None, 
         res = coordsWrapper(res, original_object=current)
     return res
 
-def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using line
 
     Args:
         length (float, default=0.8) :
         lineWidth (float, default=2.0) :
         color ( list[float], optional ) :
-        scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -561,14 +569,16 @@ def makeCoords(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None,
         res = coordsWrapper(res, original_object=ls)
     return res
 
-def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], **kwargs):
+def makeCross(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using crossing line
 
     Args:
         length (float, default=0.8) :
         lineWidth (float, default=2.0) :
         color ( list[float], optional ) :
-        scale (float, optional ) :
+        x_color ( list[float], default=[1,0,0] ) :
+        y_color ( list[float], default=[0,1,0] ) :
+        z_color ( list[float], default=[0,0,1] ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
@@ -601,15 +611,14 @@ def makeCross(coords=None, wrapped=True, length=1.0, lineWidth=2.0, color=None, 
         res = coordsWrapper(res, original_object=ls)
     return res
 
-def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, colorIndicaes=None, **kwargs):
+def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, coords=None, wrapped=True, **kwargs):
     """Makeing '3D point cloud' shape
 
     Args:
         points (numpy.array) : N x 3 matrix (N is number of points)
         pointSize (float, default=1.0) :
-        color ( list[float], optional ) :
+        colors ( list[float], optional ) :
         colorIndices ( list[float], optional ) :
-        scale (float, optional ) :
         coords (cnoid.IRSLCoords.coordinates, optional) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
