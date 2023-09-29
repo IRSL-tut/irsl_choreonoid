@@ -618,4 +618,51 @@ def makePoints(points, coords=None, wrapped=True, pointSize=1.0, colors=None, co
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    pass
+    ps=cutil.SgPointSet()
+    ps.pointSize=pointSize
+    if type(points) is list:
+        ps.setVertices(npa(points, dtype='float32'))
+    else:
+        ps.setVertices(points)
+    if colors is not None:
+        if type(colors) is list:
+            ps.setColors(npa(colors, dtype='float32'))
+        else:
+            ps.setColors(colors)
+    if colorIndices is not None:
+        ps.colorIndices = colorIndices
+    res=cutil.SgPosTransform()
+    res.addChild(ps)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=ps)
+    return res
+
+def makeText(text, textHeight=1.0, color=None, coords=None, wrapped=True, **kwargs):
+    """Makeing 'Text' shape
+
+    Args:
+        text (str) : String to be displayed
+        textHeight (float, default=1.0) :
+        color ( list[float], optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    tx = cutil.SgText()
+    tx.text = text
+    tx.textHeight = textHeight
+    if color is not None:
+        tx.color = npa(color, dtype='float32')
+    res=cutil.SgPosTransform()
+    res.addChild(tx)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=tx)
+    return res
