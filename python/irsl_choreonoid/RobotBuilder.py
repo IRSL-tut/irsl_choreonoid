@@ -998,6 +998,22 @@ class RobotBuilder(object):
         if add:
             self.addShape(res)
         return res
+
+    def makeLineAlignedShape(self, start, end, add=True, **kwargs):
+        """Making shape which is aligned to designated line, see irsl_choreonoid.make_shapes.makeLineAlignedShape
+
+        Args:
+            add (boolean, default=True) :
+
+        Returns:
+            Shape : Created shape
+
+        """
+        res = mkshapes.makeLineAlignedShape(start, end, module=self, **kwargs)
+        if add:
+            self.addShape(res)
+        return res
+
     ### end: mkshapes wrapper
     class MassParam(object):
         def __init__(self, shape, coords):

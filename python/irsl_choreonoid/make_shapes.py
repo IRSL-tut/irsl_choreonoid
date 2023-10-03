@@ -675,3 +675,48 @@ def makeText(text, textHeight=1.0, color=None, coords=None, wrapped=True, **kwar
     if wrapped:
         res = coordsWrapper(res, original_object=tx)
     return res
+
+### utility functions
+def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **kwargs):
+    """Makeing object which is aligned with a desginated line
+
+    Args:
+        start (numpy.ndarray) : 3D vector representing start-point of a line
+        end (numpy.ndarray) : 3D vector representing end-point of a line
+        size (float) : Size of generated object (radius or edge length)
+        shape (str) : Type of Shape, 'box', 'cylinder', 'capsule', 'cone'
+        module (object, default=mkshapes) :
+        verbose (bool, default=False) : If True, printing debug message
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    midp = (start + end)*0.5
+    direction = (end - start)
+    length=numpy.linalg.norm(direction)
+    coordinates.normalizeVector(direction)
+    if shape in ('cylinder', 'Cylinder'):
+        obj = makeCylinder(size, length, **kwargs)
+    elif shape in ('capsule', 'Capsule'):
+        obj = makeCapsule(size, length, **kwargs)
+    elif shape in ('cone', 'Cone'):
+        obj = makeCone(size, length, **kwargs)
+    else:
+        obj = makeBox(size, length, size, **kwargs)
+    ##
+    obj.locate(midp, coordinates.wrt.world)
+    v0 = numpy.cross(direction, coordinates.Y)
+    if numpy.linalg.norm(v0) < 0.5:
+        v0 = numpy.cross(direction, coordinates.Z)
+    coordinates.normalizeVector(v0)
+    v2 = numpy.cross(v0, direction)
+    rot=numpy.column_stack([v0, direction, v2])
+    obj.orient_with_matrix(rot, coordinates.wrt.world)
+    if verbose:
+        print('length: {}'.format(length))
+        print('direction: {}'.format(direction))
+        print('mid:  {}'.format(midp))
+        print('rot: {}'.format(rot))
+    return obj
