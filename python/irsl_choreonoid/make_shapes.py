@@ -183,7 +183,7 @@ def makeBox(x, y = None, z = None, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     Note:
         Origin of generated shape is the center of it
@@ -215,7 +215,7 @@ def makeCylinder(radius, height, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     Note:
         Center circle with indicated radius on XZ-plane and sweep to both side with half of height, along y-direction
@@ -235,7 +235,7 @@ def makeSphere(radius, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     Note:
         Origin of generated shape is the center of it
@@ -256,7 +256,7 @@ def makeCone(radius, height, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     mg = cutil.MeshGenerator()
@@ -274,7 +274,7 @@ def makeCapsule(radius, height, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     Note:
         Similar dimensions to 'makeCylinder' (bottom cricle is at minus y, cone's tip is at plus y)
@@ -297,7 +297,7 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     mg = cutil.MeshGenerator()
@@ -348,7 +348,7 @@ def makeExtrusion(crossSection, spine, wrapped=True, coords=None, **kwargs):
         kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     param=_makeExtrusionParam(crossSection, spine, **kwargs)
@@ -390,7 +390,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
         kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeElevationParam
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
@@ -415,7 +415,7 @@ def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRat
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     R0=radius
@@ -492,7 +492,7 @@ def make3DAxisBox(width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     RR=width
@@ -546,7 +546,7 @@ def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     ### material??
@@ -584,7 +584,7 @@ def makeCross(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     ### material??
@@ -624,7 +624,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, coords=No
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     ps=cutil.SgPointSet()
@@ -660,7 +660,7 @@ def makeText(text, textHeight=1.0, color=None, coords=None, wrapped=True, **kwar
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
-        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Loaded scene as a node of SceneGraph or wrapped class for interactive programming
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     tx = cutil.SgText()
