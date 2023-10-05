@@ -4,19 +4,24 @@ cmake_policy(SET CMP0057 NEW)
 
 project(irsl_choreonoid)
 
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+
+ament_python_install_package(irsl_choreonoid)
+
 #add_compile_options(-std=c++17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 ##find_package(catkin REQUIRED COMPONENTS xxxx)
-find_package(catkin REQUIRED)
+#>find_package(catkin REQUIRED)
 find_package(choreonoid REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES irsl_choreonoid
-  #CATKIN_DEPENDS choreonoid
-  DEPENDS CHOREONOID
-)
+#>catkin_package(
+#>  INCLUDE_DIRS include
+#>  LIBRARIES irsl_choreonoid
+#>  #CATKIN_DEPENDS choreonoid
+#>  DEPENDS CHOREONOID
+#>)
 
 ### debug print variables
 ##get_cmake_property(_variableNames CACHE_VARIABLES)
@@ -51,7 +56,7 @@ add_definitions(${CHOREONOID_DEFINITIONS})
 #include_directories(${CHOREONOID_INCLUDE_DIRS})
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+#>  ${catkin_INCLUDE_DIRS}
   ${CHOREONOID_INCLUDE_DIRS}
 )
 
@@ -72,7 +77,7 @@ link_directories(${CHOREONOID_LIBRARY_DIRS})
 add_subdirectory(pybind11)
 
 # for python module
-catkin_python_setup()
+#>catkin_python_setup()
 
 #add_library(${PROJECT_NAME}
 #  src/EigenUtil.cpp
@@ -91,20 +96,44 @@ catkin_python_setup()
 #  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 #)
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#>install(DIRECTORY include/${PROJECT_NAME}/
+#>  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#>  FILES_MATCHING PATTERN "*.h"
+#>)
+#>
+#>install(DIRECTORY sample
+#>  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#>  USE_SOURCE_PERMISSIONS
+#>  )
+#>install(DIRECTORY settings
+#>  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#>  USE_SOURCE_PERMISSIONS
+#>  )
+#>install(DIRECTORY test
+#>  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#>  USE_SOURCE_PERMISSIONS
+#>)
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION include/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.h"
-)
+  )
+install(
+  DIRECTORY sample
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  )
+install(
+  DIRECTORY settings
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  )
+install(
+  DIRECTORY test
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  )
 
-install(DIRECTORY sample
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  USE_SOURCE_PERMISSIONS
-  )
-install(DIRECTORY settings
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  USE_SOURCE_PERMISSIONS
-  )
-install(DIRECTORY test
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  USE_SOURCE_PERMISSIONS
-)
+ament_export_include_directories(include)
+
+ament_package()
