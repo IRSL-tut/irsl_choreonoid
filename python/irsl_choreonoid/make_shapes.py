@@ -496,8 +496,41 @@ def makeText(text, textHeight=1.0, color=None, wrapped=True, rawShape=False, coo
         res = coordsWrapper(res, original_object=tx)
     return res
 
-def makeLines(line_points, lineWidth=10.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
-    pass
+def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
+    """Makeing Lines
+
+    Args:
+        line_points (numpy.array) : N x 3 matrix (N is number of points)
+        line_indices ( list [ tuple [int] ] ) : example, [ (0, 1), (2, 3) ] represents two lines, line0 is from point0 to point1, line1 is from point2 to point3
+        lineWidth (float, default=5.0) :
+        color ( list[float], optional ) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgText will be returned (ignore wrapped)
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    ls=cutil.SgLineSet()
+    ls.lineWidth=lineWidth
+    ls.setVertices(npa(line_points, dtype='float32'))
+    for ln in line_indices:
+        ls.addLine(ln[0] , ln[1])
+    if colors is not None:
+        ls.setColors(npa(colors, dtype='float32'))
+    if colorIndices is not None:
+        ls.setColorIndices(colorIndices)
+    if rawShape:
+        return ls
+    res=cutil.SgPosTransform()
+    res.addChild(ls)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=ls)
+    return res
 
 ### utility functions
 def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
