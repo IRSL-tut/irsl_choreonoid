@@ -454,7 +454,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
         else:
             ps.setColors(colors)
     if colorIndices is not None:
-        ps.colorIndices = colorIndices
+        ps.setColorIndices(colorIndices)
     if rawShape:
         return ps
     res=cutil.SgPosTransform()
