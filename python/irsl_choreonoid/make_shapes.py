@@ -455,6 +455,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
             ps.setColors(colors)
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
+    ps.updateBoundingBox()
     if rawShape:
         return ps
     res=cutil.SgPosTransform()
@@ -522,6 +523,7 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         ls.setColors(npa(colors, dtype='float32'))
     if colorIndices is not None:
         ls.setColorIndices(colorIndices)
+    ls.updateBoundingBox()
     if rawShape:
         return ls
     res=cutil.SgPosTransform()
