@@ -79,6 +79,61 @@ def __extractShape(sg_node):
             res += __extractShape(sg_node.getChild(idx))
     return res
 
+def extractNode(sg_node, currentCoords=None, nodeTypes=None):
+    res = []
+    for ntp in nodeTypes:
+        if isinstance(sg_node, ntp):
+            res.append((sg_node, currentCoords))
+    if sg_node.isGroupNode():
+        if isinstance(sg_node, cutil.SgPosTransform):
+            if currentCoords is None:
+                currentCoords = coordinates(sg_node.T)
+            else:
+                currentCoords = currentCoords.copy().transform(coordinates(sg_node.T))
+            for idx in range(sg_node.numChildren):
+                ch = sg_node.getChild(idx)
+                res += extractNode(ch, currentCoords=currentCoords, nodeTypes=nodeTypes)
+    return res
+
+def extractShapes(sg_node, currentCoords=None):
+    """Extracting SgShape from SceneGraph
+
+    Args:
+        sg_node (cnoid.Util.SgNode) : Root node to start searching
+        currentCoords (cnoid.IRSLCoords.coordinates, optional) : Offset coordinates to extracted object
+
+    Returns:
+        list [ tuple [ cnoid.Util.SgShape, cnoid.IRSLCoords.coordinates ] ] : List of extracted objects which is tuple of object-instance and coordinates of this object
+
+    """
+    return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape])
+
+def extractPlots(sg_node, currentCoords=None):
+    """Extracting SgPlot from SceneGraph
+
+    Args:
+        sg_node (cnoid.Util.SgNode) : Root node to start searching
+        currentCoords (cnoid.IRSLCoords.coordinates, optional) : Offset coordinates to extracted object
+
+    Returns:
+        list [ tuple [ cnoid.Util.SgPlot, cnoid.IRSLCoords.coordinates ] ] : List of extracted objects which is tuple of object-instance and coordinates of this object
+
+    """
+    return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgPlot])
+
+def extractDrawables(sg_node, currentCoords=None):
+    """Extracting drawables (SgShape, SgPlot, SgText) from SceneGraph
+
+    Args:
+        sg_node (cnoid.Util.SgNode) : Root node to start searching
+        currentCoords (cnoid.IRSLCoords.coordinates, optional) : Offset coordinates to extracted object
+
+    Returns:
+        list [ tuple [ instance of drawables, cnoid.IRSLCoords.coordinates ] ] : List of extracted objects which is tuple of object-instance and coordinates of this object
+
+    """
+    return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape, cutil.SgPlot, cutil.SgText])
+
 def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
