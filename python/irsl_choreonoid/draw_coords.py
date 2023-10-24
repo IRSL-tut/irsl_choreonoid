@@ -408,10 +408,42 @@ Using for drawing SceneGraph objects interactively
         """
         self.addPyObject(obj, update=update)
 
+    def addObjects(self, objlst, update=True):
+        """Adding objects to be drawn
+
+        Args:
+            objlst ( list[cnoid.Util.SgNode] ): list of objects to be drawn
+            update (boolean, default = False) : if True, rendering scene immediately
+
+        """
+        tp=type(objlst)
+        if tp is list or tp is tuple:
+            for obj in objlst[:-1]:
+                self.addPyObject(obj, False)
+            self.addPyObject(objlst[-1], update=update)
+        else:
+            self.addPyObject(objlst, update=update)
+
     def removeObject(self, obj, update=True):
         """This method is overrided, just passing arguments to removePyObject
         """
         self.removePyObject(obj, update=update)
+
+    def removeObjects(self, objlst, update=True):
+        """Removing objects to be drawn
+
+        Args:
+            objlst ( list[cnoid.Util.SgNode] ): list of objects to be removed
+            update (boolean, default = False) : if True, rendering scene immediately
+
+        """
+        tp=type(objlst)
+        if tp is list or tp is tuple:
+            for obj in objlst[:-1]:
+                self.removePyObject(obj, False)
+            self.removePyObject(objlst[-1], update=update)
+        else:
+            self.removePyObject(objlst, update=update)
 
     def addPyObject(self, obj, update=True):
         """Adding object to be drawn

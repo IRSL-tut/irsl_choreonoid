@@ -589,6 +589,44 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         res = coordsWrapper(res, original_object=ls)
     return res
 
+def makeTetrahedron(base_width, base_height, height, base_center=None, center_x=None, center_y=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+    """Making 'Tetrahedron' shape
+
+    Args:
+        base_width (float) :
+        base_height (float) :
+        height (float) :
+        base_center (float, optional) :
+        center_x (float, optional) :
+        center_y(float, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    if base_center is None:
+        base_center = base_width * 0.5
+    if center_x is None:
+        center_x = base_width * 0.5
+    if center_y is None:
+        center_y = base_height * 0.5
+    mesh = cutil.SgMesh()
+    vt = npa(
+        [[          0.,          0., 0.],
+         [  base_width,          0., 0.],
+         [ base_center, base_height, 0.],
+         [    center_x,    center_y, height]], dtype='float32')
+    idx = [0, 1, 3, 1, 2, 3, 2, 0, 3, 0, 2, 1]
+    mesh.setVertices(vt)
+    mesh.setFaceVertexIndices(idx)
+    mf = cutil.MeshFilter()
+    mf.generateNormals(mesh, 1.57, False)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+
 ### utility functions
 def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using cylinder and cone
