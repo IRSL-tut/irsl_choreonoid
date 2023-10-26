@@ -52,22 +52,22 @@ def generateMaterial(**kwargs):
 
     val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color', 'diffuse'), kwargs)
     if val is not None:
-        mat.setDiffuseColor(npa(val, dtype='float64'))
+        mat.setDiffuseColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color', 'emissive'), kwargs)
     if val is not None:
-        mat.setEmissiveColor(npa(val, dtype='float64'))
+        mat.setEmissiveColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('SpecularExponent', 'specularexponent', 'specular-exponent'), kwargs)
     if val is not None:
-        mat.setSpecularExponent(val, dtype='float64')
+        mat.setSpecularExponent(val, dtype='float32')
         valueset = True
 
     val = __gets(('SpecularColor', 'specularcolor', 'specular-color', 'specular'), kwargs)
     if val is not None:
-        mat.setSpecularColor(npa(val, dtype='float64'))
+        mat.setSpecularColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('Transparency', 'transparency', 'Transparent', 'transparent'), kwargs)
@@ -78,8 +78,8 @@ def generateMaterial(**kwargs):
     val = __gets(('color', 'Color'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(1.0)
-        mat.setDiffuseColor(npa(val, dtype='float64') * 0.7)
-        mat.setEmissiveColor(npa(val, dtype='float64') * 0.3)
+        mat.setDiffuseColor(npa(val, dtype='float32') * 0.7)
+        mat.setEmissiveColor(npa(val, dtype='float32') * 0.3)
         valueset = True
 
     if valueset:
@@ -90,10 +90,13 @@ def parseMeshGeneratorOption(mg, **kwargs):
     val = __gets(('DivisionNumber',), kwargs)
     if val is not None:
         mg.setDivisionNumber(val)
+    val = __gets(('ExtraDivisionNumber',), kwargs)
+    if val is not None:
+        mg.setExtraDivisionNumber(val)
     val = __gets(('NormalGenerationEnabled',), kwargs)
     if val is not None:
         mg.setNormalGenerationEnabled(val)
-    val = __gets(('setBoundingBoxUpdateEnabled',), kwargs)
+    val = __gets(('BoundingBoxUpdateEnabled',), kwargs)
     if val is not None:
         mg.setBoundingBoxUpdateEnabled(val)
 
