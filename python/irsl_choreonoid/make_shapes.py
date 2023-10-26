@@ -6,6 +6,33 @@ from math import pi as PI
 
 from .irsl_draw_object import *
 
+##
+RED    = npa([1, 0, 0], dtype='float32')
+YELLOW = npa([1, 1, 0], dtype='float32')
+GREEN  = npa([0, 1, 0], dtype='float32')
+CYAN   = npa([0, 1, 1], dtype='float32')
+BLUE   = npa([0, 0, 1], dtype='float32')
+PURPLE = npa([1, 0, 1], dtype='float32')
+##
+ORANGE = npa([1, 0.5, 0], dtype='float32')
+LIME   = npa([0.5, 1, 0], dtype='float32')
+GREEN2 = npa([0, 1, 0.5], dtype='float32')
+BLUE2  = npa([0, 0.5, 1], dtype='float32')
+BLUE_PURPLE  = npa([0.5, 0, 1], dtype='float32')
+RED_PURPLE   = npa([1, 0, 0.5], dtype='float32')
+##
+BLACK  = npa([0, 0, 0], dtype='float32')
+WHITE  = npa([1, 1, 1], dtype='float32')
+GRAY1  = npa([0.1, 0.1, 0.1], dtype='float32')
+GRAY2  = npa([0.2, 0.2, 0.2], dtype='float32')
+GRAY3  = npa([0.3, 0.3, 0.3], dtype='float32')
+GRAY4  = npa([0.4, 0.4, 0.4], dtype='float32')
+GRAY5  = npa([0.5, 0.5, 0.5], dtype='float32')
+GRAY6  = npa([0.6, 0.6, 0.6], dtype='float32')
+GRAY7  = npa([0.7, 0.7, 0.7], dtype='float32')
+GRAY8  = npa([0.8, 0.8, 0.8], dtype='float32')
+GRAY9  = npa([0.9, 0.9, 0.9], dtype='float32')
+
 def __gets(klst, amap):
     for k in klst:
         if k in amap:
@@ -25,22 +52,22 @@ def generateMaterial(**kwargs):
 
     val = __gets(('DiffuseColor', 'diffusecolor', 'diffuse-color', 'diffuse'), kwargs)
     if val is not None:
-        mat.setDiffuseColor(npa(val, dtype='float64'))
+        mat.setDiffuseColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('EmissiveColor', 'emissivecolor', 'emissive-color', 'emissive'), kwargs)
     if val is not None:
-        mat.setEmissiveColor(npa(val, dtype='float64'))
+        mat.setEmissiveColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('SpecularExponent', 'specularexponent', 'specular-exponent'), kwargs)
     if val is not None:
-        mat.setSpecularExponent(val, dtype='float64')
+        mat.setSpecularExponent(val, dtype='float32')
         valueset = True
 
     val = __gets(('SpecularColor', 'specularcolor', 'specular-color', 'specular'), kwargs)
     if val is not None:
-        mat.setSpecularColor(npa(val, dtype='float64'))
+        mat.setSpecularColor(npa(val, dtype='float32'))
         valueset = True
 
     val = __gets(('Transparency', 'transparency', 'Transparent', 'transparent'), kwargs)
@@ -51,8 +78,8 @@ def generateMaterial(**kwargs):
     val = __gets(('color', 'Color'), kwargs)
     if val is not None:
         mat.setAmbientIntensity(1.0)
-        mat.setDiffuseColor(npa(val, dtype='float64') * 0.7)
-        mat.setEmissiveColor(npa(val, dtype='float64') * 0.3)
+        mat.setDiffuseColor(npa(val, dtype='float32') * 0.7)
+        mat.setEmissiveColor(npa(val, dtype='float32') * 0.3)
         valueset = True
 
     if valueset:
@@ -63,10 +90,13 @@ def parseMeshGeneratorOption(mg, **kwargs):
     val = __gets(('DivisionNumber',), kwargs)
     if val is not None:
         mg.setDivisionNumber(val)
+    val = __gets(('ExtraDivisionNumber',), kwargs)
+    if val is not None:
+        mg.setExtraDivisionNumber(val)
     val = __gets(('NormalGenerationEnabled',), kwargs)
     if val is not None:
         mg.setNormalGenerationEnabled(val)
-    val = __gets(('setBoundingBoxUpdateEnabled',), kwargs)
+    val = __gets(('BoundingBoxUpdateEnabled',), kwargs)
     if val is not None:
         mg.setBoundingBoxUpdateEnabled(val)
 
