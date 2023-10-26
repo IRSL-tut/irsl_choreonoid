@@ -6,6 +6,33 @@ from math import pi as PI
 
 from .irsl_draw_object import *
 
+##
+RED    = npa([1, 0, 0], dtype='float32')
+YELLOW = npa([1, 1, 0], dtype='float32')
+GREEN  = npa([0, 1, 0], dtype='float32')
+CYAN   = npa([0, 1, 1], dtype='float32')
+BLUE   = npa([0, 0, 1], dtype='float32')
+PURPLE = npa([1, 0, 1], dtype='float32')
+##
+ORANGE = npa([1, 0.5, 0], dtype='float32')
+LIME   = npa([0.5, 1, 0], dtype='float32')
+GREEN2 = npa([0, 1, 0.5], dtype='float32')
+BLUE2  = npa([0, 0.5, 1], dtype='float32')
+BLUE_PURPLE  = npa([0.5, 0, 1], dtype='float32')
+RED_PURPLE   = npa([1, 0, 0.5], dtype='float32')
+##
+BLACK  = npa([0, 0, 0], dtype='float32')
+WHITE  = npa([1, 1, 1], dtype='float32')
+GRAY1  = npa([0.1, 0.1, 0.1], dtype='float32')
+GRAY2  = npa([0.2, 0.2, 0.2], dtype='float32')
+GRAY3  = npa([0.3, 0.3, 0.3], dtype='float32')
+GRAY4  = npa([0.4, 0.4, 0.4], dtype='float32')
+GRAY5  = npa([0.5, 0.5, 0.5], dtype='float32')
+GRAY6  = npa([0.6, 0.6, 0.6], dtype='float32')
+GRAY7  = npa([0.7, 0.7, 0.7], dtype='float32')
+GRAY8  = npa([0.8, 0.8, 0.8], dtype='float32')
+GRAY9  = npa([0.9, 0.9, 0.9], dtype='float32')
+
 def __gets(klst, amap):
     for k in klst:
         if k in amap:
