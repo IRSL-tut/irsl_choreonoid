@@ -916,3 +916,46 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('mid:  {}'.format(midp))
         print('rot: {}'.format(rot))
     return obj
+
+##
+## Function for exporting
+##
+def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None):
+    """Exporting SgNode as a mesh file (using Assimp)
+
+    Args:
+        fname (str) : File name to be saved
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        verbose ( boolean, default=False ) :
+        generatePrimitiveMesh ( boolean, default=True ) :
+        ignoreURDFPrimitive (boolean, default=False ) :
+        outputType (str, optional) : 
+
+    """
+    wt = cnoid.AssimpPlugin.AssimpSceneWriter()
+    wt.setMessageSinkStdErr()
+
+    if verbose:
+        wt.setVerbose(True)
+    wt.generatePrimitiveMesh(generatePrimitiveMesh)
+    wt.ignoreURDFPrimitive(ignoreURDFPrimitive)
+    if outputType is not None:
+        wt.outputType = outputType
+
+    return wt.writeScene(fname, sg_node)
+
+def exportScene(fname, sg_node, **kwargs):
+    """Exporting SgNode as .scen file
+
+    Args:
+        fname (str) : File name to be saved
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+
+    """
+    wt = cutil.StdSceneWriter()
+    wt.setMessageSinkStdErr()
+
+    for k,v in kwargs.items():
+        'wt.{} = {}'.format(k, v)
+
+    return wt.writeScene(fname, sg_node)
