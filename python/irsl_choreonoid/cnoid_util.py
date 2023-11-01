@@ -1,12 +1,15 @@
 from cnoid.Base import RootItem
 
 from cnoid.Body import BodyLoader
+from cnoid.Body import StdBodyWriter
 from cnoid.Body import Body
 from cnoid.Body import Link
 
 import cnoid.Util
 
 import numpy as np
+
+from .make_shapes import addUriToShape
 
 from urllib.parse import urlparse
 import os
@@ -113,6 +116,25 @@ def loadRobot(fname):
     rb.initializePosition()
     rb.calcForwardKinematics()
     return rb
+
+def exportBody(fname, body, extModelFileMode=None, fileUri=None):
+    """
+    Args:
+        fname (str) :
+        body ( cnoid.Body.Body ) :
+        extModelFileMode (int, optional): 0; EmbedModels, 1; LinkToOriginalModelFiles, 2; ReplaceWithStdSceneFiles, 3; ReplaceWithObjModelFiles
+
+    """
+    if fileUri is not None:
+        for lk in body.links:
+            nm = lk.name
+            addUriToShape(lk.visualShape, '{}_vis'.format(nm), fileUri)
+            addUriToShape(lk.collisionShape, '{}_col'.format(nm), fileUri)
+    bw = StdBodyWriter()
+    bw.setMessageSinkStdErr()
+    if extModelFileMode is not None:
+        bw.setExtModelFileMode(extModelFileMode)
+    return bw.writeBody(body, fname)
 
 def castValueNode(_valuenode):
     """Casting cnoid.Util.ValueNode type to python primitive type

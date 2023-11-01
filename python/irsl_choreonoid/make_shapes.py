@@ -959,3 +959,23 @@ def exportScene(fname, sg_node, **kwargs):
         'wt.{} = {}'.format(k, v)
 
     return wt.writeScene(fname, sg_node)
+
+### util
+def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
+    """Exporting SgNode as .scen file
+
+    Args:
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be add uri
+        base_name ( str ) : Base name of uri
+        base_uri ( str ) : Base uri to be add
+
+    Note:
+       uri : {base_uri}/{base_name}_{counter}
+
+    """
+    cntr = 0
+    for shape, coords in extractShapes(sg_node):
+        if shape.mesh.primitiveType == cutil.SgMesh.MeshType:
+            fn = '{}_{}'.format(base_name, cntr)
+            shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
+            cntr += 1
