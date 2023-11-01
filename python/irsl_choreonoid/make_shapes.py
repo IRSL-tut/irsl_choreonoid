@@ -120,9 +120,9 @@ def extractNode(sg_node, currentCoords=None, nodeTypes=None):
                 currentCoords = coordinates(sg_node.T)
             else:
                 currentCoords = currentCoords.copy().transform(coordinates(sg_node.T))
-            for idx in range(sg_node.numChildren):
-                ch = sg_node.getChild(idx)
-                res += extractNode(ch, currentCoords=currentCoords, nodeTypes=nodeTypes)
+        for idx in range(sg_node.numChildren):
+            ch = sg_node.getChild(idx)
+            res += extractNode(ch, currentCoords=currentCoords, nodeTypes=nodeTypes)
     return res
 
 def extractShapes(sg_node, currentCoords=None):
