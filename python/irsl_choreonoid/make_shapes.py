@@ -571,6 +571,8 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
             ps.setColors(colors)
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
+    elif colors is not None:
+        ps.setColorIndices( [0]*ps.numVertices )
     ps.updateBoundingBox()
     if rawShape:
         return ps
@@ -639,6 +641,8 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         ls.setColors(npa(colors, dtype='float32'))
     if colorIndices is not None:
         ls.setColorIndices(colorIndices)
+    elif colors is not None:
+        ls.setColorIndices( [0]*ps.numVertices )
     ls.updateBoundingBox()
     if rawShape:
         return ls
