@@ -120,9 +120,9 @@ def extractNode(sg_node, currentCoords=None, nodeTypes=None):
                 currentCoords = coordinates(sg_node.T)
             else:
                 currentCoords = currentCoords.copy().transform(coordinates(sg_node.T))
-            for idx in range(sg_node.numChildren):
-                ch = sg_node.getChild(idx)
-                res += extractNode(ch, currentCoords=currentCoords, nodeTypes=nodeTypes)
+        for idx in range(sg_node.numChildren):
+            ch = sg_node.getChild(idx)
+            res += extractNode(ch, currentCoords=currentCoords, nodeTypes=nodeTypes)
     return res
 
 def extractShapes(sg_node, currentCoords=None):
@@ -247,10 +247,11 @@ def loadMesh(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def __genShape(mesh, wrapped=True, rawShape=False, coords=None, **kwargs):
+def __genShape(mesh, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     sg = cutil.SgShape()
     sg.setMesh(mesh)
-
+    if texture is not None:
+        sg.setTextureImage(texture)
     mat = generateMaterial(**kwargs)
 
     if mat is not None:
@@ -270,7 +271,7 @@ def __genShape(mesh, wrapped=True, rawShape=False, coords=None, **kwargs):
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def makeBox(x, y = None, z = None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeBox(x, y = None, z = None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Making 'Box' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -280,6 +281,7 @@ def makeBox(x, y = None, z = None, wrapped=True, rawShape=False, coords=None, **
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
+        texture (str, optional) : Image file-name of texture
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
@@ -291,21 +293,25 @@ def makeBox(x, y = None, z = None, wrapped=True, rawShape=False, coords=None, **
     """
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
     if type(x) is numpy.ndarray or type(x) is list:
-        mesh = mg.generateBox(npa(x, dtype='float64'))
+        mesh = mg.generateBox(npa(x, dtype='float64'), tex_flag)
     elif y is not None and z is not None:
-        mesh = mg.generateBox(npa([x, y, z], dtype='float64'))
+        mesh = mg.generateBox(npa([x, y, z], dtype='float64'), tex_flag)
     elif type(x) is int or type(x) is float:
-        mesh = mg.generateBox(npa([x, x, x], dtype='float64'))
+        mesh = mg.generateBox(npa([x, x, x], dtype='float64'), tex_flag)
     else:
         raise Exception(f'Invalid arguments x: {x}, y: {y}, z: {z}')
 
     if mesh is None:
         raise Exception(f'Generating mesh was failed x: {x}, y: {y}, z: {z}')
 
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
-def makeCylinder(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeCylinder(radius, height, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Making 'Cylinder' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -314,6 +320,7 @@ def makeCylinder(radius, height, wrapped=True, rawShape=False, coords=None, **kw
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
+        texture (str, optional) : Image file-name of texture
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
@@ -325,10 +332,14 @@ def makeCylinder(radius, height, wrapped=True, rawShape=False, coords=None, **kw
     """
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateCylinder(radius, height)
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
+    mesh = mg.generateCylinder(radius, height, tex_flag)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
-def makeSphere(radius, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeSphere(radius, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Make 'Sphere' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -336,6 +347,7 @@ def makeSphere(radius, wrapped=True, rawShape=False, coords=None, **kwargs):
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
+        texture (str, optional) : Image file-name of texture
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
@@ -347,10 +359,14 @@ def makeSphere(radius, wrapped=True, rawShape=False, coords=None, **kwargs):
     """
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateSphere(radius)
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
+    mesh = mg.generateSphere(radius, tex_flag)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
-def makeCone(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeCone(radius, height, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Making 'Cone' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -359,6 +375,7 @@ def makeCone(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
+        texture (str, optional) : Image file-name of texture
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
     Returns:
@@ -367,8 +384,12 @@ def makeCone(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs
     """
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateCone(radius, height)
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
+    mesh = mg.generateCone(radius, height, tex_flag)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
 def makeCapsule(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Makeing 'Capsule' shape using cnoid.Util.MeshGenerator
@@ -435,15 +456,19 @@ def _makeExtrusionParam(crossSection, spine, orientation=None, scale=None, creas
         extconf.endCap=endCap
     return extconf
 
-def _makeExtrusion(_extrusion=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def _makeExtrusion(_extrusion=None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     if type(_extrusion) is not cutil.MeshGenerator.Extrusion:
         _extrusion = makeExtrusionParam(**kwargs)
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateExtrusion(_extrusion)
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
+    mesh = mg.generateExtrusion(_extrusion, tex_flag)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
-def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -457,6 +482,7 @@ def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
+        texture (str, optional) : Image file-name of texture
         kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
 
     Returns:
@@ -464,7 +490,7 @@ def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None
 
     """
     param=_makeExtrusionParam(crossSection, spine, **kwargs)
-    return _makeExtrusion(param, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    return _makeExtrusion(param, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
 def _makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=None, creaseAngle=None, **kwargs):
     eg = cutil.MeshGenerator.ElevationGrid()
@@ -479,15 +505,19 @@ def _makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, ccw=
         eg.creaseAngle = creaseAngle
     return eg
 
-def _makeElevationGrid(_elevation_grid=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def _makeElevationGrid(_elevation_grid=None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     if type(_elevation_grid) is not cutil.MeshGenerator.ElevationGrid:
         _elevation_grid = makeElevationParam(**kwargs)
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
-    mesh = mg.generateElevationGrid(_elevation_grid)
-    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+    if texture is not None:
+        tex_flag = 1
+    else:
+        tex_flag = 0
+    mesh = mg.generateElevationGrid(_elevation_grid, tex_flag)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
-def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, rawShape=False, coords=None, **kwargs):
+def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
@@ -500,6 +530,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
         creaseAngl (float, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
+        texture (str, optional) : Image file-name of texture
         coords (cnoid.IRSLCoords.coordinates, optional) :
         kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeElevationParam
 
@@ -507,7 +538,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
-    param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, **kwargs)
+    param=_makeElevationParam(xDimension, zDimension, xSpacing, zSpacing, height, texture=texture, **kwargs)
     return _makeElevationGrid(param, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
 def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=True, rawShape=False, coords=None, **kwargs):
@@ -540,6 +571,8 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
             ps.setColors(colors)
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
+    elif colors is not None:
+        ps.setColorIndices( [0]*ps.numVertices )
     ps.updateBoundingBox()
     if rawShape:
         return ps
@@ -608,6 +641,8 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         ls.setColors(npa(colors, dtype='float32'))
     if colorIndices is not None:
         ls.setColorIndices(colorIndices)
+    elif colors is not None:
+        ls.setColorIndices( [0]*ps.numVertices )
     ls.updateBoundingBox()
     if rawShape:
         return ls
@@ -916,3 +951,66 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('mid:  {}'.format(midp))
         print('rot: {}'.format(rot))
     return obj
+
+##
+## Function for exporting
+##
+def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None):
+    """Exporting SgNode as a mesh file (using Assimp)
+
+    Args:
+        fname (str) : File name to be saved
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        verbose ( boolean, default=False ) :
+        generatePrimitiveMesh ( boolean, default=True ) :
+        ignoreURDFPrimitive (boolean, default=False ) :
+        outputType (str, optional) : 
+
+    """
+    wt = cnoid.AssimpPlugin.AssimpSceneWriter()
+    wt.setMessageSinkStdErr()
+
+    if verbose:
+        wt.setVerbose(True)
+    wt.generatePrimitiveMesh(generatePrimitiveMesh)
+    wt.ignoreURDFPrimitive(ignoreURDFPrimitive)
+    if outputType is not None:
+        wt.outputType = outputType
+
+    return wt.writeScene(fname, sg_node)
+
+def exportScene(fname, sg_node, **kwargs):
+    """Exporting SgNode as .scen file
+
+    Args:
+        fname (str) : File name to be saved
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+
+    """
+    wt = cutil.StdSceneWriter()
+    wt.setMessageSinkStdErr()
+
+    for k,v in kwargs.items():
+        'wt.{} = {}'.format(k, v)
+
+    return wt.writeScene(fname, sg_node)
+
+### util
+def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
+    """Exporting SgNode as .scen file
+
+    Args:
+        sg_node ( cnoid.Util.SgNode ) : Root node of scene to be add uri
+        base_name ( str ) : Base name of uri
+        base_uri ( str ) : Base uri to be add
+
+    Note:
+       uri : {base_uri}/{base_name}_{counter}
+
+    """
+    cntr = 0
+    for shape, coords in extractShapes(sg_node):
+        if shape.mesh.primitiveType == cutil.SgMesh.MeshType:
+            fn = '{}_{}'.format(base_name, cntr)
+            shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
+            cntr += 1

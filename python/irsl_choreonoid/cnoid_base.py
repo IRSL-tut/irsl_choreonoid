@@ -18,6 +18,9 @@ from .robot_util import make_coords_map
 from cnoid.Body import Body
 
 from cnoid.Util import SgCamera
+
+import math
+
 ## DEPRECATED: use cnoid.Base.ItemTreeView.instance
 #def flushRobotView(name):
 #    #findItem(name).notifyKinematicStateChange()
@@ -307,33 +310,38 @@ def currentSceneWidget():
     """
     return SceneView.instance.sceneWidget
 
-def getCameraCoords(withFOV=True):
+def getCameraCoords(withFOV=True, opencv=True):
     """Returning camera position of current scene
 
     Args:
         withFOV (boolean, default = True ) : If true, getting camera's field of view
-
+        opencv (boolean, default = True) : OpenCV stype coordinates will be returned
     Returns:
         (cnoid.IRSLCoords.coordinates, float) : Tuple with camera coordinates and camera's filed of view
 
     """
     sw = currentSceneWidget()
     cds = coordinates(sw.builtinCameraTransform.T)
+    if opencv:
+        cds.rotate(math.pi, coordinates.X)
     if withFOV:
         fov = sw.builtinPerspectiveCamera.fieldOfView
         return (cds, fov)
     else:
         return (cds, None)
 
-def setCameraCoords(cds, fov=None):
+def setCameraCoords(cds, fov=None, opencv=True):
     """Setting camera coordinates of current scene
 
     Args:
         cds (cnoid.IRSLCoords.coordinates) : Camera's coordinates to be set
         fov (float, default = None) : Camera's filed of view to be set
+        opencv (boolean, default=True) : cds is OpenCV stype coordinates
 
     """
     sw = currentSceneWidget()
+    if opencv:
+        cds = cds.copy().rotate(math.pi, coordinates.X)
     sw.builtinCameraTransform.setPosition(cds.cnoidPosition)
     if fov is not None:
         sw.builtinPerspectiveCamera.setFieldOfView(fov)
@@ -366,6 +374,101 @@ def setCameraCoordsParam(param_dict):
         fov = param_dict['fov']
     cds = make_coordinates(param_dict)
     setCameraCoords(cds, fov)
+
+def getCameraMatrix():
+    """Getting camera matrix of this scene
+
+    Retuns:
+        numpy.array (3x3 matrix) : Camera Matrix
+
+    """
+    sw = currentSceneWidget()
+    ## cam_cds_ = coordinates(sw.builtinCameraTransform.T)
+    fov_ = sw.builtinPerspectiveCamera.fieldOfView
+    width_  = sw.width()
+    height_ = sw.height()
+    cx_ = 0.5*width_
+    cy_ = 0.5*height_
+    if height_ < width_:
+        ff_  = 0.5*height_ / math.tan(fov_/2)
+    else:
+        ff_  = 0.5*width_ / math.tan(fov_/2)
+    return npa([[ff_, 0, cx_], [0, ff_, cy_], [0, 0, 1]], dtype='float64')
+
+def setCameraMatrix(camera_matrix, width=None, height=None):
+    """Setting camera matrix of this scene
+
+    Args:
+        camera_matrix ( numpy.array[3x3] ) : Camera matrix to be set
+        width ( int, optional ) : Set width of this scene
+        height ( int, optional ) : Set height of this scene
+
+    """
+    ff_ = (camera_matrix[0][0] + camera_matrix[1][1])/2
+    sw = currentSceneWidget()
+    if width is not None and height is not None:
+        sw.setScreenSize(width, height)
+    width_  = sw.width()
+    height_ = sw.height()
+    if height_ < width_:
+        fov_ = 2 * math.atan2(height_/2, ff_)
+    else:
+        fov_ = 2 * math.atan2(width_/2, ff_)
+    sw.builtinPerspectiveCamera.setFieldOfView(fov_)
+
+def projectPoints(point_list, world=True):
+    """Projecting 3D points to 2D points on image plane
+
+    Args:
+        point_list ( list [ numpy.array[3x3] ] ) : List 3D points on world coordinates
+
+    Returns:
+        list [ numpy.array ] : List of projected points
+
+    """
+    cam_matrix = getCameraMatrix()
+    if world:
+        cam_cds, fov = getCameraCoords()
+        point_list = [ cam_cds.inverse_transform_vector(pt) for pt in point_list ]
+    ret = []
+    for cam_pt in point_list:
+        uvs = cam_matrix.dot(cam_pt)
+        ret.append( npa([uvs[0]/uvs[2], uvs[1]/uvs[2]], dtype='float64') )
+    return ret
+
+def unprojectPoints(uv_list, depth=1.0, depth_list=None, centerRelative=False, world=True):
+    """Projecting 3D points to 2D points on image plane
+
+    Args:
+        point_list ( list [ numpy.array[3x3] ] ) : List 3D points on world coordinates
+
+    Returns:
+        list [ numpy.array ] : List of projected points
+
+    """
+    sw = currentSceneWidget()
+    fov_ = sw.builtinPerspectiveCamera.fieldOfView
+    width_  = sw.width()
+    height_ = sw.height()
+    if centerRelative:
+        cx_ = 0.0
+        cy_ = 0.0
+    else:
+        cx_ = 0.5*width_
+        cy_ = 0.5*height_
+    if height_ < width_:
+        ff_  = 0.5*height_ / math.tan(fov_/2)
+    else:
+        ff_  = 0.5*width_ / math.tan(fov_/2)
+    zz = depth/ff_
+
+    pts = [ npa([(uv[0] - cx_)*zz, (uv[1] - cy_)*zz, depth], dtype='float64') for uv in uv_list ]
+
+    if world:
+        cam_cds, fov = getCameraCoords()
+        return [ cam_cds.transform_vector(pt) for pt in pts ]
+    else:
+        return pts
 
 def setBackgroundColor(backgound_color):
     """Setting color of background
