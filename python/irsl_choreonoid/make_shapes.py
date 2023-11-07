@@ -953,6 +953,26 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('rot: {}'.format(rot))
     return obj
 
+def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
+    """Making box with the same size and position passed bounding-box
+
+    Args:
+        bbox ( cnoid.Util.BoundingBox or object has 'boundingBox' method ) :
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    if type(bbox) is cutil.BoundingBox:
+        pass
+    elif hasattr(bbox, 'boundingBox'):
+        bbox = bbox.boundingBox()
+    else:
+        raise Exception('{} (type: {}) is not BoundingBox and does not has method: boundingBox'.format(bbox, type(bbox)))
+    sz = bbox.size()
+    cds = coordinates(bb0.center())
+    return mkshapes.makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
+
 ##
 ## Function for exporting
 ##
@@ -987,6 +1007,7 @@ def exportScene(fname, sg_node, exportMesh=False, **kwargs):
         fname (str) : File name to be saved
         sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
         exportMesh (boolean, default=False) : Exporting mesh instead of primitive type
+        kwargs ( dict[str, param] ) : Extra keyword arguments for using to execute ''StdSceneWriter.<keyword> = <value>''
 
     """
     wt = cutil.StdSceneWriter()
