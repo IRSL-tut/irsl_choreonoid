@@ -547,8 +547,8 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     Args:
         points (numpy.array) : N x 3 matrix (N is number of points)
         pointSize (float, default=1.0) :
-        colors ( list[float], optional ) :
-        colorIndices ( list[float], optional ) :
+        colors ( list[list[float]], optional ) :
+        colorIndices ( list[int], optional ) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgPointSet will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -622,7 +622,8 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         line_points (numpy.array) : N x 3 matrix (N is number of points)
         line_indices ( list [ tuple [int] ] ) : example, [ (0, 1), (2, 3) ] represents two lines, line0 is from point0 to point1, line1 is from point2 to point3
         lineWidth (float, default=5.0) :
-        color ( list[float], optional ) :
+        colors ( list[list[float]], optional ) :
+        colorIndices ( list[int], optional ) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgText will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
