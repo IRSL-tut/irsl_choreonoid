@@ -547,8 +547,8 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     Args:
         points (numpy.array) : N x 3 matrix (N is number of points)
         pointSize (float, default=1.0) :
-        colors ( list[float], optional ) :
-        colorIndices ( list[float], optional ) :
+        colors ( list[list[float]], optional ) :
+        colorIndices ( list[int], optional ) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgPointSet will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -622,7 +622,8 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
         line_points (numpy.array) : N x 3 matrix (N is number of points)
         line_indices ( list [ tuple [int] ] ) : example, [ (0, 1), (2, 3) ] represents two lines, line0 is from point0 to point1, line1 is from point2 to point3
         lineWidth (float, default=5.0) :
-        color ( list[float], optional ) :
+        colors ( list[list[float]], optional ) :
+        colorIndices ( list[int], optional ) :
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgText will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -952,6 +953,26 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('rot: {}'.format(rot))
     return obj
 
+def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
+    """Making box with the same size and position passed bounding-box
+
+    Args:
+        bbox ( cnoid.Util.BoundingBox or object has 'boundingBox' method ) :
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    if type(bbox) is cutil.BoundingBox:
+        pass
+    elif hasattr(bbox, 'boundingBox'):
+        bbox = bbox.boundingBox()
+    else:
+        raise Exception('{} (type: {}) is not BoundingBox and does not has method: boundingBox'.format(bbox, type(bbox)))
+    sz = bbox.size()
+    cds = coordinates(bb0.center())
+    return mkshapes.makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
+
 ##
 ## Function for exporting
 ##
@@ -979,19 +1000,29 @@ def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignore
 
     return wt.writeScene(fname, sg_node)
 
-def exportScene(fname, sg_node, **kwargs):
+def exportScene(fname, sg_node, exportMesh=False, **kwargs):
     """Exporting SgNode as .scen file
 
     Args:
         fname (str) : File name to be saved
         sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        exportMesh (boolean, default=False) : Exporting mesh instead of primitive type
+        kwargs ( dict[str, param] ) : Extra keyword arguments for using to execute ''StdSceneWriter.<keyword> = <value>''
 
     """
     wt = cutil.StdSceneWriter()
     wt.setMessageSinkStdErr()
 
     for k,v in kwargs.items():
-        'wt.{} = {}'.format(k, v)
+        exec('wt.{} = {}'.format(k, v))
+
+    if exportMesh:
+        res = extractShapes(sg_node)
+        if len(res) > 0:
+            # v = npa([0.,0.,0.])
+            for sp, cds in res:
+                #sp.shape.mesh.translate(v)
+                sp.mesh.setMeshType()
 
     return wt.writeScene(fname, sg_node)
 
