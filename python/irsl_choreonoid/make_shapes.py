@@ -980,19 +980,28 @@ def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignore
 
     return wt.writeScene(fname, sg_node)
 
-def exportScene(fname, sg_node, **kwargs):
+def exportScene(fname, sg_node, exportMesh=False, **kwargs):
     """Exporting SgNode as .scen file
 
     Args:
         fname (str) : File name to be saved
         sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        exportMesh (boolean, default=False) : Exporting mesh instead of primitive type
 
     """
     wt = cutil.StdSceneWriter()
     wt.setMessageSinkStdErr()
 
     for k,v in kwargs.items():
-        'wt.{} = {}'.format(k, v)
+        exec('wt.{} = {}'.format(k, v))
+
+    if exportMesh:
+        res = extractShapes(sg_node)
+        if len(res) > 0:
+            # v = npa([0.,0.,0.])
+            for sp, cds in res:
+                #sp.shape.mesh.translate(v)
+                sp.mesh.setMeshType()
 
     return wt.writeScene(fname, sg_node)
 
