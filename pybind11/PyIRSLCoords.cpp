@@ -386,6 +386,12 @@ Returns:
     .def("transform",
          [](coordinates &self, const coordinates &c, const coordinates &wrt)
          { self.transform(c, wrt); return &self; } )
+    .def("get_transformed",
+         [](coordinates &self, const coordinates &c, coordinates::wrt wrt)
+         { coordinates res; self.get_transformed(res, c, wrt); return res; }, py::arg("coords"), py::arg("wrt") = coordinates::wrt::local )
+    .def("get_transformed",
+         [](coordinates &self, const coordinates &c, const coordinates &wrt)
+         { coordinates res; self.get_transformed(res, c, wrt); return res; } )
     //// in place version (modify input vec)
     .def("rotateVector",
          [](const coordinates &self, ref_noconst_vec3 vec) { Vector3 v(vec);
