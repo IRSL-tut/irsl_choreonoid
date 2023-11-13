@@ -311,7 +311,8 @@ class IKWrapper(object):
         return (succ, _total)
 
     def __inverseKinematicsQP(self, target, constraint = None, weight = 1.0, add_noise = None, debug = False,
-                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5, **kwargs):
+                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5,
+                              use_joint_limit=True, joint_limit_max_error=1e-2, joint_limit_precision=0.1, **kwargs):
         ## add_noise
         if add_noise is not None:
             if type(add_noise) is float:
@@ -396,6 +397,16 @@ class IKWrapper(object):
         tasks = IK.Tasks()
         dummy_const = IK.Constraints()
         constraints = [ dummy_const, constraints0 ]
+        ### constraint joint-limit
+        if use_joint_limit:
+            constraints1 = IK.Constraints()
+            for j in self.__current_joints:
+                const = IK.JointLimitConstraint()
+                const.joint = j
+                const.precision = 0.1
+                constraints1.push_back(const)
+            constraints.append(constraints1)
+        #
         variables = []
         if base_type is not None:
             variables.append(self.__robot.rootLink)
