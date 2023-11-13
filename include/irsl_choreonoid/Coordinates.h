@@ -446,7 +446,19 @@ namespace cnoid {
             *this = tmp;
             return *this;
         }
-
+        ////
+        coordinates &get_transformed(coordinates &res, const coordinates& c, const wrt wrt = local ) const
+        {
+            res.newcoords(*this);
+            res.transform(c, wrt);
+            return res;
+        }
+        coordinates &get_transformed(coordinates &res, const coordinates& c, const coordinates &wrt ) const
+        {
+            res.newcoords(*this);
+            res.transform(c, wrt);
+            return res;
+        }
         ////
         void rotate_vector(Vector3 &vec) const
         {
