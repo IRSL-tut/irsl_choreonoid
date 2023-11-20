@@ -1163,6 +1163,19 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         def renameMap(self):
             return self.__rename_map
 
+        @property
+        def angleMap(self):
+            """Getting dictionary [ key='jointName', value=jointAngle ]
+
+            Returns:
+                dict [str, float ] : Dictionary of key='jointName', value=jointAngle for joints in this Limb
+
+            """
+            amap = {}
+            for j in self.__joint_list:
+                amap[j.jointName] = j.q
+            return amap
+
         def inverseKinematics(self, coords, **kwargs):
             """Solving inverse kinematic on this limb
 
