@@ -51,7 +51,7 @@ def make_coordinates(coords_map):
                 return ic.coordinates(q)
             else:
                 return ic.coordinates(pos, q)
-    for key in ('angle-axis', 'aa'):
+    for key in ('angle-axis', 'angle_axis', 'aa'):
         if key in coords_map:
             aa = coords_map[key]
             rot = ic.angleAxisNormalized(aa[3], np.array(aa[:3]))
@@ -1288,7 +1288,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             mode (int, optional) : Mode to be set (0\: kinematics mode, 1\: rendering mode, 2\: rendering immediately mode)
 
         Returns:
-            int : Current mode (0\: kinematics mode, 1\: rendering mode, 2\: rendering immediately mode)
+            int : Current mode (0\: kinematics mode, 1\: rendering mode, 2\: rendering immediately mode, -1\: do nothing while hook)
 
         """
         if mode is not None:
@@ -1543,6 +1543,9 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.copy()
 
     def hook(self):
+        if self.__mode < 0:
+            ### do nothing(no-hook)
+            return
         if self.__mode == 0: ## kinematics only
             self.__robot.calcForwardKinematics()
         elif self.__mode == 1: ## render
