@@ -1027,7 +1027,7 @@ def exportScene(fname, sg_node, exportMesh=False, **kwargs):
     return wt.writeScene(fname, sg_node)
 
 ### util
-def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
+def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp', allInOne=False):
     """Exporting SgNode as .scen file
 
     Args:
@@ -1039,8 +1039,37 @@ def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
        uri : {base_uri}/{base_name}_{counter}
 
     """
+    extracts = extractShapes(sg_node)
+    if allInOne:
+        hasUri=True
+        for shape, coords in extracts:
+            if shape.mesh.primitiveType == cutil.SgMesh.MeshType and not shape.mesh.hasUri():
+                hasUri=False
+                break
+        if hasUri: ## all shapes has uri
+            ## do nothing ??
+            pass
+        else:
+            withoutUri=True
+            for shape, coords in extracts:
+                if shape.mesh.primitiveType == cutil.SgMesh.MeshType and shape.mesh.hasUri():
+                    withoutUri = False
+                    break;
+            if withoutUri:
+                ### all shapes do not have uri
+                sg_node.setUri(base_name, '{}/{}'.format(base_uri, base_name))
+            else:
+                ### some have uri, some do not
+                cntr = 0
+                for shape, coords in extracts:
+                    if shape.mesh.primitiveType == cutil.SgMesh.MeshType and not shape.mesh.hasUri():
+                        fn = '{}_{}'.format(base_name, cntr)
+                        shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
+                        cntr += 1
+        return
+
     cntr = 0
-    for shape, coords in extractShapes(sg_node):
+    for shape, coords in extracts:
         if shape.mesh.primitiveType == cutil.SgMesh.MeshType:
             fn = '{}_{}'.format(base_name, cntr)
             shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
