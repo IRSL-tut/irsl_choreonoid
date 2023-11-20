@@ -153,6 +153,20 @@ def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, 
                 ll.setInertia( npa( ((1.0, 0, 0), (0, 1.0, 0), (0, 0, 1.0)) ) * 1e-9 )
     return bw.writeBody(body, fname)
 
+def exportURDF(fname, body, **kwargs):
+    """
+    Args:
+        fname (str) :
+        body ( cnoid.Body.Body ) :
+        kwargs ( dict[str, param] ) :
+
+    """
+    ubw = URDFBodyWriter()
+    ubw.setMessageSinkStdErr()
+    for k, v in kwargs.items():
+        exec('ubw.set{}(v)'.format(k))
+    return ubw.writeBody(body, fname)
+
 def castValueNode(_valuenode):
     """Casting cnoid.Util.ValueNode type to python primitive type
 
