@@ -117,23 +117,40 @@ def loadRobot(fname):
     rb.calcForwardKinematics()
     return rb
 
-def exportBody(fname, body, extModelFileMode=None, fileUri=None):
+def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, fixMassParam=True):
     """
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
         extModelFileMode (int, optional): 0; EmbedModels, 1; LinkToOriginalModelFiles, 2; ReplaceWithStdSceneFiles, 3; ReplaceWithObjModelFiles
+        fileUri (str, optional) : Add URI for exporting mesh files
+        allInOne (boolean, default=True) : Using with fileUri, if True, all shapes will be exported as a file.
+        fixMassParam (boolean, default=False) : If True, links with mass==1.0 and inertia is identity is set small mass-parameter (they may loaded without mass parameter)
 
     """
     if fileUri is not None:
         for lk in body.links:
             nm = lk.name
-            addUriToShape(lk.visualShape, '{}_vis'.format(nm), fileUri)
-            addUriToShape(lk.collisionShape, '{}_col'.format(nm), fileUri)
+            if allInOne:
+                for idx in range(lk.visualShape.numChildren):
+                    addUriToShape(lk.visualShape.getChild(idx), '{}_{}_vis.scen'.format(nm, idx), fileUri, allInOne=allInOne)
+                for idx in range(lk.collisionShape.numChildren):
+                    addUriToShape(lk.collisionShape.getChild(idx), '{}_{}_col.scen'.format(nm, idx), fileUri, allInOne=allInOne)
+            else:
+                addUriToShape(lk.visualShape, '{}_vis'.format(nm), fileUri)
+                addUriToShape(lk.collisionShape, '{}_col'.format(nm), fileUri)
     bw = StdBodyWriter()
     bw.setMessageSinkStdErr()
     if extModelFileMode is not None:
         bw.setExtModelFileMode(extModelFileMode)
+    if fixMassParam:
+        for ll in body.links:
+            mass = ll.mass
+            II = ll.I
+            if mass == 1.0 and II[0][0] == 1.0 and II[1][1] == 1.0 and II[2][2] == 1.0 and II[0][1] == 0.0 and II[0][2] == 0.0 and II[1][2] == 0.0:
+                print('link: {}, small mass-paramters is set'.format(ll.name))
+                ll.setMass(0.001)
+                ll.setInertia( npa( ((1.0, 0, 0), (0, 1.0, 0), (0, 0, 1.0)) ) * 1e-9 )
     return bw.writeBody(body, fname)
 
 def castValueNode(_valuenode):
