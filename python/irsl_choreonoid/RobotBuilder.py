@@ -8,17 +8,12 @@ from cnoid.Body import Device
 
 ## IRSL (not base)
 from cnoid.IRSLCoords import coordinates
-#import cnoid.IRSLCoords as IC
 from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
-#-from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
-## from .draw_coords import DrawCoordsListWrapped as DrawCoords
+
 from . import make_shapes as mkshapes
 from . import cnoid_util as iu
-#-import irsl_choreonoid.make_shapes as mkshapes
-#-import irsl_choreonoid.cnoid_util as iu
 ## from . import robot_util as ru
 ## from .robot_util import RobotModelWrapped as RobotModel
-## etc
 import numpy as np
 from numpy import array as npa
 from numpy.linalg import norm
@@ -59,6 +54,10 @@ class RobotBuilder(object):
         self.__setBody(robot=robot)
         self.created_links = []
 
+        self.__store_mode = 0 # 0: storing objects as shape,
+                              # 1: storing objects converted to mesh as visual, and storing objects (as is) as collision if possible,
+                              # 2: storing objects converted to mesh as shape (visual and collision)
+                              # 3: collision is bounding-box
     def __setBodyItem(self, robot, name):
         ## set self.__bodyItem
         if isinstance(robot, BodyPlugin.BodyItem):
@@ -94,6 +93,11 @@ class RobotBuilder(object):
             self.bodyItem.removeFromParentItem()
             # cbase.RootItem.instance.addChildItem(self.bodyItem)
             # del self.BodyItem
+
+    def storeMode(self, mode=None):
+        if mode is not None:
+            self.__store_mode = mode
+        return self.__store_mode
 
     @property
     def body(self):
@@ -191,7 +195,7 @@ class RobotBuilder(object):
         if self.__di is not None:
             self.__di.removeObject(shape)
 
-    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, **kwargs):
+    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, collision=None, **kwargs):
         """Creating link from drawn shapes and appending to the other link
 
         Args:
@@ -201,6 +205,7 @@ class RobotBuilder(object):
             parentLink (cnoid.Body.Link, optional) :
             root (boolean, default=False) :
             clear (boolean, default=True) :
+            collision (cnoid.Util.SgNode, optional) :
             \*\*kwargs :
 
         Returns:
@@ -264,8 +269,12 @@ class RobotBuilder(object):
             info= RobotBuilder.mergeResults(res, density=density)
         ##link.axis (joint_axis)
         #print('info: {}'.format(info))
-        lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
-                           shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
+        if collision is None:
+            lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
+                               shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
+        else:
+            lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
+                               visual=groot, collision=collision, JointType=jtype, JointAxis=jaxis, **kwargs)
         ##link.T <= joint_root
         lk.setPosition(cds_w_j.cnoidPosition)
         if parentLink is not None:
@@ -370,9 +379,9 @@ class RobotBuilder(object):
             COM (numpy.array, optional) :
             density (float, optional) :
             inertia (numpy.array, optional) :
-            shape (,optional) :
-            visual (,optional) :
-            collision (,optional) :
+            shape (cnoid.Util.SgNode, optional) :
+            visual (cnoid.Util.SgNode, optional) :
+            collision (cnoid.Util.SgNode, optional) :
             \*\*kwargs :
 
         Returns:
@@ -771,36 +780,29 @@ class RobotBuilder(object):
             linkorg.setPosition(cloned_lk.T)
         return res
     ### end: link visualization
-    def writeBodyFile(self, fname, modelName=None, mode=0, **kwargs):
-        """Writing created robot-model to file as .body file
+    def exportBody(self, fname, modelName=None, mode=0, **kwargs):
+        """Exporting created robot-model to file as .body file
 
         Args:
             fname (str) : Name of file
             modelName (str, optional) :
-            mode (int, default=0):
+            mode (int, default=0):  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
 
         """
-        #mode: 0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
-        bw = cbody.StdBodyWriter()
-        bw.setMessageSinkStdErr()
-        bw.setExtModelFileMode(mode)
         if modelName is not None:
             self.body.setName(modelName)
-        return bw.writeBody(self.body, fname)
-    def writeURDF(self, fname, **kwargs):
-        """Writing created robot-model to file as .urdf file
+        return iu.exportBody(fname, self.body, extModelFileMode=mode, **kwargs)
+
+    def exportURDF(self, fname, **kwargs):
+        """Exporting created robot-model to file as .urdf file
 
         Args:
             fname (str) : Name of file
-            modelName (str, optional) :
             mode (int, default=0):
 
         """
-        ubw = URDFBodyWriter()
-        ubw.setMessageSinkStdErr()
-        for k, v in kwargs.items():
-            exec('ubw.set{}(v)'.format(k))
-        ubw.writeBody(self.body, fname)
+        return iu.exportURDF(fname, self.body, **kwargs)
+
     ### start: mkshapes wrapper
     def loadScene(self, fname, wrapped=True, add=True, **kwargs):
         """Loading scene as a shape, see irsl_choreonoid.make_shapes.loadScene
@@ -1016,7 +1018,7 @@ class RobotBuilder(object):
 
     ### end: mkshapes wrapper
     class MassParam(object):
-        def __init__(self, shape, coords):
+        def __init__(self, shape, coords): ## make volume, com, inertia from boundingbox
             ## shape is primitive or mesh(wo primitive)
             self.volume = 0.0
             self.mass  = 0.0
