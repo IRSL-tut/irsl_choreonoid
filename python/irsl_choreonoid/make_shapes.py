@@ -164,11 +164,12 @@ def extractDrawables(sg_node, currentCoords=None):
     """
     return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape, cutil.SgPlot, cutil.SgText])
 
-def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadScene(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
     Args:
         fname (str) : File name to be loaded
+        fileUri (str, optional) : If fileUri is set, shapes will be set Uri for exporting files
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -180,8 +181,10 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     """
     ld = cutil.SceneLoader()
     ld.setMessageSinkStdErr()
-
+    ## add ld options
     sg = ld.load(fname)
+    if sg is None:
+        raise Exception(f'Loading scene was failed : {fname}')
     shapes = __extractShape(sg)
 
     mat = generateMaterial(**kwargs)
@@ -189,6 +192,9 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     if mat is not None:
         for shape in shapes:
             shape.setMaterial(mat)
+
+    if fileUri is not None:
+        sg.setUri(fname, fileUri)
 
     if rawShape:
         return sg
@@ -208,11 +214,12 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def loadMesh(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadMesh(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
         fname (str) : File name to be loaded
+        fileUri (str, optional) : If fileUri is set, shapes will be set Uri for exporting files
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -224,14 +231,20 @@ def loadMesh(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     """
     ld = cnoid.AssimpPlugin.AssimpSceneLoader()
     ld.setMessageSinkStdErr()
+    ## add ld options
     sg = ld.load(fname)
     if sg is None:
         raise Exception(f'Loading mesh was failed : {fname}')
+    shapes = __extractShape(sg)
 
     mat = generateMaterial(**kwargs)
 
+    if fileUri is not None:
+        sg.setUri(fname, fileUri)
+
     if mat is not None:
-        sg.setMaterial(mat)
+        for shape in shapes:
+            shape.setMaterial(mat)
 
     if rawShape:
         return sg
@@ -572,7 +585,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
     elif colors is not None:
-        ps.setColorIndices( [0]*ps.numVertices )
+        ps.setColorIndices( [0]*ps.sizeOfVertices )
     ps.updateBoundingBox()
     if rawShape:
         return ps
