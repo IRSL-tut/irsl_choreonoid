@@ -330,12 +330,13 @@ def getCameraCoords(withFOV=True, opencv=True):
     else:
         return (cds, None)
 
-def setCameraCoords(cds, fov=None, opencv=True):
+def setCameraCoords(cds, fov=None, update=True, opencv=True):
     """Setting camera coordinates of current scene
 
     Args:
         cds (cnoid.IRSLCoords.coordinates) : Camera's coordinates to be set
         fov (float, default = None) : Camera's filed of view to be set
+        update (boolean, default=True) : If True, rendering scene with updated camera position
         opencv (boolean, default=True) : cds is OpenCV stype coordinates
 
     """
@@ -345,7 +346,8 @@ def setCameraCoords(cds, fov=None, opencv=True):
     sw.builtinCameraTransform.setPosition(cds.cnoidPosition)
     if fov is not None:
         sw.builtinPerspectiveCamera.setFieldOfView(fov)
-    sw.builtinPerspectiveCamera.notifyUpdate()
+    if update:
+        sw.builtinPerspectiveCamera.notifyUpdate()
 
 def getCameraCoordsParam(withFOV=True):
     """Returning camera position of current scene (returning dictionary type)
