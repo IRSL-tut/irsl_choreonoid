@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu: [ 18.04, 20.04 ] ## for 22.04 / ROS2 environment
+        # ubuntu: [ 18.04, 20.04 ] ## apt for 18.04 is not working well (2023.11.21)
+        ubuntu: [ 20.04 ] ## for 22.04 / ROS2 environment
     runs-on: self-hosted
     env:
       IMAGE_NAME: irsl_choreonoid
