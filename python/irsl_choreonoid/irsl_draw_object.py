@@ -170,7 +170,7 @@ Then, you can run some process when the position of the target is updated.
         """Wrapped method of orient_with_matrix in cnoid.IRSLCoords.coordinates
 
         Args:
-        rot (numpy.array) : 3x3 matrix, matrix applied to rotate
+            rot (numpy.array) : 3x3 matrix, matrix applied to rotate
             wrt (cnoid.IRSLCoords.coordinates.wrt or cnoid.IRSLCoords.coordinates, optional) : Reference coordinates applying this method
 
         Returns:
