@@ -164,11 +164,12 @@ def extractDrawables(sg_node, currentCoords=None):
     """
     return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape, cutil.SgPlot, cutil.SgText])
 
-def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadScene(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
     Args:
         fname (str) : File name to be loaded
+        fileUri (str, optional) : If fileUri is set, shapes will be set Uri for exporting files
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -180,8 +181,10 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     """
     ld = cutil.SceneLoader()
     ld.setMessageSinkStdErr()
-
+    ## add ld options
     sg = ld.load(fname)
+    if sg is None:
+        raise Exception(f'Loading scene was failed : {fname}')
     shapes = __extractShape(sg)
 
     mat = generateMaterial(**kwargs)
@@ -189,6 +192,9 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     if mat is not None:
         for shape in shapes:
             shape.setMaterial(mat)
+
+    if fileUri is not None:
+        sg.setUri(fname, fileUri)
 
     if rawShape:
         return sg
@@ -208,11 +214,12 @@ def loadScene(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def loadMesh(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadMesh(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
         fname (str) : File name to be loaded
+        fileUri (str, optional) : If fileUri is set, shapes will be set Uri for exporting files
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
@@ -224,14 +231,20 @@ def loadMesh(fname, wrapped=True, rawShape=False, coords=None, **kwargs):
     """
     ld = cnoid.AssimpPlugin.AssimpSceneLoader()
     ld.setMessageSinkStdErr()
+    ## add ld options
     sg = ld.load(fname)
     if sg is None:
         raise Exception(f'Loading mesh was failed : {fname}')
+    shapes = __extractShape(sg)
 
     mat = generateMaterial(**kwargs)
 
+    if fileUri is not None:
+        sg.setUri(fname, fileUri)
+
     if mat is not None:
-        sg.setMaterial(mat)
+        for shape in shapes:
+            shape.setMaterial(mat)
 
     if rawShape:
         return sg
@@ -572,7 +585,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
     elif colors is not None:
-        ps.setColorIndices( [0]*ps.numVertices )
+        ps.setColorIndices( [0]*ps.sizeOfVertices )
     ps.updateBoundingBox()
     if rawShape:
         return ps
@@ -1027,7 +1040,7 @@ def exportScene(fname, sg_node, exportMesh=False, **kwargs):
     return wt.writeScene(fname, sg_node)
 
 ### util
-def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
+def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp', allInOne=False):
     """Exporting SgNode as .scen file
 
     Args:
@@ -1039,8 +1052,37 @@ def addUriToShape(sg_node, base_name='mesh', base_uri='file:///tmp'):
        uri : {base_uri}/{base_name}_{counter}
 
     """
+    extracts = extractShapes(sg_node)
+    if allInOne:
+        hasUri=True
+        for shape, coords in extracts:
+            if shape.mesh.primitiveType == cutil.SgMesh.MeshType and not shape.mesh.hasUri():
+                hasUri=False
+                break
+        if hasUri: ## all shapes has uri
+            ## do nothing ??
+            pass
+        else:
+            withoutUri=True
+            for shape, coords in extracts:
+                if shape.mesh.primitiveType == cutil.SgMesh.MeshType and shape.mesh.hasUri():
+                    withoutUri = False
+                    break;
+            if withoutUri:
+                ### all shapes do not have uri
+                sg_node.setUri(base_name, '{}/{}'.format(base_uri, base_name))
+            else:
+                ### some have uri, some do not
+                cntr = 0
+                for shape, coords in extracts:
+                    if shape.mesh.primitiveType == cutil.SgMesh.MeshType and not shape.mesh.hasUri():
+                        fn = '{}_{}'.format(base_name, cntr)
+                        shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
+                        cntr += 1
+        return
+
     cntr = 0
-    for shape, coords in extractShapes(sg_node):
+    for shape, coords in extracts:
         if shape.mesh.primitiveType == cutil.SgMesh.MeshType:
             fn = '{}_{}'.format(base_name, cntr)
             shape.mesh.setUri(fn, '{}/{}'.format(base_uri, fn))
