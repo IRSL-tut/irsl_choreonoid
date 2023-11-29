@@ -841,7 +841,8 @@ class RobotBuilder(object):
         Args:
             fname (str) : Name of file
             modelName (str, optional) :
-            mode (int, default=0):  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
+            mode (int, default=0) :  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
+            kwargs (dict) :
 
         """
         if modelName is not None:
@@ -853,7 +854,7 @@ class RobotBuilder(object):
 
         Args:
             fname (str) : Name of file
-            mode (int, default=0):
+            kwargs (dict) :
 
         """
         return iu.exportURDF(fname, self.body, **kwargs)

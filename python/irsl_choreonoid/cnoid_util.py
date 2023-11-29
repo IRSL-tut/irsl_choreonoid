@@ -5,6 +5,11 @@ from cnoid.Body import StdBodyWriter
 from cnoid.Body import Body
 from cnoid.Body import Link
 
+try: ## for original-choreonoid
+    from cnoid.URDFPlugin import URDFBodyWriter
+except ImportError:
+    pass
+
 import cnoid.Util
 
 import numpy as np
