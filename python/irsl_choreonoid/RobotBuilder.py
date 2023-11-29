@@ -31,6 +31,33 @@ try:
 except Exception as e:
     pass
 
+class DummyInterface(object):
+    def __init__(self):
+        self.SgPosTransform = cutil.SgPosTransform()
+    def clear(self):
+        self.SgPosTransform = cutil.SgPosTransform()
+    def objects(self):
+        res = []
+        for idx in range(self.SgPosTransform.numChildren):
+            res.append(self.SgPosTransform.getChild(idx))
+        return res
+    def addObject(self, obj):
+        if hasattr(obj, 'target'): ## coordsWrapper
+            self.SgPosTransform.addChild(obj.target)
+        else:
+            self.SgPosTransform.addChild(obj)
+    def removeObject(self, obj):
+        if hasattr(obj, 'target'): ## coordsWrapper
+            self.SgPosTransform.removeChild(obj.target)
+        else:
+            self.SgPosTransform.removeChild(obj)
+    def addObjects(self, objlst):
+        for obj in objlst:
+            self.addObject(obj)
+    def removeObjects(self, objlst):
+        for obj in objlst:
+            self.removeObject(obj)
+
 ## add inertia on shape
 class RobotBuilder(object):
     """Building robot interactively
@@ -46,10 +73,14 @@ class RobotBuilder(object):
         self.__bodyItem = None
         self.__di = None
         self.__body = None
+        self.__cnoid = False
         if gui and iu.isInChoreonoid():
             ## set self.__di
+            self.__cnoid = True
             self.__di=DrawInterface()
             self.__setBodyItem(robot=robot, name=name)
+        else:
+            self.__di=DummyInterface()
         ## set self.__body
         self.__setBody(robot=robot)
         self.created_links = []
@@ -131,13 +162,13 @@ class RobotBuilder(object):
     def hideRobot(self):
         """Hiding robot model (uncheck RobotItem)
         """
-        if self.__di is not None:
+        if self.bodyItem is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
 
     def showRobot(self):
         """Showing robot model (check RobotItem)
         """
-        if self.__di is not None:
+        if self.bodyItem is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem)
             self.notifyUpdate()
 
