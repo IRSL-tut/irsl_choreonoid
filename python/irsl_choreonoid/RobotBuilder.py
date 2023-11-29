@@ -1137,7 +1137,10 @@ class RobotBuilder(object):
         total_mass = 0.0
         for masspara in result:
             if mass is not None:
-                masspara.setMass(mass * masspara.volume/total_volume)
+                if total_volume == 0.0:
+                    masspara.setMass=mass
+                else:
+                    masspara.setMass(mass * masspara.volume/total_volume)
             else:
                 masspara.setDensity(density)
             total_mass += masspara.mass
@@ -1145,7 +1148,8 @@ class RobotBuilder(object):
         newCOM_w = npa([0., 0., 0.])
         for masspara in result:
             newCOM_w += masspara.mass * masspara.coords.transform_vector(masspara.COM)
-        newCOM_w /= total_mass
+        if total_mass != 0.0:
+            newCOM_w /= total_mass
         ##
         newIner_w = npa([[0., 0., 0.],[0., 0., 0.],[0., 0., 0.]])
         for masspara in result:
