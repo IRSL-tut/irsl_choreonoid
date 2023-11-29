@@ -184,6 +184,15 @@ class RobotBuilder(object):
         """
         if self.__di is not None:
             self.__di.addObject(shape)
+    def addShapes(self, shapes):
+        """Adding a shapes
+
+        Args:
+            shapes ( list[cnoid.Util.SgNode] ) : Shapes to be added
+
+        """
+        if self.__di is not None:
+            self.__di.addObjects(shapes)
 
     def removeShape(self, shape):
         """Removing a shape
@@ -194,6 +203,11 @@ class RobotBuilder(object):
         """
         if self.__di is not None:
             self.__di.removeObject(shape)
+    def removeShapes(self, shapes):
+        """Removing a shapes
+
+        Args:
+            shapes ( list[cnoid.Util.SgNode] ) : Shapes to be removed
 
     def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, collision=None, **kwargs):
         """Creating link from drawn shapes and appending to the other link
