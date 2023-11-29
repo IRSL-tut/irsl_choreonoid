@@ -150,7 +150,7 @@ def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, 
             if mass == 1.0 and II[0][0] == 1.0 and II[1][1] == 1.0 and II[2][2] == 1.0 and II[0][1] == 0.0 and II[0][2] == 0.0 and II[1][2] == 0.0:
                 print('link: {}, small mass-paramters is set'.format(ll.name))
                 ll.setMass(0.001)
-                ll.setInertia( npa( ((1.0, 0, 0), (0, 1.0, 0), (0, 0, 1.0)) ) * 1e-9 )
+                ll.setInertia( np.array( ((1.0, 0, 0), (0, 1.0, 0), (0, 0, 1.0)) ) * 1e-9 )
     return bw.writeBody(body, fname)
 
 def exportURDF(fname, body, **kwargs):
