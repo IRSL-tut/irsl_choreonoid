@@ -209,7 +209,12 @@ class RobotBuilder(object):
         Args:
             shapes ( list[cnoid.Util.SgNode] ) : Shapes to be removed
 
-    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, collision=None, **kwargs):
+        """
+        if self.__di is not None:
+            self.__di.removeObjects(shapes)
+
+    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False,
+                            clear=True, collision=None, useCollisionForMassparam=False, **kwargs):
         """Creating link from drawn shapes and appending to the other link
 
         Args:
@@ -220,6 +225,7 @@ class RobotBuilder(object):
             root (boolean, default=False) :
             clear (boolean, default=True) :
             collision (cnoid.Util.SgNode, optional) :
+            useCollisionForMassparam (boolean, default=False) : 
             \*\*kwargs :
 
         Returns:
@@ -273,8 +279,12 @@ class RobotBuilder(object):
         cds_offset = cds_w_j.inverse_transformation()
         ##link.visual <= shapes(org:joint_root)
         groot.setPosition(cds_offset.cnoidPosition)
-        res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
-        #print('res: {}'.format(res))
+        ##
+        if collision is not None and useCollisionForMassparam:
+            res = RobotBuilder.traverseSceneGraph(collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+        else:
+            res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+        ##
         if len(res) < 1:
             print('There is no shape in the scene, rootNode: {}'.format(groot))
         if mass is not None:
