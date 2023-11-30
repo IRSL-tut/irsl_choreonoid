@@ -31,6 +31,33 @@ try:
 except Exception as e:
     pass
 
+class DummyInterface(object):
+    def __init__(self):
+        self.SgPosTransform = cutil.SgPosTransform()
+    def clear(self):
+        self.SgPosTransform = cutil.SgPosTransform()
+    def objects(self):
+        res = []
+        for idx in range(self.SgPosTransform.numChildren):
+            res.append(self.SgPosTransform.getChild(idx))
+        return res
+    def addObject(self, obj):
+        if hasattr(obj, 'target'): ## coordsWrapper
+            self.SgPosTransform.addChild(obj.target)
+        else:
+            self.SgPosTransform.addChild(obj)
+    def removeObject(self, obj):
+        if hasattr(obj, 'target'): ## coordsWrapper
+            self.SgPosTransform.removeChild(obj.target)
+        else:
+            self.SgPosTransform.removeChild(obj)
+    def addObjects(self, objlst):
+        for obj in objlst:
+            self.addObject(obj)
+    def removeObjects(self, objlst):
+        for obj in objlst:
+            self.removeObject(obj)
+
 ## add inertia on shape
 class RobotBuilder(object):
     """Building robot interactively
@@ -46,10 +73,14 @@ class RobotBuilder(object):
         self.__bodyItem = None
         self.__di = None
         self.__body = None
+        self.__cnoid = False
         if gui and iu.isInChoreonoid():
             ## set self.__di
+            self.__cnoid = True
             self.__di=DrawInterface()
             self.__setBodyItem(robot=robot, name=name)
+        else:
+            self.__di=DummyInterface()
         ## set self.__body
         self.__setBody(robot=robot)
         self.created_links = []
@@ -131,13 +162,13 @@ class RobotBuilder(object):
     def hideRobot(self):
         """Hiding robot model (uncheck RobotItem)
         """
-        if self.__di is not None:
+        if self.bodyItem is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem, False)
 
     def showRobot(self):
         """Showing robot model (check RobotItem)
         """
-        if self.__di is not None:
+        if self.bodyItem is not None:
             cbase.ItemTreeView.instance.checkItem(self.bodyItem)
             self.notifyUpdate()
 
@@ -184,6 +215,15 @@ class RobotBuilder(object):
         """
         if self.__di is not None:
             self.__di.addObject(shape)
+    def addShapes(self, shapes):
+        """Adding a shapes
+
+        Args:
+            shapes ( list[cnoid.Util.SgNode] ) : Shapes to be added
+
+        """
+        if self.__di is not None:
+            self.__di.addObjects(shapes)
 
     def removeShape(self, shape):
         """Removing a shape
@@ -194,8 +234,18 @@ class RobotBuilder(object):
         """
         if self.__di is not None:
             self.__di.removeObject(shape)
+    def removeShapes(self, shapes):
+        """Removing a shapes
 
-    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False, clear=True, collision=None, **kwargs):
+        Args:
+            shapes ( list[cnoid.Util.SgNode] ) : Shapes to be removed
+
+        """
+        if self.__di is not None:
+            self.__di.removeObjects(shapes)
+
+    def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False,
+                            clear=True, collision=None, useCollisionForMassparam=False, **kwargs):
         """Creating link from drawn shapes and appending to the other link
 
         Args:
@@ -206,6 +256,7 @@ class RobotBuilder(object):
             root (boolean, default=False) :
             clear (boolean, default=True) :
             collision (cnoid.Util.SgNode, optional) :
+            useCollisionForMassparam (boolean, default=False) : 
             \*\*kwargs :
 
         Returns:
@@ -259,8 +310,12 @@ class RobotBuilder(object):
         cds_offset = cds_w_j.inverse_transformation()
         ##link.visual <= shapes(org:joint_root)
         groot.setPosition(cds_offset.cnoidPosition)
-        res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
-        #print('res: {}'.format(res))
+        ##
+        if collision is not None and useCollisionForMassparam:
+            res = RobotBuilder.traverseSceneGraph(collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+        else:
+            res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+        ##
         if len(res) < 1:
             print('There is no shape in the scene, rootNode: {}'.format(groot))
         if mass is not None:
@@ -786,7 +841,8 @@ class RobotBuilder(object):
         Args:
             fname (str) : Name of file
             modelName (str, optional) :
-            mode (int, default=0):  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
+            mode (int, default=0) :  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
+            kwargs (dict) :
 
         """
         if modelName is not None:
@@ -798,7 +854,7 @@ class RobotBuilder(object):
 
         Args:
             fname (str) : Name of file
-            mode (int, default=0):
+            kwargs (dict) :
 
         """
         return iu.exportURDF(fname, self.body, **kwargs)
@@ -1113,7 +1169,10 @@ class RobotBuilder(object):
         total_mass = 0.0
         for masspara in result:
             if mass is not None:
-                masspara.setMass(mass * masspara.volume/total_volume)
+                if total_volume == 0.0:
+                    masspara.setMass=mass
+                else:
+                    masspara.setMass(mass * masspara.volume/total_volume)
             else:
                 masspara.setDensity(density)
             total_mass += masspara.mass
@@ -1121,7 +1180,8 @@ class RobotBuilder(object):
         newCOM_w = npa([0., 0., 0.])
         for masspara in result:
             newCOM_w += masspara.mass * masspara.coords.transform_vector(masspara.COM)
-        newCOM_w /= total_mass
+        if total_mass != 0.0:
+            newCOM_w /= total_mass
         ##
         newIner_w = npa([[0., 0., 0.],[0., 0., 0.],[0., 0., 0.]])
         for masspara in result:
