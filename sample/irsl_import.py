@@ -21,6 +21,7 @@ from irsl_choreonoid.RobotBuilder import RobotBuilder
 import numpy as np
 from numpy import array as npa
 from numpy.linalg import norm
+from irsl_choreonoid.cnoid_util import fv ## for npa
 import math
 from math import pi as PI
 ##

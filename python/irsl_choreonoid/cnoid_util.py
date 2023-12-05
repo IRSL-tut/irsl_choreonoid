@@ -320,6 +320,31 @@ def cnoidTranslation(cPosition):
     """
     return cPosition[:3, 3]
 
+## numpy utility
+def fv(*args, **kwargs):
+    """Simple function for making numpy.array
+
+    Args:
+        args (list[float]) : List will be passed to numpy.array
+        kwargs (dict) : Keyword arguments will be passed to numpy.array
+
+    Returns:
+         numpy.array : vector or matrix
+
+    Note:
+
+         This function just return numpy.array(args, **kwargs)
+
+    Examples:
+
+         fv(0.1, 0.2, 0.3) => array([0, 1, 2])
+
+        Just reducing the number of typing
+        numpy.array([0.1, 0.2, 0.3]) => fv(0.1, 0.2, 0.3)
+
+    """
+    return np.array(args, **kwargs)
+
 ## only this function use cnoid.Base module
 def isInChoreonoid():
     """isInChoreonoid
