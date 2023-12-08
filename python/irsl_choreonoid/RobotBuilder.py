@@ -1109,7 +1109,7 @@ class RobotBuilder(object):
                 if ch is target:
                     gnode.removeChildAt(idx, False)
                     return True
-                if RobotBuilder.revemoNode(ch, target):
+                if RobotBuilder.removeNode(ch, target):
                     return True
         return False
 
