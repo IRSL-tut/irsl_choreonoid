@@ -15,6 +15,7 @@ import cnoid.Util
 import numpy as np
 
 from .make_shapes import addUriToShape
+from .make_shapes import exportMesh
 
 from urllib.parse import urlparse
 import os
@@ -171,6 +172,52 @@ def exportURDF(fname, body, **kwargs):
     for k, v in kwargs.items():
         exec('ubw.set{}(v)'.format(k))
     return ubw.writeBody(body, fname)
+
+def exportBodyAsMesh(fname, input_body, scale=None, offset=None, useCollision=False, **kwargs):
+    """
+    Exporting a mesh file converted from Body
+
+    Args:
+        fname (str) : Name of output file
+        input_body ( cnoid.Body.Body ) : Robot model to be exported
+        scale (float, optional) : 
+        offset( cnoid.IRSLCoords.coordinates, optional) : 
+        useCollision ( boolean, defalt=False) : 
+        kwargs (dict) : Passing to irsl_choreonoid.makeshapes.exportMesh
+
+    """
+    base = cnoid.Util.SgPosTransform()
+    for lk in input_body.links:
+        if useCollision:
+            sh=lk.getCollisionShape()
+        else:
+            sh=lk.getVisualShape()
+        trs = cnoid.Util.SgPosTransform()
+        trs.setPosition(lk.T)
+        trs.addChild(sh)
+        base.addChild(trs)
+    if offset is not None:
+        base.setPosition(offset.cnoidPosition)
+    if scale is not None:
+        scl=cnoid.Util.SgScaleTransform()
+        scl.setScale(scale)
+        scl.addChild(base)
+        base = scl
+    exportMesh(fname, base, **kwargs)
+
+def convertBodyFileToMeshFile(mesh_file_name, body_file_name, **kwargs):
+    """
+    Converting a mesh file to a body file
+
+    Args:
+        mesh_file_name (str) : Name of output file
+        body_file_name (str) : Name of input file
+        kwargs (dict) : exportBodyAsMesh
+    """
+    robot=loadRobot(body_file_name)
+    if robot is None:
+        return
+    exportBodyAsMesh(mesh_file_name, robot, **kwargs)
 
 def castValueNode(_valuenode):
     """Casting cnoid.Util.ValueNode type to python primitive type
