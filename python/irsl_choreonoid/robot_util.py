@@ -1812,6 +1812,35 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             elif q_ < j.q_lower:
                 j.q = j.q_lower
 
+    def calcMinimumDuration(self, target_angle_vector, original_angle_vector=None, ratio=1.0):
+        """Calculating duration for the fastest movement depend on a joint limit
+
+        Args:
+            target_angle_vector (numpy.array) : AngleVector to be moved to
+            original_angle_vector (numpy.array, optional) : AngleVector to be moved from. If this argument is not given, current angles will be used.
+            ratio (float) : Result will be multipled by this value
+
+        Returns:
+            float : Duration [ second ]
+
+        """
+        if original_angle_vector is None:
+            original_angle_vector = self.angleVector()
+        ##
+        result = 0.0
+        for j, ang0, ang1 in zip(self.__robot.joints, original_angle_vector, target_angle_vector):
+            if j.dq_upper > 1e6 and j.dq_lower < -1e6:
+                min_d = 0.0
+            else:
+                diff_angle = ang1 - ang0
+                if diff_angle > 0:
+                    min_d = diff_angle / j.dq_upper
+                else:
+                    min_d = diff_angle / j.dq_lower
+            if min_d > result:
+                result = min_d
+        return ratio * result
+
     def fullbodyInverseKinematics(self, **kwargs):
         ### not implemented yet
         pass
