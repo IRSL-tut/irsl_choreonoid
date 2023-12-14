@@ -974,6 +974,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
 
         """
+        self.__keep_limit = False
+
         self.__item = None
         if hasattr(robot, 'body'): ## check BodyItem ##if isinstance(robot, BodyItem):
             self.__robot = robot.body
@@ -1543,6 +1545,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.copy()
 
     def hook(self):
+        if self.__keep_limit:
+            self.trimJointAngles()
         if self.__mode < 0:
             ### do nothing(no-hook)
             return
@@ -1772,6 +1776,31 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         cds.transform(self.__robot.rootLink.getCoords())
         self.__robot.rootLink.setCoords(cds)
         self.hook()
+
+    def keepJointLimit(self, on_ = True):
+        """Setting mode to keep joint limits
+
+        Args:
+            on_ (boolean, default=True) : 
+
+        Returns:
+            (boolean) : Returns current settings
+
+        """
+        if on_ is not None:
+            self.__keep_limit = on_
+        return self.__keep_limit
+
+    def trimJointAngles(self):
+        """Force setting joint angles inside the range of limits
+
+        """
+        for j in self.__robot.joints:
+            q_ = j.q
+            if q_ > j.q_upper:
+                j.q = j.q_upper
+            elif q_ < j.q_lower:
+                j.q = j.q_lower
 
     def fullbodyInverseKinematics(self, **kwargs):
         ### not implemented yet
