@@ -78,7 +78,7 @@ def make_coordinates(coords_map):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_map))
 
-def make_coords_map(coords):
+def make_coords_map(coords, method=None):
     """Generating dictonary describing transformation
 
     Args:
@@ -91,8 +91,18 @@ def make_coords_map(coords):
         >>> make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
-    return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
-
+    if method is None:
+        return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
+    elif method in ('RPY', 'rpy'):
+        return {'pos': coords.pos.tolist(), method: coords.getRPY().tolist()}
+    elif method in ('q', 'quaternion'):
+        return {'pos': coords.pos.tolist(), method: coords.quaternion.tolist()}
+    elif method in ('aa', 'angle_axis', 'angle-axis'):
+        return {'pos': coords.pos.tolist(), method: coords.getRotationAngle().tolist()}
+    elif method in ('rotation', 'matrix', 'mat', 'rot'):
+        return {'pos': coords.pos.tolist(), method: coords.rot.tolist()}
+    else:
+        raise Exception('method:{} is invalid'.format(method))
 ##
 ## IKWrapper
 ##
