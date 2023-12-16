@@ -573,10 +573,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     """
     ps=cutil.SgPointSet()
     ps.pointSize=pointSize
-    if type(points) is list:
-        ps.setVertices(npa(points, dtype='float32'))
-    else:
-        ps.setVertices(points)
+    ps.setVertices(npa(points, dtype='float32'))
     if colors is not None:
         if type(colors) is list:
             ps.setColors(npa(colors, dtype='float32'))
