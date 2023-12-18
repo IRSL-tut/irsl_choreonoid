@@ -125,6 +125,8 @@ def loadRobot(fname):
 
 def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, fixMassParam=True):
     """
+    Exporting .body file from an instance of cnoid.Body.Body
+
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
@@ -161,6 +163,8 @@ def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, 
 
 def exportURDF(fname, body, **kwargs):
     """
+    Exporting .urdf file from an instance of cnoid.Body.Body
+
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
@@ -173,14 +177,14 @@ def exportURDF(fname, body, **kwargs):
         exec('ubw.set{}(v)'.format(k))
     return ubw.writeBody(body, fname)
 
-def exportBodyAsMesh(fname, input_body, scale=None, offset=None, useCollision=False, **kwargs):
+def exportBodyAsMesh(fname, input_body, meshScale=None, offset=None, useCollision=False, **kwargs):
     """
-    Exporting a mesh file converted from Body
+    Exporting a mesh file converted from an instance of cnoid.Body.Body
 
     Args:
         fname (str) : Name of output file
         input_body ( cnoid.Body.Body ) : Robot model to be exported
-        scale (float, optional) : 
+        meshScale (float, optional) : 
         offset( cnoid.IRSLCoords.coordinates, optional) : 
         useCollision ( boolean, defalt=False) : 
         kwargs (dict) : Passing to irsl_choreonoid.makeshapes.exportMesh
@@ -198,9 +202,9 @@ def exportBodyAsMesh(fname, input_body, scale=None, offset=None, useCollision=Fa
         base.addChild(trs)
     if offset is not None:
         base.setPosition(offset.cnoidPosition)
-    if scale is not None:
+    if meshScale is not None:
         scl=cnoid.Util.SgScaleTransform()
-        scl.setScale(scale)
+        scl.setScale(meshScale)
         scl.addChild(base)
         base = scl
     exportMesh(fname, base, **kwargs)

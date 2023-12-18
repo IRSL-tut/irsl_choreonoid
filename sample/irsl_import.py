@@ -32,6 +32,7 @@ if iu.isInChoreonoid():
     import cnoid.BodyPlugin as BodyPlugin
 ## ROS
 try:
+    from irsl_choreonoid_ros.setup_cnoid import SetupCnoid
     import irsl_choreonoid_ros.cnoid_ros_util as cru
     from irsl_choreonoid_ros.RobotInterface import RobotInterface
 except ImportError:

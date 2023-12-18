@@ -78,7 +78,7 @@ def make_coordinates(coords_map):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_map))
 
-def make_coords_map(coords):
+def make_coords_map(coords, method=None):
     """Generating dictonary describing transformation
 
     Args:
@@ -91,8 +91,18 @@ def make_coords_map(coords):
         >>> make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
     """
-    return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
-
+    if method is None:
+        return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
+    elif method in ('RPY', 'rpy'):
+        return {'pos': coords.pos.tolist(), method: coords.getRPY().tolist()}
+    elif method in ('q', 'quaternion'):
+        return {'pos': coords.pos.tolist(), method: coords.quaternion.tolist()}
+    elif method in ('aa', 'angle_axis', 'angle-axis'):
+        return {'pos': coords.pos.tolist(), method: coords.getRotationAngle().tolist()}
+    elif method in ('rotation', 'matrix', 'mat', 'rot'):
+        return {'pos': coords.pos.tolist(), method: coords.rot.tolist()}
+    else:
+        raise Exception('method:{} is invalid'.format(method))
 ##
 ## IKWrapper
 ##
@@ -974,6 +984,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
 
         """
+        self.__keep_limit = False
+
         self.__item = None
         if hasattr(robot, 'body'): ## check BodyItem ##if isinstance(robot, BodyItem):
             self.__robot = robot.body
@@ -1543,6 +1555,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.copy()
 
     def hook(self):
+        if self.__keep_limit:
+            self.trimJointAngles()
         if self.__mode < 0:
             ### do nothing(no-hook)
             return
@@ -1772,6 +1786,60 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         cds.transform(self.__robot.rootLink.getCoords())
         self.__robot.rootLink.setCoords(cds)
         self.hook()
+
+    def keepJointLimit(self, on_ = True):
+        """Setting mode to keep joint limits
+
+        Args:
+            on_ (boolean, default=True) : 
+
+        Returns:
+            (boolean) : Returns current settings
+
+        """
+        if on_ is not None:
+            self.__keep_limit = on_
+        return self.__keep_limit
+
+    def trimJointAngles(self):
+        """Force setting joint angles inside the range of limits
+
+        """
+        for j in self.__robot.joints:
+            q_ = j.q
+            if q_ > j.q_upper:
+                j.q = j.q_upper
+            elif q_ < j.q_lower:
+                j.q = j.q_lower
+
+    def calcMinimumDuration(self, target_angle_vector, original_angle_vector=None, ratio=1.0):
+        """Calculating duration for the fastest movement depend on a joint limit
+
+        Args:
+            target_angle_vector (numpy.array) : AngleVector to be moved to
+            original_angle_vector (numpy.array, optional) : AngleVector to be moved from. If this argument is not given, current angles will be used.
+            ratio (float) : Result will be multipled by this value
+
+        Returns:
+            float : Duration [ second ]
+
+        """
+        if original_angle_vector is None:
+            original_angle_vector = self.angleVector()
+        ##
+        result = 0.0
+        for j, ang0, ang1 in zip(self.__robot.joints, original_angle_vector, target_angle_vector):
+            if j.dq_upper > 1e6 and j.dq_lower < -1e6:
+                min_d = 0.0
+            else:
+                diff_angle = ang1 - ang0
+                if diff_angle > 0:
+                    min_d = diff_angle / j.dq_upper
+                else:
+                    min_d = diff_angle / j.dq_lower
+            if min_d > result:
+                result = min_d
+        return ratio * result
 
     def fullbodyInverseKinematics(self, **kwargs):
         ### not implemented yet
