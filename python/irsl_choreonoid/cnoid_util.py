@@ -125,6 +125,8 @@ def loadRobot(fname):
 
 def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, fixMassParam=True):
     """
+    Exporting .body file from an instance of cnoid.Body.Body
+
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
@@ -161,6 +163,8 @@ def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, 
 
 def exportURDF(fname, body, **kwargs):
     """
+    Exporting .urdf file from an instance of cnoid.Body.Body
+
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
