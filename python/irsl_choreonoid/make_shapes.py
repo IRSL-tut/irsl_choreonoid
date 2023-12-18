@@ -164,7 +164,7 @@ def extractDrawables(sg_node, currentCoords=None):
     """
     return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape, cutil.SgPlot, cutil.SgText])
 
-def loadScene(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadScene(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
     Args:
@@ -196,6 +196,11 @@ def loadScene(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **
     if fileUri is not None:
         sg.setUri(fname, fileUri)
 
+    if meshScale is not None:
+        scl_ = cutil.SgScaleTransform(meshScale)
+        scl_.addChild(sg)
+        sg = scl_
+
     if rawShape:
         return sg
 
@@ -214,7 +219,7 @@ def loadScene(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def loadMesh(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
@@ -246,6 +251,11 @@ def loadMesh(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **k
         for shape in shapes:
             shape.setMaterial(mat)
 
+    if meshScale is not None:
+        scl_ = cutil.SgScaleTransform(meshScale)
+        scl_.addChild(sg)
+        sg = scl_
+
     if rawShape:
         return sg
 
@@ -260,7 +270,7 @@ def loadMesh(fname, fileUri=None, wrapped=True, rawShape=False, coords=None, **k
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def __genShape(mesh, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
+def __genShape(mesh, meshScale=None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     sg = cutil.SgShape()
     sg.setMesh(mesh)
     if texture is not None:
@@ -269,6 +279,11 @@ def __genShape(mesh, wrapped=True, rawShape=False, coords=None, texture=None, **
 
     if mat is not None:
         sg.setMaterial(mat)
+
+    if meshScale is not None:
+        scl_ = cutil.SgScaleTransform(meshScale)
+        scl_.addChild(sg)
+        sg = scl_
 
     if rawShape:
         return sg
@@ -986,12 +1001,13 @@ def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
 ##
 ## Function for exporting
 ##
-def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None):
+def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None):
     """Exporting SgNode as a mesh file (using Assimp)
 
     Args:
         fname (str) : File name to be saved
         sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        meshScale (float, optional) : 
         verbose ( boolean, default=False ) :
         generatePrimitiveMesh ( boolean, default=True ) :
         ignoreURDFPrimitive (boolean, default=False ) :
@@ -1008,14 +1024,21 @@ def exportMesh(fname, sg_node, verbose=False, generatePrimitiveMesh=True, ignore
     if outputType is not None:
         wt.outputType = outputType
 
+    if meshScale is not None:
+        scl_=cnoid.Util.SgScaleTransform()
+        scl_.setScale(meshScale)
+        scl_.addChild(sg_node)
+        sg_node = scl_
+
     return wt.writeScene(fname, sg_node)
 
-def exportScene(fname, sg_node, exportMesh=False, **kwargs):
+def exportScene(fname, sg_node, meshScale=None, exportMesh=False, **kwargs):
     """Exporting SgNode as .scen file
 
     Args:
         fname (str) : File name to be saved
         sg_node ( cnoid.Util.SgNode ) : Root node of scene to be saved
+        meshScale (float, optional) : 
         exportMesh (boolean, default=False) : Exporting mesh instead of primitive type
         kwargs ( dict[str, param] ) : Extra keyword arguments for using to execute ''StdSceneWriter.<keyword> = <value>''
 
@@ -1033,6 +1056,12 @@ def exportScene(fname, sg_node, exportMesh=False, **kwargs):
             for sp, cds in res:
                 #sp.shape.mesh.translate(v)
                 sp.mesh.setMeshType()
+
+    if meshScale is not None:
+        scl_=cnoid.Util.SgScaleTransform()
+        scl_.setScale(meshScale)
+        scl_.addChild(sg_node)
+        sg_node = scl_
 
     return wt.writeScene(fname, sg_node)
 
