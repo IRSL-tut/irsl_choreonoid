@@ -1014,6 +1014,11 @@ def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveM
         outputType (str, optional) : 
 
     """
+    if isinstance(sg_node, coordsWrapper):
+        if isinstance(sg_node.target, cutil.SgNode):
+            sg_node=sg_node.target
+        else:
+            sg_node=sg_node.object
     wt = cnoid.AssimpPlugin.AssimpSceneWriter()
     wt.setMessageSinkStdErr()
 
@@ -1043,6 +1048,11 @@ def exportScene(fname, sg_node, meshScale=None, exportMesh=False, **kwargs):
         kwargs ( dict[str, param] ) : Extra keyword arguments for using to execute ''StdSceneWriter.<keyword> = <value>''
 
     """
+    if isinstance(sg_node, coordsWrapper):
+        if isinstance(sg_node.target, cutil.SgNode):
+            sg_node=sg_node.target
+        else:
+            sg_node=sg_node.object
     wt = cutil.StdSceneWriter()
     wt.setMessageSinkStdErr()
 
