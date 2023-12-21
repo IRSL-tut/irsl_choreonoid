@@ -202,7 +202,13 @@ def loadScene(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False,
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = None
     if type(sg) is cutil.SgPosTransform:
@@ -257,7 +263,13 @@ def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, 
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
@@ -286,7 +298,13 @@ def __genShape(mesh, meshScale=None, wrapped=True, rawShape=False, coords=None, 
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
