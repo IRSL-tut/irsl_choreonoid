@@ -1903,6 +1903,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     @property
     def numDevices(self):
         return self.__robot.numDevices
+    @classmethod
+    def loadModel(cls, fname, **kwargs):
+        rb=loadRobot(fname, **kwargs)
+        return cls(rb, **kwargs)
+    @classmethod
+    def loadModelItem(cls, fname, **kwargs):
+        rb=loadRobotItem(fname, **kwargs)
+        return cls(rb, **kwargs)
 
 ### flush in Base, etc.
 if isInChoreonoid():
