@@ -202,7 +202,13 @@ def loadScene(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False,
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = None
     if type(sg) is cutil.SgPosTransform:
@@ -257,7 +263,13 @@ def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, 
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
@@ -286,7 +298,13 @@ def __genShape(mesh, meshScale=None, wrapped=True, rawShape=False, coords=None, 
         sg = scl_
 
     if rawShape:
-        return sg
+        if coords is not None:
+            ret = cutil.SgPosTransform()
+            ret.setPosition(coords.cnoidPosition)
+            ret.addChild(sg)
+            return ret
+        else:
+            return sg
 
     ret = cutil.SgPosTransform()
     ret.addChild(sg)
@@ -1014,6 +1032,11 @@ def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveM
         outputType (str, optional) : 
 
     """
+    if isinstance(sg_node, coordsWrapper):
+        if isinstance(sg_node.target, cutil.SgNode):
+            sg_node=sg_node.target
+        else:
+            sg_node=sg_node.object
     wt = cnoid.AssimpPlugin.AssimpSceneWriter()
     wt.setMessageSinkStdErr()
 
@@ -1043,6 +1066,11 @@ def exportScene(fname, sg_node, meshScale=None, exportMesh=False, **kwargs):
         kwargs ( dict[str, param] ) : Extra keyword arguments for using to execute ''StdSceneWriter.<keyword> = <value>''
 
     """
+    if isinstance(sg_node, coordsWrapper):
+        if isinstance(sg_node.target, cutil.SgNode):
+            sg_node=sg_node.target
+        else:
+            sg_node=sg_node.object
     wt = cutil.StdSceneWriter()
     wt.setMessageSinkStdErr()
 

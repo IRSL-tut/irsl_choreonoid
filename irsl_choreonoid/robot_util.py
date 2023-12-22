@@ -8,6 +8,7 @@ import cnoid.IKSolvers as IK
 
 import numpy as np
 import random
+import math
 
 def make_coordinates(coords_map):
     """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
@@ -103,6 +104,38 @@ def make_coords_map(coords, method=None):
         return {'pos': coords.pos.tolist(), method: coords.rot.tolist()}
     else:
         raise Exception('method:{} is invalid'.format(method))
+
+def make_translation_rotation(coords, unit='mm', degree=True):
+    """Generating dictonary describing transformation (using translation, rotation)
+
+    Args:
+        coords (cnoid.IRSLCoords.coordinates) : Transformation
+        unit (str, default='mm') : Unit of length. 'm', 'mm', 'cm', or 'inch'
+        degree (boolean, default=True) : Unit of angle. If True, use degree, otherwise use radian
+
+    Returns:
+        dict[str, list[float]] : Dictonary can be used in .body
+
+    """
+    res = make_coords_map(coords)
+    pp = res['pos']
+    aa = res['aa']
+    if unit == 'mm':
+        pp[0] *= 1000.0
+        pp[1] *= 1000.0
+        pp[2] *= 1000.0
+    elif unit == 'cm':
+        pp[0] *= 100.0
+        pp[1] *= 100.0
+        pp[2] *= 100.0
+    elif unit == 'inch':
+        pp[0] *= 25.4
+        pp[1] *= 25.4
+        pp[2] *= 25.4
+    if degree:
+        aa[3] = aa[3]*180/math.pi
+    return {'translation': pp, 'rotation': aa}
+
 ##
 ## IKWrapper
 ##
@@ -1870,6 +1903,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     @property
     def numDevices(self):
         return self.__robot.numDevices
+    @classmethod
+    def loadModel(cls, fname, **kwargs):
+        rb=loadRobot(fname, **kwargs)
+        return cls(rb, **kwargs)
+    @classmethod
+    def loadModelItem(cls, fname, **kwargs):
+        rb=loadRobotItem(fname, **kwargs)
+        return cls(rb, **kwargs)
 
 ### flush in Base, etc.
 if isInChoreonoid():

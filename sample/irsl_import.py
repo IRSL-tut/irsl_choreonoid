@@ -14,6 +14,7 @@ from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInter
 from irsl_choreonoid.draw_coords import DrawCoordsListWrapped as DrawCoords
 import irsl_choreonoid.make_shapes as mkshapes
 import irsl_choreonoid.cnoid_util as iu
+from irsl_choreonoid.cnoid_util import parseURL
 import irsl_choreonoid.robot_util as ru
 from irsl_choreonoid.robot_util import RobotModelWrapped as RobotModel
 from irsl_choreonoid.RobotBuilder import RobotBuilder
@@ -35,5 +36,6 @@ try:
     from irsl_choreonoid_ros.setup_cnoid import SetupCnoid
     import irsl_choreonoid_ros.cnoid_ros_util as cru
     from irsl_choreonoid_ros.RobotInterface import RobotInterface
+    from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
 except ImportError:
     pass
