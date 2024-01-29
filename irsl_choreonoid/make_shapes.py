@@ -225,7 +225,7 @@ def loadScene(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False,
             ret.setPosition(coords.cnoidPosition)
     return ret
 
-def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, coords=None, forceGenerateNormals=True, creaseAngle=PI/6, **kwargs):
     """Loading mesh file using cnoid.AssimpPlugin module
 
     Args:
@@ -242,6 +242,8 @@ def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, 
     """
     ld = cnoid.AssimpPlugin.AssimpSceneLoader()
     ld.setMessageSinkStdErr()
+    ld.setForceGenerateNormals(forceGenerateNormals)
+    ld.setCreaseAngle(creaseAngle)
     ## add ld options
     sg = ld.load(fname)
     if sg is None:
@@ -1019,7 +1021,7 @@ def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
 ##
 ## Function for exporting
 ##
-def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None):
+def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveMesh=True, ignoreURDFPrimitive=False, outputType=None, expandVertices=False):
     """Exporting SgNode as a mesh file (using Assimp)
 
     Args:
@@ -1046,7 +1048,7 @@ def exportMesh(fname, sg_node, meshScale=None, verbose=False, generatePrimitiveM
     wt.ignoreURDFPrimitive(ignoreURDFPrimitive)
     if outputType is not None:
         wt.outputType = outputType
-
+    wt.setExpandVertices(expandVertices)
     if meshScale is not None:
         scl_=cnoid.Util.SgScaleTransform()
         scl_.setScale(meshScale)
