@@ -740,6 +740,32 @@ class IKWrapper(object):
         """
         return self.__default_coords
 
+### functions for Body
+def linkDirectChildren(lk):
+    ch = lk.child
+    if ch is None:
+        return []
+    else:
+        child_list = [ch]
+        while ch.sibling is not None:
+            ch = ch.sibling
+            child_list.append(ch)
+        return child_list
+
+def linkDescendants(lk):
+    ch = lk.child
+    if ch is None:
+        return []
+    else:
+        child_list = [ch]
+        while ch.sibling is not None:
+            ch = ch.sibling
+            child_list.append(ch)
+        for ch in tuple(child_list):
+            res = linkDescendants(ch)
+            child_list.extend(res)
+        return child_list
+
 ## add methods to choreonoid's class
 def __joint_list(self):
     return [self.joint(idx) for idx in range(self.numJoints) ]
@@ -753,6 +779,8 @@ cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
 cnoid.Body.Link.getOffsetCoords = lambda self: ic.getOffsetCoords(self)
 cnoid.Body.Link.setOffsetCoords = lambda self, cds: ic.setOffsetCoords(self, cds)
+cnoid.Body.Link.directChildren = lambda self: linkDirectChildren(self)
+cnoid.Body.Link.descendants = lambda self: linkDescendants(self)
 
 class RobotModel(object):
     def __init__(self, robot):
