@@ -1539,7 +1539,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if dev is None:
             return None
         p_cds = dev.getLink().getCoords()
-        p_cds.transform(coordinates(dev.T_local))
+        p_cds.transform(ic.coordinates(dev.T_local))
         return p_cds
 
     def angleVector(self, angles = None):
