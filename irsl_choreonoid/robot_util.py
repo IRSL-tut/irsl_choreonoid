@@ -1841,7 +1841,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return cds.mid_coords(p, self.llegEndEffector)
 
     def fixLegToCoords(self, coords, p = 0.5):
-        mc = self.foot_mid_coords(p)
+        mc = self.footMidCoords(p)
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(self.__robot.rootLink.getCoords())
