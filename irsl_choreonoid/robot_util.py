@@ -1265,6 +1265,55 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 self.__hook()
             return result
 
+        def move(self, vec, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector linearly by translation vector
+
+            Args:
+                vec (numpy.array) : Translation vector
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.translate
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.translate(vec, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
+        def rotate(self, angle, axis, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector angularly by angle-axis
+
+            Args:
+                angle (float) : Rotation angle
+                axis (numpy.array) : Rotation axis
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.rotate
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.rotate(angle, axis, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
+        def moveCoords(self, coords, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector by transformation of coordinates
+
+            Args:
+                coords (cnoid.IRSLCoords.coordinates) : Relative coordinates
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.transform
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.transform(coords, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
         def jointAngle(self, name, angle = None):
             """Setting or getting angle of the joint (limb version)
 
