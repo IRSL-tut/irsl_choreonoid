@@ -740,6 +740,32 @@ class IKWrapper(object):
         """
         return self.__default_coords
 
+### functions for Body
+def linkDirectChildren(lk):
+    ch = lk.child
+    if ch is None:
+        return []
+    else:
+        child_list = [ch]
+        while ch.sibling is not None:
+            ch = ch.sibling
+            child_list.append(ch)
+        return child_list
+
+def linkDescendants(lk):
+    ch = lk.child
+    if ch is None:
+        return []
+    else:
+        child_list = [ch]
+        while ch.sibling is not None:
+            ch = ch.sibling
+            child_list.append(ch)
+        for ch in tuple(child_list):
+            res = linkDescendants(ch)
+            child_list.extend(res)
+        return child_list
+
 ## add methods to choreonoid's class
 def __joint_list(self):
     return [self.joint(idx) for idx in range(self.numJoints) ]
@@ -753,6 +779,8 @@ cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
 cnoid.Body.Link.getOffsetCoords = lambda self: ic.getOffsetCoords(self)
 cnoid.Body.Link.setOffsetCoords = lambda self, cds: ic.setOffsetCoords(self, cds)
+cnoid.Body.Link.directChildren = lambda self: linkDirectChildren(self)
+cnoid.Body.Link.descendants = lambda self: linkDescendants(self)
 
 class RobotModel(object):
     def __init__(self, robot):
@@ -1237,6 +1265,55 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 self.__hook()
             return result
 
+        def move(self, vec, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector linearly by translation vector
+
+            Args:
+                vec (numpy.array) : Translation vector
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.translate
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.translate(vec, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
+        def rotate(self, angle, axis, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector angularly by angle-axis
+
+            Args:
+                angle (float) : Rotation angle
+                axis (numpy.array) : Rotation axis
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.rotate
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.rotate(angle, axis, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
+        def moveCoords(self, coords, wrt=ic.coordinates.wrt.local, **kwargs):
+            """Relative moving end-effector by transformation of coordinates
+
+            Args:
+                coords (cnoid.IRSLCoords.coordinates) : Relative coordinates
+                wrt (default = cnoid.IRSLCoords.coordinates.wrt.local) : Just passing to cnoid.IRSLCoords.coordinates.transform
+                kwargs (dict) : Just passing to IKWrapper
+
+            Returns:
+                 (boolean, int) : IK was success or not, and total count of calculation
+
+            """
+            tgt=self.endEffector
+            tgt.transform(coords, wrt)
+            return self.inverseKinematics(tgt, **kwargs)
+
         def jointAngle(self, name, angle = None):
             """Setting or getting angle of the joint (limb version)
 
@@ -1511,7 +1588,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if dev is None:
             return None
         p_cds = dev.getLink().getCoords()
-        p_cds.transform(coordinates(dev.T_local))
+        p_cds.transform(ic.coordinates(dev.T_local))
         return p_cds
 
     def angleVector(self, angles = None):
@@ -1813,7 +1890,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return cds.mid_coords(p, self.llegEndEffector)
 
     def fixLegToCoords(self, coords, p = 0.5):
-        mc = self.foot_mid_coords(p)
+        mc = self.footMidCoords(p)
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(self.__robot.rootLink.getCoords())
