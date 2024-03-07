@@ -1908,8 +1908,9 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(self.__robot.rootLink.getCoords())
-        self.__robot.rootLink.setCoords(cds)
-        self.hook()
+        self.newcoords(cds)
+        #self.__robot.rootLink.setCoords(cds)
+        #self.hook()
 
     def keepJointLimit(self, on_ = True):
         """Setting mode to keep joint limits
