@@ -1202,6 +1202,20 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             else:
                 return nick_name
 
+        def joint(self, jname):
+            """Getting joint in this limb by name
+
+            Args:
+                jname (str) : name or nick-name of a joint
+
+            Returns:
+                cnoid.Body.Link : Instance of the joint
+
+            """
+            nm = self.rename(jname)
+            if nm in self.__joint_map:
+                return self.__joint_map[nm]
+
         @property
         def endEffector(self):
             """Getting coordinate of the end-effector (return value is generated on demand)
