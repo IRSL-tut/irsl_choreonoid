@@ -20,7 +20,7 @@ def make_coordinates(coords_map):
         cnoid.IRSLCoords.coordinates : generated coordinates
 
     Raises:
-        Exeption : If there is not valid keyword
+        Exception : If there is not valid keyword
 
     Examples:
 
@@ -1731,7 +1731,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector
 
         Raises:
-            Exeption : If wrong limb name is passed
+            Exception : If wrong limb name is passed
 
         """
         if limb_name in self.eef_map:
@@ -1743,7 +1743,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
             return ret
         else:
-            raise Exeption('unknown limb name{}'.format(limb_name))
+            raise Exception('unknown limb name{}'.format(limb_name))
 
     def getEndEffector(self, limb_name):
         """Getting coordinates of end-effector of limb (return value is generated on demand)
@@ -1966,10 +1966,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return ratio * result
 
     def fullbodyInverseKinematics(self, **kwargs):
-        ### not implemented yet
+        raise Exception('not implemented yet')
         pass
     def moveCentroidOnFoot(self, p = 0.5, debug = False):
-        ### not implemented yet
+        raise Exception('not implemented yet')
         pass
     ## wrappedMethod to cnoid.Body
     @property
