@@ -20,7 +20,7 @@ def make_coordinates(coords_map):
         cnoid.IRSLCoords.coordinates : generated coordinates
 
     Raises:
-        Exeption : If there is not valid keyword
+        Exception : If there is not valid keyword
 
     Examples:
 
@@ -1202,6 +1202,20 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             else:
                 return nick_name
 
+        def joint(self, jname):
+            """Getting joint in this limb by name
+
+            Args:
+                jname (str) : name or nick-name of a joint
+
+            Returns:
+                cnoid.Body.Link : Instance of the joint
+
+            """
+            nm = self.rename(jname)
+            if nm in self.__joint_map:
+                return self.__joint_map[nm]
+
         @property
         def endEffector(self):
             """Getting coordinate of the end-effector (return value is generated on demand)
@@ -1717,7 +1731,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector : Instance of EndEffector
 
         Raises:
-            Exeption : If wrong limb name is passed
+            Exception : If wrong limb name is passed
 
         """
         if limb_name in self.eef_map:
@@ -1729,7 +1743,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
             return ret
         else:
-            raise Exeption('unknown limb name{}'.format(limb_name))
+            raise Exception('unknown limb name{}'.format(limb_name))
 
     def getEndEffector(self, limb_name):
         """Getting coordinates of end-effector of limb (return value is generated on demand)
@@ -1886,16 +1900,41 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.getLimb(limb_name).inverseKinematics(coords, **kwargs)
 
     def footMidCoords(self, p = 0.5):
+        """Getting coordinates representing mid-point of leg's end-effector
+
+        Args:
+            p (float, default=0.5) : Parameter of mid-point. (0.5, 0.0, 1.0 represents the center, rleg, lleg, respectively)
+
+        Returns:
+            cnoid.IRSLCoords.coordinates : Coordinates indicating the mid-point of legs
+
+        Note:
+            This method requires settings of limbs( 'rleg' and 'lleg' )
+
+
+        """
         cds = self.rlegEndEffector
         return cds.mid_coords(p, self.llegEndEffector)
 
     def fixLegToCoords(self, coords, p = 0.5):
+        """Locating the robot by fixing the legs to designated coordinates
+
+        Args:
+            coords (cnoid.IRSLCoords.coordinates) : Target coordinates ( footMidCoords of this robot will be the same as this coordinates )
+            p (float, default=0.5) : Parameter of mid-point. (0.5, 0.0, 1.0 represents the center, rleg, lleg, respectively)
+
+        Note:
+            This method requires settings of limbs( 'rleg' and 'lleg' )
+
+
+        """
         mc = self.footMidCoords(p)
         cds = mc.inverse_transformation()
         cds.transform(coords)
         cds.transform(self.__robot.rootLink.getCoords())
-        self.__robot.rootLink.setCoords(cds)
-        self.hook()
+        self.newcoords(cds)
+        #self.__robot.rootLink.setCoords(cds)
+        #self.hook()
 
     def keepJointLimit(self, on_ = True):
         """Setting mode to keep joint limits
@@ -1952,10 +1991,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return ratio * result
 
     def fullbodyInverseKinematics(self, **kwargs):
-        ### not implemented yet
+        raise Exception('not implemented yet')
         pass
     def moveCentroidOnFoot(self, p = 0.5, debug = False):
-        ### not implemented yet
+        raise Exception('not implemented yet')
         pass
     ## wrappedMethod to cnoid.Body
     @property
