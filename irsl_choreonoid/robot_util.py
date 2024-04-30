@@ -52,7 +52,7 @@ def make_coordinates(coords_map):
                 return ic.coordinates(q)
             else:
                 return ic.coordinates(pos, q)
-    for key in ('angle-axis', 'angle_axis', 'aa'):
+    for key in ('angle-axis', 'angle_axis', 'aa', 'rotation'):
         if key in coords_map:
             aa = coords_map[key]
             rot = ic.angleAxisNormalized(aa[3], np.array(aa[:3]))
@@ -60,7 +60,7 @@ def make_coordinates(coords_map):
                 return ic.coordinates(rot)
             else:
                 return ic.coordinates(pos, rot)
-    for key in ('rotation', 'matrix', 'mat', 'rot'):
+    for key in ('rotation-matrix', 'matrix', 'mat', 'rot'):
         if key in coords_map:
             rot = np.array(coords_map[key])
             if pos is None:
@@ -95,13 +95,13 @@ def make_coords_map(coords, method=None):
     if method is None:
         return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
     elif method in ('RPY', 'rpy'):
-        return {'pos': coords.pos.tolist(), method: coords.getRPY().tolist()}
+        return {'translation': coords.pos.tolist(), method: coords.getRPY().tolist()}
     elif method in ('q', 'quaternion'):
-        return {'pos': coords.pos.tolist(), method: coords.quaternion.tolist()}
-    elif method in ('aa', 'angle_axis', 'angle-axis'):
-        return {'pos': coords.pos.tolist(), method: coords.getRotationAngle().tolist()}
-    elif method in ('rotation', 'matrix', 'mat', 'rot'):
-        return {'pos': coords.pos.tolist(), method: coords.rot.tolist()}
+        return {'translation': coords.pos.tolist(), method: coords.quaternion.tolist()}
+    elif method in ('aa', 'angle_axis', 'angle-axis', 'rotation'):
+        return {'translation': coords.pos.tolist(), method: coords.getRotationAngle().tolist()}
+    elif method in ('rotation-matrix', 'matrix', 'mat', 'rot'):
+        return {'translation': coords.pos.tolist(), method: coords.rot.tolist()}
     else:
         raise Exception('method:{} is invalid'.format(method))
 
