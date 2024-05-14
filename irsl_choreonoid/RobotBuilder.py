@@ -870,7 +870,7 @@ class RobotBuilder(object):
             Shape : Created shape
 
         """
-        res = mkshapes.loadScene(fname, wrapped, **kwargs)
+        res = mkshapes.loadScene(fname, wrapped=wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
@@ -884,7 +884,7 @@ class RobotBuilder(object):
             Shape : Created shape
 
         """
-        res = mkshapes.loadMesh(fname, wrapped, **kwargs)
+        res = mkshapes.loadMesh(fname, wrapped=wrapped, **kwargs)
         if add:
             self.addShape(res)
         return res
