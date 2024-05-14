@@ -187,7 +187,7 @@ def exportBodyAsMesh(fname, input_body, meshScale=None, offset=None, useCollisio
         meshScale (float, optional) : 
         offset( cnoid.IRSLCoords.coordinates, optional) : 
         useCollision ( boolean, defalt=False) : 
-        kwargs (dict) : Passing to irsl_choreonoid.makeshapes.exportMesh
+        kwargs (dict) : Passing to `irsl_choreonoid.make_shapes.exportMesh <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.exportMesh>`_
 
     """
     base = cnoid.Util.SgPosTransform()
@@ -216,7 +216,7 @@ def convertBodyFileToMeshFile(mesh_file_name, body_file_name, **kwargs):
     Args:
         mesh_file_name (str) : Name of output file
         body_file_name (str) : Name of input file
-        kwargs (dict) : exportBodyAsMesh
+        kwargs (dict) : Passing to `irsl_choreonoid.cnoid_util.exportBodyAsMesh <./module_irsl_choreonoid.html#irsl_choreonoid.cnoid_util.exportBodyAsMesh>`_
     """
     robot=loadRobot(body_file_name)
     if robot is None:
@@ -384,7 +384,7 @@ def fv(*args, **kwargs):
 
     Note:
 
-         This function just return numpy.array(args, **kwargs)
+         This function just return numpy.array(args, \*\*kwargs)
 
     Examples:
 
