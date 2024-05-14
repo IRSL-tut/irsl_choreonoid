@@ -861,7 +861,7 @@ class RobotBuilder(object):
 
     ### start: mkshapes wrapper
     def loadScene(self, fname, wrapped=True, add=True, **kwargs):
-        """Loading scene as a shape, see irsl_choreonoid.make_shapes.loadScene
+        """Loading scene as a shape, see `irsl_choreonoid.make_shapes.loadScene <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.loadScene>`_
 
         Args:
             add (boolean, default=True) :
@@ -875,7 +875,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def loadMesh(self, fname, wrapped=True, add=True, **kwargs):
-        """Loading mesh as a shape, see irsl_choreonoid.make_shapes.loadMesh
+        """Loading mesh as a shape, see `irsl_choreonoid.make_shapes.loadMesh <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.loadMesh>`_
 
         Args:
             add (boolean, default=True) :
@@ -889,7 +889,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeBox(self, x, y = None, z = None, wrapped=True, add=True, **kwargs):
-        """Making box shape, see irsl_choreonoid.make_shapes.makeBox
+        """Making box shape, see `irsl_choreonoid.make_shapes.makeBox <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeBox>`_
 
         Args:
             add (boolean, default=True) :
@@ -903,7 +903,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeCylinder(self, radius, height, wrapped=True, add=True, **kwargs):
-        """Making cylinder shape, see irsl_choreonoid.make_shapes.makeCylinder
+        """Making cylinder shape, see `irsl_choreonoid.make_shapes.makeCylinder <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeCylinder>`_
 
         Args:
             add (boolean, default=True) :
@@ -917,7 +917,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeSphere(self, radius, wrapped=True, add=True, **kwargs):
-        """Making sphere shape, see irsl_choreonoid.make_shapes.makeSphere
+        """Making sphere shape, see `irsl_choreonoid.make_shapes.makeSphere <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeSphere>`_
 
         Args:
             add (boolean, default=True) :
@@ -931,7 +931,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeCone(self, radius, height, wrapped=True, add=True, **kwargs):
-        """Making cone shape, see irsl_choreonoid.make_shapes.makeCone
+        """Making cone shape, see `irsl_choreonoid.make_shapes.makeCone <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeCone>`_
 
         Args:
             add (boolean, default=True) :
@@ -945,7 +945,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeCapsule(self, radius, height, wrapped=True, add=True, **kwargs):
-        """Making capsule shape, see irsl_choreonoid.make_shapes.makeCapsule
+        """Making capsule shape, see `irsl_choreonoid.make_shapes.makeCapsule <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeCapsule>`_
 
         Args:
             add (boolean, default=True) :
@@ -959,7 +959,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeTorus(self, radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, add=True, **kwargs):
-        """Making torus shape, see irsl_choreonoid.make_shapes.makeTorus
+        """Making torus shape, see `irsl_choreonoid.make_shapes.makeTorus <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeTorus>`_
 
         Args:
             add (boolean, default=True) :
@@ -973,7 +973,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeExtrusion(self, crossSection, spine, wrapped=True, add=True, **kwargs):
-        """Making extrusion shape, see irsl_choreonoid.make_shapes.makeExtrusion
+        """Making extrusion shape, see `irsl_choreonoid.make_shapes.makeExtrusion <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeExtrusion>`_
 
         Args:
             add (boolean, default=True) :
@@ -987,7 +987,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeElevationGrid(self, xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, add=True, **kwargs):
-        """Making elevation-grid shape, see irsl_choreonoid.make_shapes.makeElevationGrid
+        """Making elevation-grid shape, see `irsl_choreonoid.make_shapes.makeElevationGrid <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeElevationGrid>`_
 
         Args:
             add (boolean, default=True) :
@@ -1001,7 +1001,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def make3DAxis(self, coords=None, add=True, **kwargs):
-        """Making 3D-axis shape, see irsl_choreonoid.make_shapes.make3DAxis
+        """Making 3D-axis shape, see `irsl_choreonoid.make_shapes.make3DAxis <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.make3DAxis>`_
 
         Args:
             add (boolean, default=True) :
@@ -1015,7 +1015,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def make3DAxisBox(self, coords=None, add=True, **kwargs):
-        """Making 3D-axis shape (type: box), see irsl_choreonoid.make_shapes.make3DAxisBox
+        """Making 3D-axis shape (type: box), see `irsl_choreonoid.make_shapes.make3DAxisBox <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.make3DAxisBox>`_
 
         Args:
             add (boolean, default=True) :
@@ -1029,7 +1029,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeCoords(self, coords=None, add=True, **kwargs):
-        """Making 3D-axis shape (type: line), see irsl_choreonoid.make_shapes.makeCoords
+        """Making 3D-axis shape (type: line), see `irsl_choreonoid.make_shapes.makeCoords <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeCoords>`_
 
         Args:
             add (boolean, default=True) :
@@ -1043,7 +1043,7 @@ class RobotBuilder(object):
             self.addShape(res)
         return res
     def makeCross(self, coords=None, add=True, **kwargs):
-        """Making 3D-axis shape (type: crossing-line), see irsl_choreonoid.make_shapes.makeCross
+        """Making 3D-axis shape (type: crossing-line), see `irsl_choreonoid.make_shapes.makeCross <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeCross>`_
 
         Args:
             add (boolean, default=True) :
@@ -1058,7 +1058,7 @@ class RobotBuilder(object):
         return res
 
     def makeLineAlignedShape(self, start, end, add=True, **kwargs):
-        """Making shape which is aligned to designated line, see irsl_choreonoid.make_shapes.makeLineAlignedShape
+        """Making shape which is aligned to designated line, see `irsl_choreonoid.make_shapes.makeLineAlignedShape <./module_irsl_choreonoid.html#irsl_choreonoid.make_shapes.makeLineAlignedShape>`_
 
         Args:
             add (boolean, default=True) :
