@@ -10,11 +10,12 @@ import numpy as np
 import random
 import math
 
-def make_coordinates(coords_map):
+def make_coordinates(coords_map, scale=1.0):
     """Generating coordinates(cnoid.IRSLCoords.coordinates) from dictionary
 
     Args:
         coords_map (dict[str, list[float]]) : dictionary of describing transformation
+        scale (float, default = 1.0) : Scaling for making coordinates
 
     Returns:
         cnoid.IRSLCoords.coordinates : generated coordinates
@@ -43,7 +44,7 @@ def make_coordinates(coords_map):
     pos = None
     for key in ('position', 'translation', 'pos', 'trans'):
         if key in coords_map:
-            pos = np.array(coords_map[key])
+            pos = np.array(coords_map[key]) * scale
             break
     for key in ('q', 'quaternion'):
         if key in coords_map:
@@ -79,11 +80,12 @@ def make_coordinates(coords_map):
         return ic.coordinates(pos)
     raise Exception('{}'.format(coords_map))
 
-def make_coords_map(coords, method=None):
+def make_coords_map(coords, method=None, scale=1.0):
     """Generating dictonary describing transformation
 
     Args:
         coords (cnoid.IRSLCoords.coordinates) : Transformation
+        scale (float, default = 1.0) : Scaling for making dictionary
 
     Returns:
         dict[str, list[float]] : Dictonary can be used by make_coordinates
@@ -91,17 +93,22 @@ def make_coords_map(coords, method=None):
     Examples:
         >>> make_coords_map( make_coordinates( {'position' : [1, 2, 3]} ) )
         {'pos': [1.0, 2.0, 3.0], 'aa': [1.0, 0.0, 0.0, 0.0]}
+        >>> make_coords_map(make_coordinates( {'pos' : [0.01, 0.02, 0.03]} ), method = 'translation', scale=1000.0)
+        {'translation': [10.0, 20.0, 30.0], 'rotation': [1.0, 0.0, 0.0, 0.0]}
     """
+    pos = coords.pos * scale
     if method is None:
-        return {'pos': coords.pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
+        return {'pos': pos.tolist(), 'aa': coords.getRotationAngle().tolist()}
     elif method in ('RPY', 'rpy'):
-        return {'translation': coords.pos.tolist(), method: coords.getRPY().tolist()}
+        return {'pos': pos.tolist(), method: coords.getRPY().tolist()}
     elif method in ('q', 'quaternion'):
-        return {'translation': coords.pos.tolist(), method: coords.quaternion.tolist()}
-    elif method in ('aa', 'angle_axis', 'angle-axis', 'rotation'):
-        return {'translation': coords.pos.tolist(), method: coords.getRotationAngle().tolist()}
+        return {'pos': pos.tolist(), method: coords.quaternion.tolist()}
+    elif method in ('rotation'):
+        return {'translation': pos.tolist(), method: coords.getRotationAngle().tolist()}
+    elif method in ('aa', 'angle_axis', 'angle-axis'):
+        return {'pos': pos.tolist(), method: coords.getRotationAngle().tolist()}
     elif method in ('rotation-matrix', 'matrix', 'mat', 'rot'):
-        return {'translation': coords.pos.tolist(), method: coords.rot.tolist()}
+        return {'pos': pos.tolist(), method: coords.rot.tolist()}
     else:
         raise Exception('method:{} is invalid'.format(method))
 
