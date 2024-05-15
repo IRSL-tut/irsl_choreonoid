@@ -245,7 +245,7 @@ class RobotBuilder(object):
             self.__di.removeObjects(shapes)
 
     def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False,
-                            clear=True, collision=None, useCollisionForMassparam=False, **kwargs):
+                            clear=True, collision=None, useCollisionForMassparam=False, overwriteMassparam=None, **kwargs):
         """Creating link from drawn shapes and appending to the other link
 
         Args:
@@ -257,6 +257,7 @@ class RobotBuilder(object):
             clear (boolean, default=True) :
             collision (cnoid.Util.SgNode, optional) :
             useCollisionForMassparam (boolean, default=False) : 
+            overwriteMassparam (dict, optional): 'mass', 'COM', 'inertia'
             \*\*kwargs :
 
         Returns:
@@ -322,7 +323,9 @@ class RobotBuilder(object):
         ##
         if len(res) < 1:
             print('There is no shape in the scene, rootNode: {}'.format(groot))
-        if mass is not None:
+        if overwriteMassparam is not None:
+            info = overwriteMassparam
+        elif mass is not None:
             info= RobotBuilder.mergeResults(res, mass=mass)
         else:
             info= RobotBuilder.mergeResults(res, density=density)
