@@ -310,9 +310,13 @@ class RobotBuilder(object):
         cds_offset = cds_w_j.inverse_transformation()
         ##link.visual <= shapes(org:joint_root)
         groot.setPosition(cds_offset.cnoidPosition)
+        if collision is not None:
+            l_collision = cutil.SgPosTransform()
+            l_collision.addChild(collision)
+            l_collision.setPosition(cds_offset.cnoidPosition)
         ##
         if collision is not None and useCollisionForMassparam:
-            res = RobotBuilder.traverseSceneGraph(collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+            res = RobotBuilder.traverseSceneGraph(l_collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
         else:
             res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
         ##
@@ -329,7 +333,7 @@ class RobotBuilder(object):
                                shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
         else:
             lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
-                               visual=groot, collision=collision, JointType=jtype, JointAxis=jaxis, **kwargs)
+                               visual=groot, collision=l_collision, JointType=jtype, JointAxis=jaxis, **kwargs)
         ##link.T <= joint_root
         lk.setPosition(cds_w_j.cnoidPosition)
         if parentLink is not None:
