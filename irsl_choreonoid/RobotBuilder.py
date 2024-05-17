@@ -245,7 +245,7 @@ class RobotBuilder(object):
             self.__di.removeObjects(shapes)
 
     def createLinkFromShape(self, name=None, mass=None, density=1000.0, parentLink=None, root=False,
-                            clear=True, collision=None, useCollisionForMassparam=False, **kwargs):
+                            clear=True, collision=None, useCollisionForMassparam=False, overwriteMassparam=None, **kwargs):
         """Creating link from drawn shapes and appending to the other link
 
         Args:
@@ -257,6 +257,7 @@ class RobotBuilder(object):
             clear (boolean, default=True) :
             collision (cnoid.Util.SgNode, optional) :
             useCollisionForMassparam (boolean, default=False) : 
+            overwriteMassparam (dict, optional): 'mass', 'COM', 'inertia'
             \*\*kwargs :
 
         Returns:
@@ -310,15 +311,21 @@ class RobotBuilder(object):
         cds_offset = cds_w_j.inverse_transformation()
         ##link.visual <= shapes(org:joint_root)
         groot.setPosition(cds_offset.cnoidPosition)
+        if collision is not None:
+            l_collision = cutil.SgPosTransform()
+            l_collision.addChild(collision)
+            l_collision.setPosition(cds_offset.cnoidPosition)
         ##
         if collision is not None and useCollisionForMassparam:
-            res = RobotBuilder.traverseSceneGraph(collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
+            res = RobotBuilder.traverseSceneGraph(l_collision, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
         else:
             res = RobotBuilder.traverseSceneGraph(groot, excludes=['joint_root', 'COM_root', 'inertia_root', 'joint_axis'])
         ##
         if len(res) < 1:
             print('There is no shape in the scene, rootNode: {}'.format(groot))
-        if mass is not None:
+        if overwriteMassparam is not None:
+            info = overwriteMassparam
+        elif mass is not None:
             info= RobotBuilder.mergeResults(res, mass=mass)
         else:
             info= RobotBuilder.mergeResults(res, density=density)
@@ -329,7 +336,7 @@ class RobotBuilder(object):
                                shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
         else:
             lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
-                               visual=groot, collision=collision, JointType=jtype, JointAxis=jaxis, **kwargs)
+                               visual=groot, collision=l_collision, JointType=jtype, JointAxis=jaxis, **kwargs)
         ##link.T <= joint_root
         lk.setPosition(cds_w_j.cnoidPosition)
         if parentLink is not None:
