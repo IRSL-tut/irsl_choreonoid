@@ -997,6 +997,143 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('rot: {}'.format(rot))
     return obj
 
+def makeBasket(width, height, tall, thickness = 0.1, bottom_thickness = 0.1, wrapped=True, rawShape=False, **kwargs):
+    """Making basket shape
+
+    Args:
+        width (float) : width of bottom plate (x-axis)
+        height (float) : height of bottom plate (y-axis)
+        tall (float) : tall of basket
+        thickness (float, default = 0.1): thickness of walls
+        bottom_thickness (float, default = 0.1): thickness of bottom plate
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    wall0 = makeBox(width, thickness, tall, **kwargs).translate(npa([0,  height*0.5, tall*0.5]))
+    wall1 = makeBox(width, thickness, tall, **kwargs).translate(npa([0, -height*0.5, tall*0.5]))
+    wall2 = makeBox(thickness, height - thickness, tall, **kwargs).translate(npa([ 0.5*(width- thickness), 0, tall*0.5]))
+    wall3 = makeBox(thickness, height - thickness, tall, **kwargs).translate(npa([-0.5*(width- thickness), 0, tall*0.5]))
+    bottm = makeBox(width - 2*thickness, height - thickness, bottom_thickness, **kwargs).translate(npa([0, 0, bottom_thickness*0.5]))
+    if rawShape:
+        sg = cutil.SgGroup()
+    else:
+        sg = cutil.SgPosTransform()
+    sg.addChild(wall0.target)
+    sg.addChild(wall1.target)
+    sg.addChild(wall2.target)
+    sg.addChild(wall3.target)
+    sg.addChild(bottm.target)
+    if rawShape:
+        return sg
+    ret = sg
+    if wrapped:
+        ret = coordsWrapper(sg, original_object=sg)
+    return ret
+
+def makeTableSingleLeg(width, height, tall, thickness = 0.05, bottom_thickness = 0.04, bottom_width = 0.4, bottom_height = 0.4, leg_size = 0.1, wrapped=True, rawShape=False, **kwargs):
+    """Making table with single leg
+
+    Args:
+        width (float) : width of top plate (x-axis)
+        height (float) : height of top plate (y-axis)
+        tall (float) : tall of table
+        thickness (float, default = 0.05): thickness of top plate
+        bottom_thickness (float, default = 0.04): thickness of bottom plate
+        bottom_width (float, default = 0.4): width of bottom plate
+        bottom_height (float, default = 0.4): height of bottom plate
+        leg_size (float, default = 0.1): leg size
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    plate = makeBox(width, height, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness]))
+    leg = makeBox(leg_size, leg_size, tall - thickness - bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*(tall - thickness + bottom_thickness)]))
+    bottom = makeBox(bottom_width, bottom_height, bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*bottom_thickness]))
+    if rawShape:
+        sg = cutil.SgGroup()
+    else:
+        sg = cutil.SgPosTransform()
+    sg.addChild(plate.target)
+    sg.addChild(leg.target)
+    sg.addChild(bottom.target)
+    if rawShape:
+        return sg
+    ret = sg
+    if wrapped:
+        ret = coordsWrapper(sg, original_object=sg)
+    return ret
+
+def makeTable4Legs(width, height, tall, thickness = 0.05, leg_size = 0.1, wrapped=True, rawShape=False, **kwargs):
+    """Making table with 4 legs
+
+    Args:
+        width (float) : width of top plate (x-axis)
+        height (float) : height of top plate (y-axis)
+        tall (float) : tall of table
+        thickness (float, default = 0.05): thickness of top plate
+        leg_size (float, default = 0.1): leg size
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    plate = makeBox(width, height, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness]))
+    leg0  = makeBox(leg_size, leg_size, tall - thickness, **kwargs).translate(npa([ 0.5*(width - leg_size), 0.5*(height - leg_size), 0.5*(tall - thickness)]))
+    leg1  = makeBox(leg_size, leg_size, tall - thickness, **kwargs).translate(npa([-0.5*(width - leg_size), 0.5*(height - leg_size), 0.5*(tall - thickness)]))
+    leg2  = makeBox(leg_size, leg_size, tall - thickness, **kwargs).translate(npa([ 0.5*(width - leg_size),-0.5*(height - leg_size), 0.5*(tall - thickness)]))
+    leg3  = makeBox(leg_size, leg_size, tall - thickness, **kwargs).translate(npa([-0.5*(width - leg_size),-0.5*(height - leg_size), 0.5*(tall - thickness)]))
+    if rawShape:
+        sg = cutil.SgGroup()
+    else:
+        sg = cutil.SgPosTransform()
+    sg.addChild(plate.target)
+    sg.addChild(leg0.target)
+    sg.addChild(leg1.target)
+    sg.addChild(leg2.target)
+    sg.addChild(leg3.target)
+    if rawShape:
+        return sg
+    ret = sg
+    if wrapped:
+        ret = coordsWrapper(sg, original_object=sg)
+    return ret
+
+def makeRoundTable(radius, tall, thickness = 0.05, bottom_thickness = 0.04, bottom_width = 0.4, bottom_height = 0.4, leg_size = 0.1, wrapped=True, rawShape=False, **kwargs):
+    """Making round table with single leg
+
+    Args:
+        radius (float) : width of top plate (x-axis)
+        tall (float) : tall of table
+        thickness (float, default = 0.05): thickness of top plate
+        bottom_thickness (float, default = 0.04): thickness of bottom plate
+        bottom_width (float, default = 0.4): width of bottom plate
+        bottom_height (float, default = 0.4): height of bottom plate
+        leg_size (float, default = 0.1): leg size
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    """
+    plate = makeCylinder(radius, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness])).rotate(PI/2, coordinates.X)
+    leg = makeBox(leg_size, leg_size, tall - thickness - bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*(tall - thickness + bottom_thickness)]))
+    bottom = makeBox(bottom_width, bottom_height, bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*bottom_thickness]))
+    if rawShape:
+        sg = cutil.SgGroup()
+    else:
+        sg = cutil.SgPosTransform()
+    sg.addChild(plate.target)
+    sg.addChild(leg.target)
+    sg.addChild(bottom.target)
+    if rawShape:
+        return sg
+    ret = sg
+    if wrapped:
+        ret = coordsWrapper(sg, original_object=sg)
+    return ret
+
 def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
     """Making box with the same size and position passed bounding-box
 
