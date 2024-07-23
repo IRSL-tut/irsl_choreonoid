@@ -962,7 +962,6 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         end (numpy.ndarray) : 3D vector representing end-point of a line
         size (float) : Size of generated object (radius or edge length)
         shape (str) : Type of Shape, 'box', 'cylinder', 'capsule', 'cone'
-        module (object, default=mkshapes) :
         verbose (bool, default=False) : If True, printing debug message
         kwargs ( dict[str, param] ) : Keywords for generating material and mesh
 
