@@ -453,7 +453,8 @@ class IKWrapper(object):
             for j in self.__current_joints:
                 const = IK.JointLimitConstraint()
                 const.joint = j
-                const.precision = 0.1
+                const.precision = joint_limit_precision
+                const.maxError  = joint_limit_max_error
                 constraints1.push_back(const)
             constraints.append(constraints1)
         #
@@ -1258,6 +1259,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return self.__rename_map
 
         @property
+        def tipLink(self):
+            return self.__tip_link
+
+        @property
+        def tipLinkToEEF(self):
+            return self.__tip_link_to_eef
+
+        @property
         def angleMap(self):
             """Getting dictionary [ key='jointName', value=jointAngle ]
 
@@ -1750,7 +1759,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
             return ret
         else:
-            raise Exception('unknown limb name{}'.format(limb_name))
+            raise Exception('unknown limb name: {}'.format(limb_name))
 
     def getEndEffector(self, limb_name):
         """Getting coordinates of end-effector of limb (return value is generated on demand)
@@ -2000,9 +2009,152 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def fullbodyInverseKinematics(self, **kwargs):
         raise Exception('not implemented yet')
         pass
-    def moveCentroidOnFoot(self, p = 0.5, debug = False):
-        raise Exception('not implemented yet')
-        pass
+    def moveCentroidOnFoot(self, p = 0.5, constraint='6D', base_type='parallel2D', weight = 1.0, base_weight = 1.0,
+                           debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
+                           joint_limit_precision=0.1, **kwargs):
+        rleg = self.getLimb('rleg')
+        lleg = self.getLimb('lleg')
+        foot_mid = self.footMidCoords(p)
+        ## constraint
+        if constraint is None or constraint == '6D':
+            constraint = [1, 1, 1, 1, 1, 1]
+        elif constraint == 'position':
+            constraint = [1, 1, 1, 0, 0, 0]
+        elif constraint == 'rotation':
+            constraint = [0, 0, 0, 1, 1, 1]
+        elif type(constraint) is str:
+            ## 'xyzRPY'
+            wstr = constraint
+            constraint = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    constraint[0] = 1
+                elif ss == 'y':
+                    constraint[1] = 1
+                elif ss == 'z':
+                    constraint[2] = 1
+                elif ss == 'R':
+                    constraint[3] = 1
+                elif ss == 'P':
+                    constraint[4] = 1
+                elif ss == 'Y':
+                    constraint[5] = 1
+        ## base_type
+        if base_type == '2D' or base_type == 'planer':
+            base_const = np.array([0, 0, 1, 1, 1, 0])
+        elif base_type == 'parallel2D':
+            base_const = np.array([0, 0, 0, 1, 1, 0])
+        elif base_type == 'position':
+            base_const = np.array([0, 0, 0, 1, 1, 1])
+        elif base_type == 'rotation':
+            base_const = np.array([1, 1, 1, 0, 0, 0])
+        elif type(base_type) is str:
+            ## 'xyzRPY'
+            wstr = base_type
+            _bweight = [0, 0, 0, 0, 0, 0]
+            for ss in wstr:
+                if ss == 'x':
+                    _bweight[0] = 1
+                elif ss == 'y':
+                    _bweight[1] = 1
+                elif ss == 'z':
+                    _bweight[2] = 1
+                elif ss == 'R':
+                    _bweight[3] = 1
+                elif ss == 'P':
+                    _bweight[4] = 1
+                elif ss == 'Y':
+                    _bweight[5] = 1
+            base_const = np.array(_bweight)
+        elif base_type is not None:
+            base_const = np.array(base_type)
+        ##
+        if base_type is not None:
+            base_const = base_weight * base_const
+        ### constraints for IK
+        constraints0 = IK.Constraints()
+        rf_constraint = IK.PositionConstraint()
+        rf_constraint.A_link =     rleg.tipLink
+        rf_constraint.A_localpos = rleg.tipLinkToEEF.toPosition()
+        #constraint.B_link() = nullptr;
+        rf_constraint.B_localpos = rleg.endEffector.toPosition()
+        rf_constraint.weight     = weight * np.array(constraint)
+        constraints0.push_back(rf_constraint)
+        lf_constraint = IK.PositionConstraint()
+        lf_constraint.A_link =     lleg.tipLink
+        lf_constraint.A_localpos = lleg.tipLinkToEEF.toPosition()
+        #constraint.B_link() = nullptr;
+        lf_constraint.B_localpos = lleg.endEffector.toPosition()
+        lf_constraint.weight     = weight * np.array(constraint)
+        constraints0.push_back(lf_constraint)
+        ##
+        if base_type is not None:
+            if debug:
+                print('use base : {}'.format(base_const))
+            b_constraint = IK.PositionConstraint()
+            b_constraint.A_link =     self.robot.rootLink
+            b_constraint.A_localpos = ic.coordinates().cnoidPosition
+            #constraint.B_link() = nullptr;
+            b_constraint.B_localpos = self.robot.rootLink.T
+            b_constraint.weight     = np.array(base_const)
+            constraints0.push_back(b_constraint)
+        ### COM constraint
+        com_constraint = IK.COMConstraint()
+        com_constraint.A_robot = self.robot
+        com_constraint.B_localp = foot_mid.pos
+        w = com_constraint.weight
+        w[2] = 0.0
+        com_constraint.weight = w
+        constraints0.push_back(com_constraint)
+        #
+        tasks = IK.Tasks()
+        dummy_const = IK.Constraints()
+        constraints = [ dummy_const, constraints0 ]
+        jlist = []
+        jlist += rleg.jointList
+        jlist += lleg.jointList
+        ### constraint joint-limit
+        if use_joint_limit:
+            constraints1 = IK.Constraints()
+            for j in jlist:
+                const = IK.JointLimitConstraint()
+                const.joint = j
+                const.precision = joint_limit_precision
+                const.maxError  = joint_limit_max_error
+                constraints1.push_back(const)
+            constraints.append(constraints1)
+        #
+        variables = []
+        if base_type is not None:
+            variables.append(self.robot.rootLink)
+        variables += jlist
+        if debug:
+            print('var: {}'.format(variables))
+        #
+        d_level = 0
+        if debug:
+            d_level = 1
+        loop = IK.prioritized_solveIKLoop(variables, constraints, tasks,
+                                          max_iteration, threshold, d_level)
+        if debug:
+            for cntr, consts in enumerate(constraints):
+                for idx, const in enumerate(consts):
+                    const.debuglevel = 1
+                    if const.checkConvergence():
+                        print('constraint {}-{} ({}) : converged'.format(cntr, idx, const))
+                    else:
+                        print('constraint {}-{} ({}) : NOT converged'.format(cntr, idx, const))
+        conv = True
+        for cntr, consts in enumerate(constraints):
+            for const in consts:
+                if not const.checkConvergence():
+                    conv = False
+                    break
+            if not conv:
+                break
+        self.hook()
+        return (conv, loop)
+
     ## wrappedMethod to cnoid.Body
     @property
     def mass(self):
