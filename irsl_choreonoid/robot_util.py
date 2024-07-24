@@ -453,7 +453,8 @@ class IKWrapper(object):
             for j in self.__current_joints:
                 const = IK.JointLimitConstraint()
                 const.joint = j
-                const.precision = 0.1
+                const.precision = joint_limit_precision
+                const.maxError  = joint_limit_max_error
                 constraints1.push_back(const)
             constraints.append(constraints1)
         #
@@ -1258,6 +1259,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return self.__rename_map
 
         @property
+        def tipLink(self):
+            return self.__tip_link
+
+        @property
+        def tipLinkToEEF(self):
+            return self.__tip_link_to_eef
+
+        @property
         def angleMap(self):
             """Getting dictionary [ key='jointName', value=jointAngle ]
 
@@ -1750,7 +1759,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
             return ret
         else:
-            raise Exception('unknown limb name{}'.format(limb_name))
+            raise Exception('unknown limb name: {}'.format(limb_name))
 
     def getEndEffector(self, limb_name):
         """Getting coordinates of end-effector of limb (return value is generated on demand)
