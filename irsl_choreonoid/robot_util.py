@@ -2008,9 +2008,109 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 result = min_d
         return ratio * result
 
-    def fullbodyInverseKinematics(self, **kwargs):
-        raise Exception('not implemented yet')
-        pass
+##>    @staticmethod
+##>    def parseConstraint(const):
+##>        if const is None or const == '6D':
+##>            constraint = [1, 1, 1, 1, 1, 1]
+##>        elif const == 'position':
+##>            constraint = [1, 1, 1, 0, 0, 0]
+##>        elif const == 'rotation':
+##>            constraint = [0, 0, 0, 1, 1, 1]
+##>        elif type(const) is str:
+##>            ## 'xyzRPY'
+##>            constraint = [0, 0, 0, 0, 0, 0]
+##>            for ss in const:
+##>                if ss == 'x':
+##>                    constraint[0] = 1
+##>                elif ss == 'y':
+##>                    constraint[1] = 1
+##>                elif ss == 'z':
+##>                    constraint[2] = 1
+##>                elif ss == 'R':
+##>                    constraint[3] = 1
+##>                elif ss == 'P':
+##>                    constraint[4] = 1
+##>                elif ss == 'Y':
+##>                    constraint[5] = 1
+##>        else:
+##>            return const
+##>        return constraint
+##>
+##>    ## pos_constraint  (target, joint_lst, link, link_offset, weight, constraint)
+##>    ## base_constraint (target, link_offset, weight, constraint)
+##>    ## com_constraint  (pos, weight)
+##>    ## joint_limits
+##>    ## joint_const
+##>    ## extra
+##>    def fullbodyInverseKinematics(self, **kwargs): ## limbs, targets, weight_list, constraints, use_joint_limit, extra_constraints
+##>        ik_size = len(limbs)
+##>        if len(targets) != ik_size:
+##>            return
+##>        if weight_list is None:
+##>            weight_list = []
+##>            for i in range(ik_size):
+##>                weight_list.append(1.0)
+##>        else len(weight_list) != ik_size:
+##>            return
+##>        if constraints is None:
+##>            constraints = []
+##>            for i in range(ik_size):
+##>                constraints.append([1.0]*6)
+##>        else len(constraints) != ik_size:
+##>            return
+##>        lst_joints = []
+##>        lst_limb = []
+##>        lst_const = []
+##>        for l, c in zip(limbs, constraints):
+##>            lst_limb.append(self.getLimb(l))
+##>            lst_const.append(self.parseConstraint(c))
+##>            if type(limb) is cnoid.Body.Link:
+##>                lst_joints.append(limb)
+##>            else:
+##>                jlist += limb.jointList
+##>        constraints0 = IK.Constraints()
+##>        for limb, tgt, const, weight, zip(lst_limbs, targets, lst_const, weight_list):
+##>            tmp_constraint = IK.PositionConstraint()
+##>            if type(limb) is cnoid.Body.Link:
+##>                tmp_constraint.A_link     = limb
+##>                tmp_constraint.A_localpos = coordinates().toPosition()
+##>                #constraint.B_link() = nullptr;
+##>                if type(tgt) is coordinates:
+##>                    tmp_constraint.B_localpos = tgt.toPosition()
+##>                else:
+##>                    tmp_constraint.B_localpos = tgt
+##>                tmp_constraint.weight     = weight * np.array(constraint)
+##>            else:
+##>                tmp_constraint.A_link     = limb.tipLink
+##>                tmp_constraint.A_localpos = limb.tipLinkToEEF.toPosition()
+##>                #constraint.B_link() = nullptr;
+##>                if type(tgt) == coordinates:
+##>                    tmp_constraint.B_localpos = tgt.toPosition()
+##>                else:
+##>                    tmp_constraint.B_localpos = tgt
+##>                tmp_constraint.weight     = weight * np.array(constraint)
+##>            constraints0.push_back(tmp_constraint)
+##>        #
+##>        tasks = IK.Tasks()
+##>        dummy_const = IK.Constraints()
+##>        constraints = [ dummy_const, constraints0 ]
+##>        ### constraint joint-limit
+##>        if use_joint_limit:
+##>            constraints1 = IK.Constraints()
+##>            for j in lst_joints:
+##>                if type(j) is not cnoid.Body.Link:
+##>                    const = IK.JointLimitConstraint()
+##>                    const.joint = j
+##>                    const.precision = joint_limit_precision
+##>                    const.maxError  = joint_limit_max_error
+##>                    constraints1.push_back(const)
+##>            constraints.append(constraints1)
+##>        if extra_constraints:
+##>            if type(extra_constraints) is list:
+##>                constraints += extra_constraints
+##>            else:
+##>                constraints.append(extra_constraints)
+
     def moveCentroidOnFoot(self, p = 0.5, constraint='6D', base_type='parallel2D', weight = 1.0, base_weight = 1.0,
                            debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
                            joint_limit_precision=0.1, **kwargs):
