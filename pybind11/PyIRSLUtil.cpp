@@ -4,6 +4,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/iostream.h> // add_ostream_redirect
 //
 #include <cnoid/PyUtil>
 #include <cnoid/PyEigenTypes>
@@ -80,13 +81,18 @@ PYBIND11_MODULE(IRSLUtil, m)
     py::module::import("cnoid.Base");
     // py::module::import("cnoid.Util");
 
+    //
     m.def("getViewTitles", [] (bool mounted) {
         std::vector<std::string> res;
         get_viewtitles(res, mounted);
         return res;
     });
-
     m.def("unmountViewTitles", &unmount_viewtitles);
+
+    // fix for left-hand coordinates
     m.def("fixSgPosTransform", &fixSgPosTransform);
     m.def("fixMesh", &fixMesh);
+
+    // bind C++ output-stream
+    py::add_ostream_redirect(m, "ostream_redirect");
 }
