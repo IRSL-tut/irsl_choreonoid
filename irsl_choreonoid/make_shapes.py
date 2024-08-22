@@ -1155,8 +1155,8 @@ def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
     else:
         raise Exception('{} (type: {}) is not BoundingBox and does not has method: boundingBox'.format(bbox, type(bbox)))
     sz = bbox.size()
-    cds = coordinates(bb0.center())
-    return mkshapes.makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
+    cds = coordinates(bbox.center())
+    return makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
 
 ##
 ## Function for exporting
