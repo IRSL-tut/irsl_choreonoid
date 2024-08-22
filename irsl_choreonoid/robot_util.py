@@ -1758,6 +1758,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 ret = v
                 break
             return ret
+        elif limb_name == 'base':
+            return self.robot.rootLink
         else:
             raise Exception('unknown limb name: {}'.format(limb_name))
 
