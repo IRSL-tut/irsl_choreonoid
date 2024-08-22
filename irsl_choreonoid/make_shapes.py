@@ -660,7 +660,7 @@ def makeText(text, textHeight=1.0, color=None, wrapped=True, rawShape=False, coo
         res = coordsWrapper(res, original_object=tx)
     return res
 
-def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
+def makeLines(line_points, line_indices=None, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
     """Makeing Lines
 
     Args:
@@ -681,6 +681,10 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
     ls=cutil.SgLineSet()
     ls.lineWidth=lineWidth
     ls.setVertices(npa(line_points, dtype='float32'))
+    if line_indices is None:
+        line_indices = []
+        for idx in range(len(line_points)-1):
+            line_indices.append([idx, idx+1])
     for ln in line_indices:
         ls.addLine(ln[0] , ln[1])
     if colors is not None:
