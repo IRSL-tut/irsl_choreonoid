@@ -660,7 +660,7 @@ def makeText(text, textHeight=1.0, color=None, wrapped=True, rawShape=False, coo
         res = coordsWrapper(res, original_object=tx)
     return res
 
-def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
+def makeLines(line_points, line_indices=None, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
     """Makeing Lines
 
     Args:
@@ -681,6 +681,10 @@ def makeLines(line_points, line_indices, lineWidth=5.0, colors=None, colorIndice
     ls=cutil.SgLineSet()
     ls.lineWidth=lineWidth
     ls.setVertices(npa(line_points, dtype='float32'))
+    if line_indices is None:
+        line_indices = []
+        for idx in range(len(line_points)-1):
+            line_indices.append([idx, idx+1])
     for ln in line_indices:
         ls.addLine(ln[0] , ln[1])
     if colors is not None:
@@ -1151,9 +1155,70 @@ def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
     else:
         raise Exception('{} (type: {}) is not BoundingBox and does not has method: boundingBox'.format(bbox, type(bbox)))
     sz = bbox.size()
-    cds = coordinates(bb0.center())
-    return mkshapes.makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
+    cds = coordinates(bbox.center())
+    return makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
 
+def _crossPoint2D(p0, n0, p1, n1):
+    """Getting crossing point
+
+    Args:
+        p0 (numpy.array) : 2D point
+        n0 (numpy.array) : 2D vector
+        p1 (numpy.array) : 2D point
+        n1 (numpy.array) : 2D vector
+
+    Returns:
+        numpy.array : Cross point (2D vector) of p0 + a * n0 = p1 + b * n1
+    """
+    ## n0.dot(n1)
+    N = numpy.linalg.inv(numpy.vstack([n0, n1]).transpose())
+    res = N.dot(p1 - p0)
+    return res[0] * n0 + p0
+
+def makeLineAlignedWall(points, height=1.0, thickness=0.1, **kwargs):
+    """Making a wall which is aligned with a multi-segment line
+    points on XY plane, extrude them by Z-axis(height)
+
+    Args:
+        points ( list[numpy.array] ) : List of 2D point, representing a line on XY-plane
+        height (float, default=1.0) : Height of the wall
+        thickness (float, default=0.1) : Thickness of the wall
+    Examples:
+        points=[]
+        NN = 36
+        for idx in range(NN+1):
+            xx = 2*PI/NN*idx
+            ss = math.sin(xx)
+            points.append(fv(xx, ss))
+        sp = mkshapes.makeLineAlignedWall(points)
+    """
+    n_lst = []
+    for idx in range(len(points) - 1):
+        ntmp = (points[idx+1] - points[idx])
+        ntmp /= numpy.linalg.norm(ntmp)
+        n_lst.append(ntmp)
+    Amat = npa([[0., -thickness], [ thickness, 0.]])
+    Bmat = npa([[0.,  thickness], [-thickness, 0.]])
+    plst = []
+    plst.append(points[0] + Bmat.dot(n_lst[0])) ##
+    for idx in range(1, len(points)-1):
+        p = _crossPoint2D(points[idx]   + Bmat.dot(n_lst[idx]  ), n_lst[idx],
+                          points[idx-1] + Bmat.dot(n_lst[idx-1]), n_lst[idx-1])
+        plst.append(p)
+    plst.append(points[-1] + Bmat.dot(n_lst[-1])) ##
+    ###
+    plst.append(points[-1] + Amat.dot(n_lst[-1])) ##
+    for idx in reversed(range(1, len(points)-1)):
+        p = _crossPoint2D(points[idx]   + Amat.dot(n_lst[idx]  ), n_lst[idx],
+                          points[idx-1] + Amat.dot(n_lst[idx-1]), n_lst[idx-1])
+        plst.append(p)
+    plst.append(points[0] + Amat.dot(n_lst[0])) ##
+    #plst.append(plst[0])
+    qlst = []
+    for p in reversed(plst):
+        qlst.append(npa([p[0], -p[1]]))
+    qlst.append(qlst[0])
+    return makeExtrusion(qlst, [[0., 0., 0.], [0., 0., height]], **kwargs)
 ##
 ## Function for exporting
 ##
