@@ -1014,6 +1014,9 @@ def makeBasket(width, height, tall, thickness = 0.1, bottom_thickness = 0.1, wra
         rawShape(boolean, default=False) : Just passing to makeBox
         kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
 
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
     """
     wall0 = makeBox(width, thickness, tall, **kwargs).translate(npa([0,  height*0.5, tall*0.5]))
     wall1 = makeBox(width, thickness, tall, **kwargs).translate(npa([0, -height*0.5, tall*0.5]))
@@ -1052,6 +1055,9 @@ def makeTableSingleLeg(width, height, tall, thickness = 0.05, bottom_thickness =
         rawShape(boolean, default=False) : Just passing to makeBox
         kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
 
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
     """
     plate = makeBox(width, height, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness]))
     leg = makeBox(leg_size, leg_size, tall - thickness - bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*(tall - thickness + bottom_thickness)]))
@@ -1082,6 +1088,9 @@ def makeTable4Legs(width, height, tall, thickness = 0.05, leg_size = 0.1, wrappe
         wrapped (boolean, default=True) : Just passing to makeBox
         rawShape(boolean, default=False) : Just passing to makeBox
         kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     plate = makeBox(width, height, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness]))
@@ -1120,6 +1129,9 @@ def makeRoundTable(radius, tall, thickness = 0.05, bottom_thickness = 0.04, bott
         rawShape(boolean, default=False) : Just passing to makeBox
         kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
 
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
     """
     plate = makeCylinder(radius, thickness, **kwargs).translate(npa([0, 0, tall - 0.5*thickness])).rotate(PI/2, coordinates.X)
     leg = makeBox(leg_size, leg_size, tall - thickness - bottom_thickness, **kwargs).translate(npa([0, 0, 0.5*(tall - thickness + bottom_thickness)]))
@@ -1138,14 +1150,18 @@ def makeRoundTable(radius, tall, thickness = 0.05, bottom_thickness = 0.04, bott
         ret = coordsWrapper(sg, original_object=sg)
     return ret
 
-def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
+def makeBoxFromBoundingBox(bbox, line=False, wrapped=True, rawShape=False, **kwargs):
     """Making box with the same size and position passed bounding-box
 
     Args:
         bbox ( cnoid.Util.BoundingBox or object has 'boundingBox' method ) :
+        line (boolean, default=False): If True, BoundingBox is shown with line
         wrapped (boolean, default=True) : Just passing to makeBox
         rawShape(boolean, default=False) : Just passing to makeBox
         kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     """
     if type(bbox) is cutil.BoundingBox:
@@ -1154,9 +1170,25 @@ def makeBoxFromBoundingBox(bbox, wrapped=True, rawShape=False, **kwargs):
         bbox = bbox.boundingBox()
     else:
         raise Exception('{} (type: {}) is not BoundingBox and does not has method: boundingBox'.format(bbox, type(bbox)))
-    sz = bbox.size()
-    cds = coordinates(bbox.center())
-    return makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
+    if line:
+        m0 = bbox.min()
+        m1 = bbox.max()
+        lst = [ [ m0[0], m0[1], m0[2] ],
+                [ m1[0], m0[1], m0[2] ],
+                [ m1[0], m1[1], m0[2] ],
+                [ m0[0], m1[1], m0[2] ],
+                [ m0[0], m0[1], m1[2] ],
+                [ m1[0], m0[1], m1[2] ],
+                [ m1[0], m1[1], m1[2] ],
+                [ m0[0], m1[1], m1[2] ] ]
+        line_indices = [ (0, 1), (1, 2), (2, 3), (3, 0),
+                         (4, 5), (5, 6), (6, 7), (7, 4),
+                         (0, 4), (1, 5), (2, 6), (3, 7) ]
+        return makeLines(lst, line_indices=line_indices, wrapped=wrapped, rawShape=rawShape, **kwargs)
+    else:
+        sz = bbox.size()
+        cds = coordinates(bbox.center())
+        return makeBox(sz[0], sz[1], sz[2], coords=cds, wrapped=wrapped, rawShape=rawShape, **kwargs)
 
 def _crossPoint2D(p0, n0, p1, n1):
     """Getting crossing point
@@ -1183,14 +1215,20 @@ def makeLineAlignedWall(points, height=1.0, thickness=0.1, **kwargs):
         points ( list[numpy.array] ) : List of 2D point, representing a line on XY-plane
         height (float, default=1.0) : Height of the wall
         thickness (float, default=0.1) : Thickness of the wall
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
     Examples:
-        points=[]
-        NN = 36
-        for idx in range(NN+1):
-            xx = 2*PI/NN*idx
-            ss = math.sin(xx)
-            points.append(fv(xx, ss))
-        sp = mkshapes.makeLineAlignedWall(points)
+
+        >>> points=[]
+        >>> NN = 36
+        >>> for idx in range(NN+1):
+        >>>     xx = 2*PI/NN*idx
+        >>>     ss = math.sin(xx)
+        >>>     points.append(fv(xx, ss))
+        >>> sp = mkshapes.makeLineAlignedWall(points)
+
     """
     n_lst = []
     for idx in range(len(points) - 1):
