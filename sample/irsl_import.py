@@ -40,3 +40,14 @@ try:
     from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
 except ImportError:
     pass
+## utility
+def exec_script(fname):
+    exec(open(fname).read())
+### reload module
+#import X
+# >>> reaload( X )
+#from X import Y
+# >>> import X
+# >>> reload(X)
+# >>> from X import Y
+from importlib import reload
