@@ -123,7 +123,7 @@ def loadRobot(fname):
     rb.calcForwardKinematics()
     return rb
 
-def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, fixMassParam=True):
+def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True, fixMassParam=True):
     """
     Exporting .body file from an instance of cnoid.Body.Body
 
@@ -131,22 +131,22 @@ def exportBody(fname, body, extModelFileMode=None, fileUri=None, allInOne=True, 
         fname (str) :
         body ( cnoid.Body.Body ) :
         extModelFileMode (int, optional): 0; EmbedModels, 1; LinkToOriginalModelFiles, 2; ReplaceWithStdSceneFiles, 3; ReplaceWithObjModelFiles
-        fileUri (str, optional) : Add URI for exporting mesh files
-        allInOne (boolean, default=True) : Using with fileUri, if True, all shapes will be exported as a file.
+        filePrefix (str, optional) : Add URI for exporting mesh files
+        allInOne (boolean, default=True) : Using with filePrefix, if True, all shapes will be exported as a file.
         fixMassParam (boolean, default=False) : If True, links with mass==1.0 and inertia is identity is set small mass-parameter (they may loaded without mass parameter)
 
     """
-    if fileUri is not None:
+    if filePrefix is not None:
         for lk in body.links:
             nm = lk.name
             if allInOne:
                 for idx in range(lk.visualShape.numChildren):
-                    addUriToShape(lk.visualShape.getChild(idx), '{}_{}_vis.scen'.format(nm, idx), fileUri, allInOne=allInOne)
+                    addUriToShape(lk.visualShape.getChild(idx), '{}{}_{}_vis.scen'.format(filePrefix, nm, idx), 'file://', allInOne=allInOne)
                 for idx in range(lk.collisionShape.numChildren):
-                    addUriToShape(lk.collisionShape.getChild(idx), '{}_{}_col.scen'.format(nm, idx), fileUri, allInOne=allInOne)
+                    addUriToShape(lk.collisionShape.getChild(idx), '{}{}_{}_col.scen'.format(filePrefix, nm, idx), 'file://', allInOne=allInOne)
             else:
-                addUriToShape(lk.visualShape, '{}_vis'.format(nm), fileUri)
-                addUriToShape(lk.collisionShape, '{}_col'.format(nm), fileUri)
+                addUriToShape(lk.visualShape, '{}{}_vis'.format(filePrefix, nm), 'file://')
+                addUriToShape(lk.collisionShape, '{}{}_col'.format(filePrefix, nm), 'file://')
     bw = StdBodyWriter()
     bw.setMessageSinkStdErr()
     if extModelFileMode is not None:
