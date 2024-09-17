@@ -18,6 +18,7 @@ from irsl_choreonoid.cnoid_util import parseURL
 import irsl_choreonoid.robot_util as ru
 from irsl_choreonoid.robot_util import RobotModelWrapped as RobotModel
 from irsl_choreonoid.RobotBuilder import RobotBuilder
+from irsl_choreonoid.RobotBuilder import SimpleRobotBuilder
 ## etc
 import numpy as np
 from numpy import array as npa
@@ -39,3 +40,14 @@ try:
     from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
 except ImportError:
     pass
+## utility
+def exec_script(fname):
+    exec(open(fname).read())
+### reload module
+#import X
+# >>> reaload( X )
+#from X import Y
+# >>> import X
+# >>> reload(X)
+# >>> from X import Y
+from importlib import reload

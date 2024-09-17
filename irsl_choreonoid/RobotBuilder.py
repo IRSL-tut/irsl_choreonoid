@@ -12,7 +12,7 @@ from .draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
 
 from . import make_shapes as mkshapes
 from . import cnoid_util as iu
-## from . import robot_util as ru
+from . import robot_util as ru
 ## from .robot_util import RobotModelWrapped as RobotModel
 import numpy as np
 from numpy import array as npa
@@ -1213,3 +1213,217 @@ class RobotBuilder(object):
         res['COM'] = newCOM_w
         res['inertia'] = newIner_w
         return res
+
+class SimpleRobotBuilder(RobotBuilder):
+    '''
+    Examples:
+        >>> link_params = [
+            {'point': [0, 0, 0.2], 'type': 'yaw_revolute', 'axis': 'Z'},
+            {'point': [0, 0, 0.4], 'type': 'revolute', 'axis': 'X'},
+            {'point': [0, 0, 0.6], 'type': 'revolute', 'axis': 'Y'},
+            {'point': [0, 0, 0.6 + 1.4], 'type': 'revolute', 'axis': 'Y'},
+            {'point': [0, 0, 0.6 + 1.4 + 1.4], 'type': 'revolute', 'axis': 'Y'},
+            {'point': [0, 0, 0.6 + 1.4 + 1.4 + 0.2], 'type': 'revolute', 'axis': 'X'},
+            {'point': [0, 0, 0.6 + 1.4 + 1.4 + 0.4], 'type': 'yaw_revolute', 'axis': 'Z'},
+            ]
+
+        >>> g_root = {'primitive': 'cylinder',
+           'parameter': {'radius': 1.5, 'height': 0.4, 'color': [1.0, 1.0, 0], 'DivisionNumber': 6},
+           'rotation': [1, 0, 0, PI/2],
+           'translation': [0, 0, 0.0]}
+
+        >>> g_tip = [
+            {'primitive': 'box',
+             'parameter': {'x': 0.1, 'y': 0.1, 'z': 0.3, 'color': [0, 1.0, 0]},
+             'translation': [0, 0, 0.15 ]},
+            {'primitive': 'box',
+             'parameter': {'x': 0.15, 'y': 0.15, 'z': 0.4, 'color': [0, 1.0, 1.0]},
+             'translation': [0,  0.15, 0.3 + 0.15],
+             'rotation': [1, 0, 0, -0.6]},
+            {'primitive': 'box',
+             'parameter': {'x': 0.15, 'y': 0.15, 'z': 0.4, 'color': [0, 1.0, 1.0]},
+             'translation': [0, -0.15, 0.3 + 0.15],
+             'rotation': [1, 0, 0, 0.6]},
+            {'primitive': 'box',
+             'parameter': {'x': 0.15, 'y': 0.185, 'z': 0.3, 'color': [0, 1.0, 1.0]},
+             'translation': [0,  0.22,  0.3 + 0.40],
+             },
+            {'primitive': 'box',
+             'parameter': {'x': 0.15, 'y': 0.185, 'z': 0.3, 'color': [0, 1.0, 1.0]},
+             'translation': [0,  -0.22, 0.3 + 0.40],
+             },
+            ]
+
+        >>> sp = SimpleRobotBuilder()
+
+        >>> sp.buildSimpleRobot(link_params, rootGeometry=g_root, tipGeometry=g_tip)
+
+    Note:
+        definition of link_params
+        [ { 'point': [], 'type': str, 'axis': str }, ... ]
+
+        point: absolute world position, list of 3 float values,  [X, Y, Z]
+        type: type of the joint, 'revolute', 'yaw_revolute'
+        axis: direction of joint-axis, 'X', 'Y', or 'Z'
+    '''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.default_density = 1000
+        self.default_joint_range = [-PI, PI]
+        self.default_velocity_range = [-PI*10, PI*10]
+        self.default_effort_range = [-100, 100]
+        self.cur_lk = None
+        self.cur_jid = None
+        self.links = []
+        self.scale = 1.0
+        self.link_color  = [0, 1.0, 0]
+        self.joint_color = [1.0, 0, 0]
+        ### TODO : adding link/joint name
+        ## link_prefix
+        ## joint_prefix
+    def _makePreJoint(self, cur_coords, cur_type, cur_axis):
+        if   cur_type == 'revolute':
+            thick_  = 0.25 * self.scale
+            radius_ = 0.10 * self.scale
+        elif cur_type == 'yaw_revolute':
+            thick_  = 0.05 * self.scale
+            radius_ = 0.25 * self.scale
+        ##
+        cyl=self.makeCylinder(radius_, thick_, color=self.joint_color)
+        cyl.newcoords(cur_coords.copy())
+        mv_ = npa([0, -thick_/2, 0])
+        if   cur_axis == 'X':
+            cyl.rotate(-PI/2, coordinates.Z).translate(mv_)
+        elif cur_axis == 'Y':
+            cyl                             .translate(mv_)
+        elif cur_axis == 'Z':
+            cyl.rotate( PI/2, coordinates.X).translate(mv_)
+    #
+    def _makeJoint(self, cur_coords, cur_type, cur_axis):
+        j  = self.createJointShape(jointType=Link.JointType.RevoluteJoint)
+        j.newcoords(cur_coords.copy())
+        if cur_axis == 'X':
+            j.rotate(-PI/2, coordinates.Z)
+        elif cur_axis == 'Z':
+            j.rotate( PI/2, coordinates.X)
+        lk = self.createLinkFromShape(name='LINK{}'.format(self.cur_jid),
+                                    JointName='JOINT{}'.format(self.cur_jid),
+                                    parentLink=self.cur_lk,
+                                    JointId=self.cur_jid,
+                                    density=self.default_density,
+                                    JointRange=self.default_joint_range,
+                                    JointVelocityRange=self.default_velocity_range,
+                                    JointEffortRange=self.default_effort_range,
+                                    EquivalentRotorInertia=0.1)
+        self.cur_lk = lk
+        self.cur_jid += 1
+    #
+    def _makePostJoint(self, cur_coords, cur_type, cur_axis):
+        if   cur_type == 'revolute':
+            thick_  = 0.25 * self.scale
+            radius_ = 0.10 * self.scale
+        elif cur_type == 'yaw_revolute':
+            thick_  = 0.05 * self.scale
+            radius_ = 0.25 * self.scale
+        cyl=self.makeCylinder(radius_, thick_, color=self.joint_color)
+        cyl.newcoords(cur_coords.copy())
+        mv_ = npa([0, thick_/2, 0])
+        if   cur_axis == 'X':
+            cyl.rotate(-PI/2, coordinates.Z).translate(mv_)
+        elif cur_axis == 'Y':
+            cyl                             .translate(mv_)
+        elif cur_axis == 'Z':
+            cyl.rotate( PI/2, coordinates.X).translate(mv_)
+    #
+    def makeInitialLink(self, lst, name='Root', rootGeometry=None):
+        ## root-geometry
+        if rootGeometry is not None:
+            if type(rootGeometry) is list:
+                for g in rootGeometry:
+                    self.makeShapeFromParam(**g)
+            else:
+                self.makeShapeFromParam(**rootGeometry)
+        #
+        c_cds_  = coordinates(lst[0]['point'])
+        c_type_ = lst[0]['type']
+        c_axis_ = lst[0]['axis']
+        self._makePreJoint(c_cds_, c_type_, c_axis_) ## cur-joint
+        lk_ = self.createLinkFromShape(name=name, root=True, density=self.default_density)
+        self.cur_lk  = lk_
+        self.cur_jid = 0
+    #
+    def makeLinks(self, lst, tipGeometry=None):
+        c_cds_  = coordinates(lst[0]['point'])
+        c_type_ = lst[0]['type']
+        c_axis_ = lst[0]['axis']
+        ##
+        for l in lst[1:]:
+            n_cds_  = coordinates(l['point'])
+            n_type_ = l['type']
+            n_axis_ = l['axis']
+            #
+            self._makePreJoint(n_cds_, n_type_, n_axis_) ## next-joint
+            ## to-next-geometry
+            self.makeLineAlignedShape(c_cds_.pos, n_cds_.pos, size=0.1*self.scale, color=self.link_color)
+            self._makePostJoint(c_cds_, c_type_, c_axis_) ## cur-joint
+            self._makeJoint(c_cds_, c_type_, c_axis_) ## next-joint
+            #
+            c_cds_  = n_cds_
+            c_type_ = n_type_
+            c_axis_ = n_axis_
+        ## tip-geometry
+        if tipGeometry is not None:
+            glst = []
+            if type(tipGeometry) is list:
+                for g in tipGeometry:
+                    glst.append(self.makeShapeFromParam(**g))
+            else:
+                glst.append(self.makeShapeFromParam(**tipGeometry))
+            for g in glst:
+                g.transform(c_cds_, coordinates.wrt.world)
+        else:
+            ### default tip
+            tip = self.makeLineAlignedShape(npa([0,0,0.]), npa([0, 0, 1.0]), size=0.1*self.scale, color=self.link_color)
+            tip.transform(c_cds_, coordinates.wrt.world)
+        #
+        self._makePostJoint(c_cds_, c_type_, c_axis_) ## cur-joint
+        self._makeJoint(c_cds_, c_type_, c_axis_) ## next-joint
+    #
+    def makeShapeFromParam(self, primitive=None, parameter=None, translation=None, rotation=None):
+        mk = {}
+        if translation is not None:
+            mk['translation'] = translation
+        if rotation is not None:
+            mk['rotation'] = rotation
+        #
+        if len(mk) > 0:
+            coords = ru.make_coordinates(mk)
+        else:
+            coords = coordinates()
+        #
+        func = None
+        if primitive == 'box':
+            func = self.makeBox
+        elif primitive == 'cylinder':
+            func = self.makeCylinder
+        elif primitive == 'sphere':
+            func = self.makeCylinder
+        elif primitive == 'cone':
+            func = self.makeCone
+        elif primitive == 'capsule':
+            func = self.makeCapsule
+        elif primitive == 'torus':
+            func = self.makeTorus
+        elif primitive == 'tetrahedron':
+            func = self.makeTetrahedron
+        elif primitive == 'extrusion':
+            func = self.makeExtrusion
+        #
+        if func is not None:
+            ret = func(**parameter)
+            ret.newcoords(coords)
+            return ret
+    #
+    def buildSimpleRobot(self, link_param_list, name='Root', rootGeometry=None, tipGeometry=None):
+        self.makeInitialLink(link_param_list, name=name, rootGeometry=rootGeometry)
+        self.makeLinks(link_param_list, tipGeometry=tipGeometry)
