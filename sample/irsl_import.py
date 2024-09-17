@@ -18,6 +18,7 @@ from irsl_choreonoid.cnoid_util import parseURL
 import irsl_choreonoid.robot_util as ru
 from irsl_choreonoid.robot_util import RobotModelWrapped as RobotModel
 from irsl_choreonoid.RobotBuilder import RobotBuilder
+from irsl_choreonoid.RobotBuilder import SimpleRobotBuilder
 ## etc
 import numpy as np
 from numpy import array as npa
