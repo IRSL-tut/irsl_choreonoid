@@ -166,7 +166,7 @@ def findItemsByQuery(query):
         list [ cnoid.Base.Item ] : all found items that query returns True
 
     """
-    return [ itm for itm in RootItem.instance.getDescendantItems() if func(itm) ]
+    return [ itm for itm in RootItem.instance.getDescendantItems() if query(itm) ]
 
 def findItemsByName(name):
     """Finding item with the same name in ItemTreeView
