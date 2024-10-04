@@ -239,13 +239,14 @@ def findRobot(name):
 #
 # Utility for Scene
 #
-def cameraPositionLookingFor(eye, direction, up):
+def cameraPositionLookingFor(eye, direction, up, opencv=True):
     """Generating camera coordinates where designated direction is the camera's optical axis
 
     Args:
         eye (numpy.array or list[float]) : 3D position of the camera
         direction (numpy.array or list[float]) : Direction of the camera's optical axis
         up (numpy.array or list[float]) : Up direction
+        opencv (boolean, default = True) : OpenCV stype coordinates will be returned
 
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
@@ -254,15 +255,19 @@ def cameraPositionLookingFor(eye, direction, up):
         Refer cnoid.Util.SgCamera.positionLookingFor
 
     """
-    return coordinates(SgCamera.positionLookingFor(npa(eye), npa(direction), npa(up)))
+    res = coordinates(SgCamera.positionLookingFor(npa(eye), npa(direction), npa(up)))
+    if opencv:
+        res.rotate(math.pi, coordinates.X)
+    return res
 
-def cameraPositionLookingAt(eye, center, up):
+def cameraPositionLookingAt(eye, center, up, opencv=True):
     """Generating camera coordinates looking at the point
 
     Args:
         eye (numpy.array or list[float]) : 3D position of the camera
         center (numpy.array or list[float]) : 3D position wherer the camera's optical axis passes through
         up (numpy.array or list[float]) : Up direction
+        opencv (boolean, default = True) : OpenCV stype coordinates will be returned
 
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
@@ -271,7 +276,10 @@ def cameraPositionLookingAt(eye, center, up):
         Refer cnoid.Util.SgCamera.positionLookingAt
 
     """
-    return coordinates(SgCamera.positionLookingAt(npa(eye), npa(center), npa(up)))
+    res = coordinates(SgCamera.positionLookingAt(npa(eye), npa(center), npa(up)))
+    if opencv:
+        res.rotate(math.pi, coordinates.X)
+    return res
 
 def saveImageOfScene(filename):
     """Saving scene as image file
