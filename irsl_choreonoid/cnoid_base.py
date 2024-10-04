@@ -515,3 +515,40 @@ def enableGrid(plane = 0):
     sw = currentSceneWidget()
     sw.setGridEnabled(SceneWidget.GridPlane(plane), True)
     sw.updateGrids()
+
+def setCoordinateAxes(on=True):
+    """On/Off of the coordinate axes on the screen
+
+    Args:
+        on (boolean, default=True) : On/Off of the coordinate axes
+
+    """
+    sw = currentSceneWidget()
+    sw.setCoordinateAxes(on)
+
+def setViewSize(width, height):
+    """Setting size of view(widget)
+
+    Args:
+        width (int) : Width of the widget to be set
+        height (int) : Height of the widget to be set
+
+    """
+    sw = currentSceneWidget()
+    sw.resize(width, height)
+
+def viewAll():
+    """Setting camera position as viewing all objects
+    """
+    sw = currentSceneWidget()
+    sw.viewAll()
+
+def getAllBoundingBox():
+    """Getting a boundingBox of all objects on the scene
+
+    Returns:
+        BoundingBox : BoundingBox of all objects on the scene
+
+    """
+    sw = currentSceneWidget()
+    return sw.scene.boundingBox()
