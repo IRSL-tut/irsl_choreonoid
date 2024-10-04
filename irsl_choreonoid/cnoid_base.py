@@ -166,7 +166,7 @@ def findItemsByQuery(query):
         list [ cnoid.Base.Item ] : all found items that query returns True
 
     """
-    return [ itm for itm in RootItem.instance.getDescendantItems() if func(itm) ]
+    return [ itm for itm in RootItem.instance.getDescendantItems() if query(itm) ]
 
 def findItemsByName(name):
     """Finding item with the same name in ItemTreeView
@@ -239,13 +239,14 @@ def findRobot(name):
 #
 # Utility for Scene
 #
-def cameraPositionLookingFor(eye, direction, up):
+def cameraPositionLookingFor(eye, direction, up, opencv=True):
     """Generating camera coordinates where designated direction is the camera's optical axis
 
     Args:
         eye (numpy.array or list[float]) : 3D position of the camera
         direction (numpy.array or list[float]) : Direction of the camera's optical axis
         up (numpy.array or list[float]) : Up direction
+        opencv (boolean, default = True) : OpenCV stype coordinates will be returned
 
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
@@ -254,15 +255,19 @@ def cameraPositionLookingFor(eye, direction, up):
         Refer cnoid.Util.SgCamera.positionLookingFor
 
     """
-    return coordinates(SgCamera.positionLookingFor(npa(eye), npa(direction), npa(up)))
+    res = coordinates(SgCamera.positionLookingFor(npa(eye), npa(direction), npa(up)))
+    if opencv:
+        res.rotate(math.pi, coordinates.X)
+    return res
 
-def cameraPositionLookingAt(eye, center, up):
+def cameraPositionLookingAt(eye, center, up, opencv=True):
     """Generating camera coordinates looking at the point
 
     Args:
         eye (numpy.array or list[float]) : 3D position of the camera
         center (numpy.array or list[float]) : 3D position wherer the camera's optical axis passes through
         up (numpy.array or list[float]) : Up direction
+        opencv (boolean, default = True) : OpenCV stype coordinates will be returned
 
     Returns:
         cnoid.IRSLCoords.coordinates : Camera coordinates
@@ -271,7 +276,10 @@ def cameraPositionLookingAt(eye, center, up):
         Refer cnoid.Util.SgCamera.positionLookingAt
 
     """
-    return coordinates(SgCamera.positionLookingAt(npa(eye), npa(center), npa(up)))
+    res = coordinates(SgCamera.positionLookingAt(npa(eye), npa(center), npa(up)))
+    if opencv:
+        res.rotate(math.pi, coordinates.X)
+    return res
 
 def saveImageOfScene(filename):
     """Saving scene as image file
@@ -498,7 +506,7 @@ def disableGrid(plane = None):
     sw.updateGrids()
 
 def enableGrid(plane = 0):
-    """SHowing grids
+    """Showing grids
 
     Args:
         plane (int, default = 0) : ID of plane to show. 0\: XY, 1\: XZ, 2\: YZ
@@ -507,3 +515,40 @@ def enableGrid(plane = 0):
     sw = currentSceneWidget()
     sw.setGridEnabled(SceneWidget.GridPlane(plane), True)
     sw.updateGrids()
+
+def setCoordinateAxes(on=True):
+    """On/Off of the coordinate axes on the screen
+
+    Args:
+        on (boolean, default=True) : On/Off of the coordinate axes
+
+    """
+    sw = currentSceneWidget()
+    sw.setCoordinateAxes(on)
+
+def setViewSize(width, height):
+    """Setting size of view(widget)
+
+    Args:
+        width (int) : Width of the widget to be set
+        height (int) : Height of the widget to be set
+
+    """
+    sw = currentSceneWidget()
+    sw.resize(width, height)
+
+def viewAll():
+    """Setting camera position as viewing all objects
+    """
+    sw = currentSceneWidget()
+    sw.viewAll()
+
+def getAllBoundingBox():
+    """Getting a boundingBox of all objects on the scene
+
+    Returns:
+        BoundingBox : BoundingBox of all objects on the scene
+
+    """
+    sw = currentSceneWidget()
+    return sw.scene.boundingBox()
