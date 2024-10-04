@@ -506,7 +506,7 @@ def disableGrid(plane = None):
     sw.updateGrids()
 
 def enableGrid(plane = 0):
-    """SHowing grids
+    """Showing grids
 
     Args:
         plane (int, default = 0) : ID of plane to show. 0\: XY, 1\: XZ, 2\: YZ
