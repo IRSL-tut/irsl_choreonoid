@@ -692,7 +692,7 @@ def makeLines(line_points, line_indices=None, lineWidth=5.0, colors=None, colorI
     if colorIndices is not None:
         ls.setColorIndices(colorIndices)
     elif colors is not None:
-        ls.setColorIndices( [0]*ps.numVertices )
+        ls.setColorIndices( [0] * ls.sizeOfVertices )
     ls.updateBoundingBox()
     if rawShape:
         return ls
