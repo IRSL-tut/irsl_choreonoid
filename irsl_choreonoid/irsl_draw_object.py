@@ -1,5 +1,6 @@
 ## do not use cnoid.Base
 from cnoid.IRSLCoords import coordinates
+import cnoid.Util as cutil
 # from cnoid.Util import SgPosTransform
 # from cnoid.DrawInterface import GeneralDrawInterface as GDI
 
@@ -14,12 +15,13 @@ Some mthods (newcoords, translate, rotate, transform) to update itself are overr
 
 Then, you can run some process when the position of the target is updated.
     """
-    def __init__(self, target, init_coords=None, update_callback=None, original_object=None):
+    def __init__(self, target, init_coords=None, update_callback=None, original_object=None, scalable=False):
         """
         Args:
             target (object) : wrapped target which have property 'T' for setting cnoidPosition
             init_coords (cnoid.IRSLCoords.coordinates, optional) : coordinates of this instance
             update_callback (function(), optional) : callback function which is called when target is updated
+            scalable (boolean, default=False) : call setScalable() within constructor
         """
         super().__init__()
         self.__target = target
@@ -35,6 +37,32 @@ Then, you can run some process when the position of the target is updated.
             self.newcoords(init_coords)
         else:
             self.cnoidPosition =  self.__target.T
+
+        if scalable:
+            self.setScalable()
+
+    def setScalable(self):
+        """Enabling to use methods, setScale and setTurnedOn
+
+        """
+        if self.__target.numChildren == 1:
+            scl = cutil.SgScaleTransform()
+            swt = cutil.SgSwitchableGroup()
+            self._switch_ = swt
+            self._scale_  = scl
+            chld = self.__target.getChild(0)
+            self.__target.clearChildren()
+            scl.addChild(chld)
+            swt.addChild(scl)
+            self.__target.addChild(swt)
+        else:
+            trs = cutil.SgPosTransform()
+            trs.T = self.__target.T
+            self.__target.T = coordinates().cnoidPosition
+            org = self.__target
+            trs.addChild(org)
+            self.__target = trs
+            self.setScalable()
 
     #def __del__(self):
     #    print('destruct: coordsWrapper')
@@ -249,3 +277,25 @@ Then, you can run some process when the position of the target is updated.
 
         """
         return self._original_object
+
+    def setScale(self, float_or_vec, update=False):
+        """Setting scale of drawn objects
+
+        Args:
+            float_or_vec (float or [float] ) : Parameter of scale
+            update (boolean, default=False) : Update drawn object in screen
+        """
+        self._scale_.setScale(float_or_vec)
+        if update:
+            self.updateTarget()
+
+    def setTurnedOn(self, on=True, update=False):
+        """Switching On/Off of drawn objects
+
+        Args:
+            on (boolean, default=False) : Switch to draw this object
+            update (boolean, default=False) : Update drawn object in screen
+        """
+        self._switch_.setTurnedOn(on, False)
+        if update:
+            self.updateTarget()
