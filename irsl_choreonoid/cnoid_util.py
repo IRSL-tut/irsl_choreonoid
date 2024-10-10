@@ -222,7 +222,9 @@ def convertBodyFileToMeshFile(mesh_file_name, body_file_name, **kwargs):
     if robot is None:
         return
     exportBodyAsMesh(mesh_file_name, robot, **kwargs)
-
+##
+## ValueNode
+##
 def castValueNode(_valuenode):
     """Casting cnoid.Util.ValueNode type to python primitive type
 

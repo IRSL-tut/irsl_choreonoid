@@ -357,7 +357,7 @@ def setCameraCoords(cds, fov=None, update=True, opencv=True):
     if update:
         sw.builtinPerspectiveCamera.notifyUpdate()
 
-def getCameraCoordsParam(withFOV=True):
+def getCameraCoordsParam(withFOV=True, opencv=True):
     """Returning camera position of current scene (returning dictionary type)
 
     Args:
@@ -367,12 +367,12 @@ def getCameraCoordsParam(withFOV=True):
         dict[str, param] : Dictionary can be read with irsl_choreonoid.robot_util.make_coordinates, and added the keyword 'fov'
 
     """
-    cds, fov = getCameraCoords(withFOV)
+    cds, fov = getCameraCoords(withFOV, opencv=opencv)
     _ret = make_coords_map(cds)
     _ret['fov'] = fov
     return _ret
 
-def setCameraCoordsParam(param_dict):
+def setCameraCoordsParam(param_dict, opencv=True):
     """Setting camera coordinates of current scene (receiving dictionary type)
 
     Args:
@@ -383,7 +383,7 @@ def setCameraCoordsParam(param_dict):
     if 'fov' in param_dict:
         fov = param_dict['fov']
     cds = make_coordinates(param_dict)
-    setCameraCoords(cds, fov)
+    setCameraCoords(cds, fov, opencv=opencv)
 
 def getCameraMatrix():
     """Getting camera matrix of this scene

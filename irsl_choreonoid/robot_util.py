@@ -143,6 +143,24 @@ def make_translation_rotation(coords, unit='mm', degree=True):
         aa[3] = aa[3]*180/math.pi
     return {'translation': pp, 'rotation': aa}
 
+def axisAlignedCoords(axis, target_axis=ic.coordinates.Y, rotate=None, up_axis=None):
+    """
+    """
+    ax = np.array(axis)
+    ic.coordinates.normalizeVector(ax)
+    rota = np.cross(target_axis, ax)
+    angle2 = math.atan2(np.linalg.norm(rota), np.dot(ax, target_axis))
+    res = ic.coordinates()
+    ic.coordinates.normalizeVector(rota)
+    res.rotate(angle2, rota)
+    if rotate is not None:
+        res.rotate(rotate, target_axis)
+    if up_axis is not None:
+        ## up: ic.coordinates.Z
+        ## res.rotate_vector(up_axis)
+        pass ## not implemented yet
+    return res
+
 ##
 ## IKWrapper
 ##
@@ -361,8 +379,9 @@ class IKWrapper(object):
         return (succ, _total)
 
     def __inverseKinematicsQP(self, target, constraint = None, weight = 1.0, add_noise = None, debug = False,
-                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5,
+                              base_type = None, base_weight = 1.0, max_iteration = 32, threshold = 5e-5, position_precision = None,
                               use_joint_limit=True, joint_limit_max_error=1e-2, joint_limit_precision=0.1, **kwargs):
+        ## default position precision // 1e-4, 1e-4, 1e-4, 0.001745, 0.001745, 0.001745;
         ## add_noise
         if add_noise is not None:
             if type(add_noise) is float:
@@ -432,6 +451,8 @@ class IKWrapper(object):
         #constraint.B_link() = nullptr;
         a_constraint.B_localpos = target.toPosition()
         a_constraint.weight     = weight * np.array(constraint)
+        if position_precision is not None:
+            a_constraint.precision = np.array(position_precision)
         constraints0.push_back(a_constraint)
         if base_type is not None:
             if debug:
@@ -442,6 +463,8 @@ class IKWrapper(object):
             #constraint.B_link() = nullptr;
             b_constraint.B_localpos = self.__robot.rootLink.T
             b_constraint.weight     = np.array(base_const)
+            if position_precision is not None:
+                b_constraint.precision = np.array(position_precision)
             constraints0.push_back(b_constraint)
         #
         tasks = IK.Tasks()
