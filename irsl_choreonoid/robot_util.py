@@ -143,6 +143,24 @@ def make_translation_rotation(coords, unit='mm', degree=True):
         aa[3] = aa[3]*180/math.pi
     return {'translation': pp, 'rotation': aa}
 
+def axisAlignedCoords(axis, target_axis=ic.coordinates.Y, rotate=None, up_axis=None):
+    """
+    """
+    ax = np.array(axis)
+    ic.coordinates.normalizeVector(ax)
+    rota = np.cross(target_axis, ax)
+    angle2 = math.atan2(np.linalg.norm(rota), np.dot(ax, target_axis))
+    res = ic.coordinates()
+    ic.coordinates.normalizeVector(rota)
+    res.rotate(angle2, rota)
+    if rotate is not None:
+        res.rotate(rotate, target_axis)
+    if up_axis is not None:
+        ## up: ic.coordinates.Z
+        ## res.rotate_vector(up_axis)
+        pass ## not implemented yet
+    return res
+
 ##
 ## IKWrapper
 ##
