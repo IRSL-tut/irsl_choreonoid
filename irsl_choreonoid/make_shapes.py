@@ -1195,6 +1195,27 @@ def makeRoundTable(radius, tall, thickness = 0.05, bottom_thickness = 0.04, bott
         ret = coordsWrapper(sg, original_object=sg)
     return ret
 
+def makeWireframeCone(wrapped=True, rawShape=False, scale=[1, 1, 1], **kwargs):
+    """Making cone with lines
+
+    Args:
+        wrapped (boolean, default=True) : Just passing to makeBox
+        rawShape(boolean, default=False) : Just passing to makeBox
+        kwargs ( dict[str, param] ) : Extra keyword arguments passing to makeBox
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    lst = [ [ 0., 0., 0.],
+            [ 0.5*scale[0],  0.5*scale[1], scale[2]],
+            [ 0.5*scale[0], -0.5*scale[1], scale[2]],
+            [-0.5*scale[0], -0.5*scale[1], scale[2]],
+            [-0.5*scale[0],  0.5*scale[1], scale[2]] ]
+    line_indices = [ (0, 1), (0, 2), (0, 3), (0, 4),
+                     (1, 2), (2, 3), (3, 4), (4, 1) ]
+    return makeLines(lst, line_indices=line_indices, wrapped=wrapped, rawShape=rawShape, **kwargs)
+
 def makeBoxFromBoundingBox(bbox, line=False, wrapped=True, rawShape=False, **kwargs):
     """Making box with the same size and position passed bounding-box
 
