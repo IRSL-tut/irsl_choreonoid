@@ -743,6 +743,51 @@ def makeTetrahedron(base_width, base_height, height, base_center=None, center_x=
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
 ### utility functions
+def makeAxis(radius=0.075, length=1.0, axisLength=0.35, axisRadius=0.125, axisRatio=None, color=None, scale=None, coords=None, wrapped=True, **kwargs):
+    """Makeing single axis shape using cylinder and cone
+
+    Args:
+        radius (float, default=0.15) :
+        length (float, default=0.8) :
+        axisLength (float, default=0.3) :
+        axisRadius (float, default=0.25) :
+        axisRatio (float, optional) :
+        color ( list[float], optional ) :
+        scale (float, optional ) :
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    R0=radius
+    if axisRatio is None:
+        ll=axisLength
+        rr=axisRadius
+    else:
+        ll = axisRatio * length
+        rr = ll
+    L0=length-ll
+    bd0 = makeCylinder(R0, L0, color=color, **kwargs)
+    bd0.translate(npa([0,L0/2.0,0]))
+    a0 = makeCone(rr, ll, color=color, **kwargs)
+    a0.translate(npa([0,L0+ll/2,0]))
+    res=cutil.SgPosTransform()
+    if scale is not None:
+        current = cutil.SgScaleTransform(scale)
+        res.addChild(current)
+    else:
+        current = res
+    current.addChild(bd0.target)
+    current.addChild(a0.target)
+    if coords is not None:
+        res.setPosition(coords.cnoidPosition)
+    if wrapped:
+        res = coordsWrapper(res, original_object=current)
+    return res
+
 def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
     """Makeing '3D-axis' shape using cylinder and cone
 
