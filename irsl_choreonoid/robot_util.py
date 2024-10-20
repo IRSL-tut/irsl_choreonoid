@@ -144,7 +144,30 @@ def make_translation_rotation(coords, unit='mm', degree=True):
     return {'translation': pp, 'rotation': aa}
 
 def axisAlignedCoords(axis, target_axis=ic.coordinates.Y, rotate=None, up_axis=None):
-    """
+    """Generating axis aligned coordinates.
+
+    target_axis on the generated coordinates will be axis on the world-coordinates
+
+    Args:
+        axis ( list[float] ) : Target direction(axis)
+        target_axis ( list[float] ) : Target axis to be alined
+
+    Returns:
+        cnoid.IRSLCoords.coordinates : generated coordinates
+
+    Examples:
+        >>> ay = axisAlignedCoords([1., 1., 1.,], coordinates.Y)
+        >>> ay.y_axis
+        array([0.57735027, 0.57735027, 0.57735027])
+
+        >>> az = axisAlignedCoords([1., 1., 1.,], coordinates.Z)
+        >>> az.z_axis
+        array([0.57735027, 0.57735027, 0.57735027])
+
+        >>> target = fv(1., 1., 1.)
+        >>> aa = axisAlignedCoords([1., 0., 1.,], target)
+        >>> aa.transform_vector(target)
+        array([1.22474487, 0.        , 1.22474487])
     """
     ax = np.array(axis)
     ic.coordinates.normalizeVector(ax)
