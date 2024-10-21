@@ -1046,6 +1046,46 @@ def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **k
         print('rot: {}'.format(rot))
     return obj
 
+def makeParallelogram(height, length, width, offset=None, angle=None, front_cut=None, back_cut=None, **kwargs):
+    """Making a geometry, 'Parallelogram'
+
+    Args:
+        height (float) : Height of the geometry
+        length (float) : Length of bottom edge
+        width (float) : Width of the geometry
+        offset (float, optional) : Offset of a top edge and a bottom edge
+        angle (float, optional) : range is [0, PI]
+        front_cut (float, optional) : Cut from front-side if angle > 0
+        back_cut (float, optional) : Cut from back-side if angle > 0
+        **kwargs : Passing to irsl_choreonoid.make_shapes.makeExtrusion
+
+    Retuns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    if angle is not None:
+        offset = height / math.tan(angle)
+    else:
+        if offset is None:
+            raise Exception('offset or angle should be set')
+        angle = math.atan2(height, offset)
+    if (front_cut is not None or back_cut is not None) and angle > 0.0:
+        if front_cut is not None:
+            cross_s = [ [front_cut, 0], [length, 0], ]
+        else:
+            cross_s = [ [        0, 0], [length, 0], ]
+        if back_cut is not None:
+            cross_s += [ [(length + offset - back_cut), (offset - back_cut) * math.tan(angle)], [(length + offset - back_cut), height], [offset, height], ]
+        else:
+            cross_s += [ [(length + offset), height], [offset, height], ]
+        if front_cut is not None:
+            cross_s += [ [front_cut, front_cut * math.tan(angle) ], [front_cut, 0] ]
+        else:
+            cross_s += [ [0, 0] ]
+    else:
+        cross_s = [ [0, 0], [length, 0], [(length + offset), height], [offset, height], [0, 0 ]]
+    return makeExtrusion(cross_s, spine=[[0, width*-0.5, 0], [0, width*0.5, 0]], **kwargs)
+
 def makeBasket(width, height, tall, thickness = 0.1, bottom_thickness = 0.1, wrapped=True, rawShape=False, **kwargs):
     """Making basket shape
 
