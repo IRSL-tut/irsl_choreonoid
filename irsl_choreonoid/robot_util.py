@@ -2321,6 +2321,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return (conv, loop)
 
     ## wrappedMethod to cnoid.Body
+    def joint(self, name):
+        return self.__robot.joint(name)
+    def link(self, name):
+        return self.__robot.link(name)
     @property
     def mass(self):
         return self.__robot.mass
