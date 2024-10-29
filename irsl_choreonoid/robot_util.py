@@ -1188,6 +1188,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__joint_list = []
             self.__joint_map = {}
             self.__rename_map = {}
+            self.__rename_map_inv = {}
             self.__hook = hook
             ##
             if joint_tuples is not None:
@@ -1238,6 +1239,18 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__joint_list = _lst
             self.__joint_map  = _jmap
             self.__rename_map = _rmap
+            for k, v in _rmap.items():
+                self.__rename_map_inv[v] = k
+
+        def nicknameOf(self, joint_name):
+            """
+            """
+            if self.__rename_map_inv is None:
+                return joint_name
+            if joint_name in self.__rename_map_inv:
+                return self.__rename_map_inv[joint_name]
+            else:
+                return joint_name
 
         def rename(self, nick_name):
             """Renaming using registered nick-name
@@ -1299,6 +1312,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         @property
         def jointNames(self):
             return [ j.jointName for j in self.__joint_list ]
+
+        @property
+        def jointNicknames(self):
+            return [ self.nicknameOf(j.jointName) for j in self.__joint_list ]
 
         @property
         def renameMap(self):
@@ -2304,6 +2321,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return (conv, loop)
 
     ## wrappedMethod to cnoid.Body
+    def joint(self, name):
+        return self.__robot.joint(name)
+    def link(self, name):
+        return self.__robot.link(name)
     @property
     def mass(self):
         return self.__robot.mass
