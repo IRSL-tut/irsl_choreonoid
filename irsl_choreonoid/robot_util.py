@@ -1458,6 +1458,26 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 self.__hook()
             return res
 
+        def getAngleMap(self, name_list):
+            """Getting angles of the joint (limb version)
+
+            Args:
+                name_list ( list[str] ) : List of joint names. 'nickname' is acceptable.
+
+            Returns:
+                dict[str, float] : Keyword is a joint name and value is a joint angle.
+
+            """
+            if self.__joint_list is None:
+                ### warning
+                return {}
+            res = {}
+            for name in name_list:
+                nm = self.rename(name)
+                if nm in self.__joint_map:
+                    res[nm] = self.__joint_map[nm].q
+            return res
+
         def angleVector(self, angle_vector = None):
             """Setting or getting angle-vector (limb version)
 
@@ -1743,6 +1763,25 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.hook()
         return res
 
+    def getAngleMap(self, name_list):
+        """Getting angles of the joint
+
+        Args:
+            name_list ( list[str] ) : List of joint names. 'nickname' is acceptable.
+
+        Returns:
+            dict[str, float] : Keyword is a joint name and value is a joint angle.
+
+        """
+        if self.__joint_list is None:
+            ### warning
+            return {}
+        res = {}
+        for name in name_list:
+            if name in self.__joint_map:
+                res[name] = self.__joint_map[name].q
+        return res
+
     def rootCoords(self, coords = None):
         """Getting or setting coordinates of root link of robot
 
@@ -1765,6 +1804,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return
         if self.__mode == 0: ## kinematics only
             self.__robot.calcForwardKinematics()
+            self.revert()## sync Body -> coordsWrapper
         elif self.__mode == 1: ## render
             self.flush()
         elif self.__mode == 2: ## render Immediately
@@ -1773,6 +1813,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def flush(self, updateGui=False):
         if self.__robot is not None:
             self.__robot.calcForwardKinematics()
+            self.revert()## sync Body -> coordsWrapper
         if self.__item is not None:
             self.__item.notifyKinematicStateChange()
             if updateGui:
