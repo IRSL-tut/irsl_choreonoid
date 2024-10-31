@@ -1765,6 +1765,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return
         if self.__mode == 0: ## kinematics only
             self.__robot.calcForwardKinematics()
+            self.revert()## sync Body -> coordsWrapper
         elif self.__mode == 1: ## render
             self.flush()
         elif self.__mode == 2: ## render Immediately
@@ -1773,6 +1774,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def flush(self, updateGui=False):
         if self.__robot is not None:
             self.__robot.calcForwardKinematics()
+            self.revert()## sync Body -> coordsWrapper
         if self.__item is not None:
             self.__item.notifyKinematicStateChange()
             if updateGui:
