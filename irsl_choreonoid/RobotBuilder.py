@@ -30,6 +30,9 @@ try:
     from cnoid.URDFPlugin import URDFBodyWriter
 except Exception as e:
     pass
+##
+import copy
+from enum import IntEnum
 
 class DummyInterface(object):
     def __init__(self):
@@ -62,6 +65,23 @@ class DummyInterface(object):
 class RobotBuilder(object):
     """Building robot interactively
     """
+    class JointType(IntEnum):
+        Fixed = Link.JointType.FixedJoint.value
+        Free  = Link.JointType.FreeJoint.value
+        Revolute  = Link.JointType.RevoluteJoint.value
+        Linear    = Link.JointType.PrismaticJoint.value
+        Prismatic = Link.JointType.PrismaticJoint.value
+        ## 2DOF
+        LinearXZ = 92
+        LinearYZ = 93
+        LinearXY = 94
+        RevoluteXZ = 96
+        RevoluteYZ = 97
+        RevoluteXY = 98
+        ## 3DOF
+        Planar     = 95 ##X,Y,theta
+        Ball       = 99
+
     def __init__(self, robot=None, gui=True, name=None): ## item
         """
         Args:
@@ -287,7 +307,7 @@ class RobotBuilder(object):
             ###
             jroot=res[0]
             jax=jroot.getChild(0)
-            jtype=jax.name
+            jtype=jax.name ## name of joint_axis
             jtype=jtype.split(':')[1]
             jaxis=coordinates(jax.T).y_axis
             ###
@@ -306,6 +326,8 @@ class RobotBuilder(object):
             jtype=Link.JointType.RevoluteJoint
         elif jtype=='prismatic':
             jtype=Link.JointType.PrismaticJoint
+        elif jtype=='ball':
+            pass
         else:
             jtype=Link.JointType.FreeJoint
         cds_offset = cds_w_j.inverse_transformation()
@@ -331,25 +353,64 @@ class RobotBuilder(object):
             info= RobotBuilder.mergeResults(res, density=density)
         ##link.axis (joint_axis)
         #print('info: {}'.format(info))
-        if collision is None:
+        if jtype=='ball':
+            new_kwargs = copy.deepcopy(kwargs)
+            namebase=name
+            if 'JointName' in new_kwargs:
+                namebase = new_kwargs['JointName']
+                del new_kwargs['JointName']
+            jid = 0
+            if 'JointId' in new_kwargs:
+                jid = new_kwargs['JointId']
+                del new_kwargs['JointId']
+            aac=ru.axisAlignedCoords(jaxis, coordinates.Y)
+            lname0 = '{}_ballx'.format(namebase)
+            lname1 = '{}_bally'.format(namebase)
+            lk_0 = self.createLink(name=lname0, JointType=Link.JointType.RevoluteJoint,
+                                   JointAxis=aac.x_axis, JointId=jid, **new_kwargs)
+            lk_1 = self.createLink(name=lname1, JointType=Link.JointType.RevoluteJoint,
+                                   JointAxis=aac.y_axis, JointId=jid+1, **new_kwargs)
+            ##
             lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
-                               shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
-        else:
-            lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
-                               visual=groot, collision=l_collision, JointType=jtype, JointAxis=jaxis, **kwargs)
-        ##link.T <= joint_root
-        lk.setPosition(cds_w_j.cnoidPosition)
-        if parentLink is not None:
-            self.appendLink(parentLink, lk)
+                               shape=groot, JointType=Link.JointType.RevoluteJoint,
+                               JointAxis=aac.z_axis, JointId=jid+2, JointName=namebase, **new_kwargs)
+            lk_0.setPosition(cds_w_j.cnoidPosition)
+            lk_1.setPosition(cds_w_j.cnoidPosition)
+            lk.setPosition(cds_w_j.cnoidPosition)
+            if parentLink is not None:
+                self.appendLink(parentLink, lk_0)
+                self.appendLink(lk_0, lk_1)
+                self.appendLink(lk_1, lk)
+            elif root:
+                ### warning
+                self.setRootLink(lk)
+            else:
+                self.appendLink(self.body.rootLink, lk_0)
+                self.appendLink(lk_0, lk_1)
+                self.appendLink(lk_1, lk)
             if clear:
                 self.clear()
-        elif root:
-            self.setRootLink(lk)
-            if clear:
-                self.clear()
+            return lk
         else:
-            self.appendLink(self.body.rootLink, lk)
-        return lk
+            if collision is None:
+                lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
+                                   shape=groot, JointType=jtype, JointAxis=jaxis, **kwargs)
+            else:
+                lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
+                                   visual=groot, collision=l_collision, JointType=jtype, JointAxis=jaxis, **kwargs)
+            ##link.T <= joint_root
+            lk.setPosition(cds_w_j.cnoidPosition)
+            if parentLink is not None:
+                self.appendLink(parentLink, lk)
+                if clear:
+                    self.clear()
+            elif root:
+                self.setRootLink(lk)
+                if clear:
+                    self.clear()
+            else:
+                self.appendLink(self.body.rootLink, lk)
+            return lk
 
     def viewInfo(self, autoScale=False, **kwargs):
         """Showing information of links. (joint-type, joint-axis, mass, center-of-mass, inertia)
@@ -386,7 +447,7 @@ class RobotBuilder(object):
         """Creating and showing jointShape
 
         Args:
-            jointType (cnoid.Body.Link.JointType, default=FreeJoint) :
+            jointType (cnoid.Body.Link.JointType, default=FixedJoint) :
             wrapped (boolean, default=True) :
             coords (cnoid.IRSLCoords.coordinates, optional) :
             add (boolean, default=True) :
@@ -409,9 +470,15 @@ class RobotBuilder(object):
         elif jointType == Link.JointType.PrismaticJoint:
             sh=self.__prismaticJointShape(**kwargs)
             tp='prismatic'
+        elif jointType == RobotBuilder.JointType.Ball:
+            sh=self.__ballJointShape(**kwargs)
+            tp='ball'
+        elif jointType == RobotBuilder.JointType.Planar:
+            ##sh= not implemented
+            tp='planar'
         else:
             pass
-        sh.setName('joint_axis:{}'.format(tp)) ## just rotate
+        sh.setName('joint_axis:{}'.format(tp))
         trs=cutil.SgPosTransform()
         trs.setName('joint_root')
         trs.addChild(sh)
@@ -790,6 +857,17 @@ class RobotBuilder(object):
         current.addChild(bd0.target)
         current.addChild(bd1.target)
         current.addChild(bd2.target)
+        return res
+
+    def __ballJointShape(self, scale=None, color=None, transparent=0.6):
+        bd0 = mkshapes.makeSphere(0.5, color=color, transparent=transparent)
+        res=cutil.SgPosTransform()
+        if scale is not None:
+            current = cutil.SgScaleTransform(scale)
+            res.addChild(current)
+        else:
+            current = res
+        current.addChild(bd0.target)
         return res
 
     def addDeviceShape(self, alink, scale=1.0):
