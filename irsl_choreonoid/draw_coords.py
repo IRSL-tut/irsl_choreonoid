@@ -403,12 +403,12 @@ Using for drawing SceneGraph objects interactively
         """
         super().cpp_clear(flush)
 
-    def addObject(self, obj, update=True):
+    def addObject(self, obj, update=True, hook=True):
         """This method is overrided, just passing arguments to addPyObject
         """
-        self.addPyObject(obj, update=update)
+        self.addPyObject(obj, update=update, hook=hook)
 
-    def addObjects(self, objlst, update=True):
+    def addObjects(self, objlst, update=True, hook=True):
         """Adding objects to be drawn
 
         Args:
@@ -419,10 +419,10 @@ Using for drawing SceneGraph objects interactively
         tp=type(objlst)
         if tp is list or tp is tuple:
             for obj in objlst[:-1]:
-                self.addPyObject(obj, False)
-            self.addPyObject(objlst[-1], update=update)
+                self.addPyObject(obj, False, hook=hook)
+            self.addPyObject(objlst[-1], update=update, hook=hook)
         else:
-            self.addPyObject(objlst, update=update)
+            self.addPyObject(objlst, update=update, hook=hook)
 
     def removeObject(self, obj, update=True):
         """This method is overrided, just passing arguments to removePyObject
@@ -445,7 +445,7 @@ Using for drawing SceneGraph objects interactively
         else:
             self.removePyObject(objlst, update=update)
 
-    def addPyObject(self, obj, update=True):
+    def addPyObject(self, obj, update=True, hook=True):
         """Adding object to be drawn
 
         Args:
@@ -455,7 +455,10 @@ Using for drawing SceneGraph objects interactively
         """
         if issubclass(type(obj), coordsWrapper):
             super().addPyObject(obj.target, update)
-            obj.setUpdateCallback( lambda : self.flush() )
+            if callable(hook):
+                obj.setUpdateCallback( hook )
+            elif hook:
+                obj.setUpdateCallback( lambda : self.flush() )
         else:
             super().addPyObject(obj, update)
 
