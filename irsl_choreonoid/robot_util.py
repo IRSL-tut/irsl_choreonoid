@@ -1458,7 +1458,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 self.__hook()
             return res
 
-        def getAngleMap(self, name_list):
+        def getAngleMap(self, *args):
             """Getting angles of the joint (limb version)
 
             Args:
@@ -1468,9 +1468,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 dict[str, float] : Keyword is a joint name and value is a joint angle.
 
             """
-            if self.__joint_list is None:
+            if len(args) or self.__joint_list is None:
                 ### warning
                 return {}
+            if hasattr(args[0], '__iter__'):
+                name_list = args[0]
+            else:
+                name_list = args
             res = {}
             for name in name_list:
                 nm = self.rename(name)
@@ -1763,7 +1767,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.hook()
         return res
 
-    def getAngleMap(self, name_list):
+    def getAngleMap(self, *args):
         """Getting angles of the joint
 
         Args:
@@ -1773,9 +1777,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             dict[str, float] : Keyword is a joint name and value is a joint angle.
 
         """
-        if self.__joint_list is None:
+        if len(args) or self.__joint_list is None:
             ### warning
             return {}
+        if hasattr(args[0], '__iter__'):
+            name_list = args[0]
+        else:
+            name_list = args
         res = {}
         for name in name_list:
             if name in self.__joint_map:
