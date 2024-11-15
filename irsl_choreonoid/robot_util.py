@@ -1824,6 +1824,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__robot.calcForwardKinematics()
             self.revert()## sync Body -> coordsWrapper
         if self.__item is not None:
+            self.updateTarget(updateGui) ##
             self.__item.notifyKinematicStateChange()
             if updateGui:
                 cnoid.Base.App.updateGui()

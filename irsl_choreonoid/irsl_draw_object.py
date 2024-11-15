@@ -15,12 +15,13 @@ Some mthods (newcoords, translate, rotate, transform) to update itself are overr
 
 Then, you can run some process when the position of the target is updated.
     """
-    def __init__(self, target, init_coords=None, update_callback=None, original_object=None, scalable=False):
+    def __init__(self, target, init_coords=None, update_callback=None, kinematics_callback=None, original_object=None, scalable=False):
         """
         Args:
             target (object) : wrapped target which have property 'T' for setting cnoidPosition
             init_coords (cnoid.IRSLCoords.coordinates, optional) : coordinates of this instance
-            update_callback (function(), optional) : callback function which is called when target is updated
+            update_callback (function(), optional) : callback function which is called when target is updated (including drawing)
+            kinematics_callback (function(), optional) : callback function which is called when target is updated (only updating kinematics)
             scalable (boolean, default=False) : call setScalable() within constructor
         """
         super().__init__()
@@ -32,7 +33,7 @@ Then, you can run some process when the position of the target is updated.
         ##    setattr(target, 'coords', self)
 
         self.__update_callback = update_callback
-
+        self.__kinematics_callback = kinematics_callback
         if init_coords is not None:
             self.newcoords(init_coords)
         else:
@@ -40,7 +41,72 @@ Then, you can run some process when the position of the target is updated.
 
         if scalable:
             self.setScalable()
+        self.children = []
+        self._resetParent()
+### cascaded-coordinates
+    def assoc(self, child, coords=None):
+        if child._parent is None:
+            child._setParent(self, coords=coords)
+            self.children.append(child)
 
+    def dissoc(self, child):
+        if self is child.parent:
+            child._resetParent()
+            if child in self.children:
+                self.children.remove(child)
+
+    def dissocFromParent(self):
+        if self._parent is not None:
+            self._parent.dissoc(self)
+
+    def clearChildren(self):
+        for c in self.children:
+            self.dissoc(c)
+        self.children = []
+
+    def descendants(self):
+        return self.children
+
+    def isChild(self, coords):
+        return coords in self.children
+
+    def isParent(self, coords):
+        return coords is self._parent
+
+    def hasChild(self):
+        return len(self.children) > 0
+
+    def _resetParent(self):
+        self._parent = None
+        self._from_parent = None
+        self._parent_coords = None ## for using Link or SgPosTransform
+
+    def _setParent(self, parent, coords=None):
+        self._parent = parent
+        self._parent_coords = coords
+        if coords is not None:
+            if hasattr(coords, 'T'):
+                self._from_parent = coordinates(coords.T).transformation(self)
+            else:
+                self._from_parent = coords.transformation(self)
+        else:
+            self._from_parent = parent.transformation(self)
+
+    def _updateChildren(self, update=False):
+        for c in self.children:
+            c._update_from_parent(update=update)
+
+    def _update_from_parent(self, update=False):
+        if self._parent_coords is None:
+            super().newcoords(self._parent)
+        else:
+            if hasattr(self._parent_coords, 'T'):
+                super().newcoords(coordinates(self._parent_coords.T))
+            else:
+                super().newcoords(self._parent_coords)
+        super().transform(self._from_parent)
+        self.updateTarget(update=update)
+###
     def setScalable(self):
         """Enabling to use methods, setScale and setTurnedOn
 
@@ -67,7 +133,7 @@ Then, you can run some process when the position of the target is updated.
     #def __del__(self):
     #    print('destruct: coordsWrapper')
 
-    def updateTarget(self):
+    def updateTarget(self, update=True):
         """Updating self.target and call callback_function
 
         Args:
@@ -75,14 +141,17 @@ Then, you can run some process when the position of the target is updated.
 
         """
         self.__target.T = self.cnoidPosition
-        if callable(self.__update_callback):
+        if callable(self.__kinematics_callback):
+            self.__kinematics_callback()
+        self._updateChildren(update=False)
+        if update and callable(self.__update_callback):
             self.__update_callback()
 
     def revert(self): ##
         self.cnoidPosition =  self.__target.T
 
     def setUpdateCallback(self, func):
-        """Setting callback function
+        """Setting callback function for updating drawings
 
         Args:
             func (function()) : callback function which is called when target is updated
@@ -90,6 +159,16 @@ Then, you can run some process when the position of the target is updated.
         """
         if callable(func):
             self.__update_callback = func
+
+    def setKinematicsCallback(self, func):
+        """Setting callback function for updating kinematics
+
+        Args:
+            func (function()) : callback function which is called when target is updated
+
+        """
+        if callable(func):
+            self.__kinematics_callback = func
 
     def newcoords(self, cds):
         """Wrapped method of newcoords in cnoid.IRSLCoords.coordinates
