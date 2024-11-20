@@ -1,5 +1,6 @@
 import cnoid.Body
 #import cnoid.Util
+import cnoid.BodyPlugin as BodyPlugin
 
 from .cnoid_util import *
 
@@ -1458,7 +1459,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 self.__hook()
             return res
 
-        def getAngleMap(self, name_list):
+        def getAngleMap(self, *args):
             """Getting angles of the joint (limb version)
 
             Args:
@@ -1468,9 +1469,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 dict[str, float] : Keyword is a joint name and value is a joint angle.
 
             """
-            if self.__joint_list is None:
+            if len(args) or self.__joint_list is None:
                 ### warning
                 return {}
+            if hasattr(args[0], '__iter__'):
+                name_list = args[0]
+            else:
+                name_list = args
             res = {}
             for name in name_list:
                 nm = self.rename(name)
@@ -1763,7 +1768,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.hook()
         return res
 
-    def getAngleMap(self, name_list):
+    def getAngleMap(self, *args):
         """Getting angles of the joint
 
         Args:
@@ -1773,9 +1778,13 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             dict[str, float] : Keyword is a joint name and value is a joint angle.
 
         """
-        if self.__joint_list is None:
+        if len(args) or self.__joint_list is None:
             ### warning
             return {}
+        if hasattr(args[0], '__iter__'):
+            name_list = args[0]
+        else:
+            name_list = args
         res = {}
         for name in name_list:
             if name in self.__joint_map:
@@ -1815,6 +1824,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             self.__robot.calcForwardKinematics()
             self.revert()## sync Body -> coordsWrapper
         if self.__item is not None:
+            self.updateTarget(updateGui) ##
             self.__item.notifyKinematicStateChange()
             if updateGui:
                 cnoid.Base.App.updateGui()
@@ -2360,6 +2370,63 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
         self.hook()
         return (conv, loop)
+    ##
+    def addLink(self, name, parentLink, offset, jointType=Link.JointType.FixedJoint, visualShape=None, collisionShape=None, **kwargs):
+        """Adding new link
+
+        Args:
+            name (str) :
+            parentLink ( cnoid.Body.Link ) :
+            offset ( cnoid.IRSLCoords.coordinates) :
+            jointType () :
+            visualShape () :
+            collisionShape () :
+            kwargs () :
+
+        Note:
+            keywords for kwargs are listed below.
+            JointName, Mass, CenterOfMass, Inertia, EquivalentRotorInertia,
+            JointId, JointAxis, JointVelocityRange, JointRange, JointEffortRange,
+            InitialJointDisplacement, ActuationMode
+
+        """
+        plk = self.link(parentLink) if type(parentLink) is str else parentLink
+
+        lk = self.robot.createLink()
+        lk.setName(name)
+        lk.setJointType(jointType)
+        for k, v in kwargs.items():
+            exec(f'lk.set{k}( v )')
+        if visualShape is not None:
+            lk.addVisualShape(visualShape)
+        if collisionShape is not None:
+            lk.addCollisionShape(collisionShape)
+        #pcds = coordinates(plk.T)
+        #pcds.transform(offset)
+        lk.setOffsetPosition(offset.cnoidPosition)
+        plk.appendChild(lk)
+        self.robot.updateLinkTree()
+        self.robot.calcForwardKinematics()
+        self._updateBodyStructure()
+    def _updateBodyStructure(self):
+        if self.__item is not None:
+            ### for updating item while changing structure of body
+            self.__item.notifyModelUpdate(sum([int(i) for i in (BodyPlugin.BodyItem.ModelUpdateFlag.LinkSetUpdate, BodyPlugin.BodyItem.ModelUpdateFlag.LinkSpecUpdate,
+                                                                BodyPlugin.BodyItem.ModelUpdateFlag.DeviceSetUpdate, BodyPlugin.BodyItem.ModelUpdateFlag.DeviceSpecUpdate,
+                                                                BodyPlugin.BodyItem.ModelUpdateFlag.ShapeUpdate)]))
+            self.__item.notifyKinematicStateUpdate()
+
+    def setFrame(self, name, parentLink, offset):
+        """Setting temporary frame (link), which is connected by fixed-joint
+
+        Args:
+            name (str) : Name of the adding link
+            parentLink ( str or cnoid.Body.Link ) : Link name or instance of link which the adding link is connected to
+            offset ( cnoid.IRSLCoords.coordinates) : Offset from parentLink to the adding link ( on parentLink coordinates )
+
+        """
+        self.addLink(name, parentLink, offset,
+                     Mass=0.0, Inertia=np.array([[0, 0., 0.], [0., 0, 0.], [0., 0., 0]]) )
 
     ## wrappedMethod to cnoid.Body
     def joint(self, name):
