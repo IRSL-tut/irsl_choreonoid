@@ -10,12 +10,10 @@ import unittest
 
 class TestRobotModel(unittest.TestCase):
     def test_set_pose(self):
-        rr = sr.init_sample_robot()
-        rr.flush()
+        rr = sr.SampleRobot()
         av_org = rr.angleVector()
 
-        rr.set_pose('default')
-        rr.flush()
+        rr.setDefaultPose()
         av_default = rr.angleVector()
 
         diff = np.linalg.norm(av_org - av_default)
@@ -23,33 +21,33 @@ class TestRobotModel(unittest.TestCase):
         self.assertTrue(diff > 0.1)
 
     def test_end_effector(self):
-        rr = sr.init_sample_robot()
-        rhcds = rr.end_effector('rarm')
-        lhcds = rr.end_effector('larm')
-        rlcds = rr.end_effector('rleg')
-        llcds = rr.end_effector('lleg')
+        rr = sr.SampleRobot()
+        rr.setDefaultPose()
+        ## TODO check
+        rhcds = rr.rarm
+        lhcds = rr.larm
+        rlcds = rr.rleg
+        llcds = rr.lleg
 
     def test_mid_coords(self):
-        rr = sr.init_sample_robot()
-        rr.flush()
+        rr = sr.SampleRobot()
 
-        cds0 = rr.foot_mid_coords()
+        ## TODO check
+        cds0 = rr.footMidCoords()
 
     def test_fix_coords(self):
-        rr = sr.init_sample_robot()
+        rr = sr.SampleRobot()
 
         rot = ic.angleAxisNormalized(0.2, np.array([1.0, 2.0, 3.0]))
         pos = np.array([1.0, 2.0, 3.0])
         cds = ic.coordinates(pos, rot)
-        rr.robot.rootLink.setCoords(cds)
-        rr.flush()
+        rr.rootCoords(cds)
 
-        cds_org = rr.foot_mid_coords()
+        cds_org = rr.footMidCoords()
 
-        rr.fix_leg_to_coords(ic.coordinates()) ## coordinates
-        rr.flush()
+        rr.fixLegToCoords(ic.coordinates()) ## coordinates
 
-        cds_fix = rr.foot_mid_coords()
+        cds_fix = rr.footMidCoords()
 
         diff_cds = cds_org.transformation(cds_fix)
         self.assertTrue(np.linalg.norm(diff_cds.pos) > 3.2)
@@ -59,20 +57,26 @@ class TestRobotModel(unittest.TestCase):
         self.assertTrue(ang[3] < 0.0001)
 
     def test_move_centroid(self):
-        rr = sr.init_sample_robot()
-        rr.flush()
-        rr.set_pose('default')
-        rr.flush()
-        rr.fix_leg_to_coords(ic.coordinates()) ## coordinates
-        rr.flush()
-        cds_org = rr.foot_mid_coords()
+        rr = sr.SampleRobot()
+        rr.setDefaultPose()
+        rr.fixLegToCoords(ic.coordinates()) ## coordinates
 
-        loop = rr.move_centroid_on_foot_cnoid(debug=True)
-        self.assertNotEqual(loop, 20)
-        rr.flush()
-        cds_moved = rr.foot_mid_coords()## 左右脚先の中点
+        succ, loop = rr.rleg.move(np.array([0.05, 0, 0]))
+        self.assertTrue(succ)
+
+        succ, loop = rr.lleg.move(np.array([0.05, 0, 0]))
+        self.assertTrue(succ)
+
+        rr.fixLegToCoords(ic.coordinates()) ## coordinates
+        cds_org = rr.footMidCoords()
+
+        succ, loop = rr.moveCentroidOnFoot(debug=True)
+        self.assertTrue(succ)
+
+        cds_moved = rr.footMidCoords()## 左右脚先の中点
         self.assertTrue(np.linalg.norm(cds_moved.pos) < 0.001)
-        cog = rr.robot.calcCenterOfMass()
+
+        cog = np.array(rr.centerOfMass)
         cog[2] = 0.0
         self.assertTrue(np.linalg.norm(cog) < 0.001)
 
