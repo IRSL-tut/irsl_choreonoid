@@ -230,7 +230,21 @@ Returns:
             ss << q.z(); ss << " ";
             ss << q.w(); ss << " >";
             return ss.str();
-        })
+    })
+    .def("__str__", [](const coordinates &self) {
+        std::stringstream ss;
+        ss << "{'translation': [ ";
+        ss << self.pos(0); ss << ", ";
+        ss << self.pos(1); ss << ", ";
+        ss << self.pos(2); ss << " ], ";
+        ss << "'rotation': [ ";
+        double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
+        ss << ax_(0); ss << ", ";
+        ss << ax_(1); ss << ", ";
+        ss << ax_(2); ss << ", ";
+        ss << an_; ss << " ]}";
+        return ss.str();
+    })
     .def_property_readonly_static("X", [](py::object /* cls */) { return Vector3::UnitX(); })
     .def_property_readonly_static("Y", [](py::object /* cls */) { return Vector3::UnitY(); })
     .def_property_readonly_static("Z", [](py::object /* cls */) { return Vector3::UnitZ(); })
