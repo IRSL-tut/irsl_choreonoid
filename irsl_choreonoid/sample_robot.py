@@ -7,78 +7,71 @@ import numpy as np
 
 import math
 
-def init_sample_robot(world = True):
-    fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
-    if cu.isInChoreonoid():
-        ### in choreonoid
-        cb.loadRobotItem(fname, 'SampleRobot', world)
-        i = cb.findItem('SampleRobot')
-        return SampleRobot(i)
-    else:
-        ### not in choreonoid
-        rb = cu.loadRobot(fname)
-        rb.calcForwardKinematics()
-        return SampleRobot(rb)
-
-class SampleRobot(ru.RobotModel):
-    def __init__(self, robot):
-        super(SampleRobot, self).__init__(robot)
-
-        self.rleg_tip_link = self.robot.link('RLEG_ANKLE_R')
-        self.lleg_tip_link = self.robot.link('LLEG_ANKLE_R')
-
-        self.rleg_tip_to_eef = ic.cnoidPosition(np.array([0.0, 0.0, -0.055]))
-        self.lleg_tip_to_eef = ic.cnoidPosition(np.array([0.0, 0.0, -0.055]))
-
-        self.rarm_tip_link = self.robot.link('RARM_WRIST_R')
-        self.larm_tip_link = self.robot.link('LARM_WRIST_R')
-
-        self.rarm_tip_to_eef = ic.cnoidPosition(ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
-                                                np.array([0.0, 0.0, -0.14]))
-        self.larm_tip_to_eef = ic.cnoidPosition(ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0])),
-                                                np.array([0.0, 0.0, -0.14]))
-        self.init_ending()
-
-    def default_pose__(self):
-        return np.array([ 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## rleg
-                          0.523599, 0.0, 0.0, -1.74533, 0.15708, -0.113446, 0.637045, ## rarm
-                          0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## lleg
-                          0.523599, 0.0, 0.0, -1.74533, -0.15708, -0.113446, -0.637045, ## larm
-                          0.0, 0.0, 0.0 ]);
-
-    def lleg_mask(self):
-        return (0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                1, 1, 1, 1, 1, 1,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0 )
-    def rleg_mask(self):
-        return (1, 1, 1, 1, 1, 1,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0 )
-    def leg_mask(self):
-        return (1, 1, 1, 1, 1, 1,
-                0, 0, 0, 0, 0, 0, 0,
-                1, 1, 1, 1, 1, 1,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0 )
-    def larm_mask(self):
-        return (0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0,
-                1, 1, 1, 1, 1, 1, 1,
-                0, 0, 0 )
-    def rarm_mask(self):
-        return (0, 0, 0, 0, 0, 0,
-                1, 1, 1, 1, 1, 1, 1,
-                0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0 )
-    def torso_mask(self):
-        return (0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                1, 1, 1 )
+class SampleRobot(ru.RobotModelWrapped):
+    def __init__(self, robot=None, **kwargs):
+        if robot is None:
+            fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
+            if cu.isInChoreonoid():
+                ### in choreonoid
+                robot = cb.loadRobotItem(fname, 'SampleRobot', True)
+            else:
+                ### not in choreonoid
+                robot = cu.loadRobot(fname)
+        super().__init__(robot, **kwargs)
+        #
+        self.registerEndEffector('rleg', ## end-effector
+                                 'RLEG_ANKLE_R', ## tip-link
+                                 tip_link_to_eef = ic.coordinates(np.array([0, 0, -0.055])),
+                                 joint_tuples = (('RLEG_HIP_R',   'hip-p'),
+                                                 ('RLEG_HIP_P',   'hip-r'),
+                                                 ('RLEG_HIP_Y',   'hip-y'),
+                                                 ('RLEG_KNEE',    'knee-p'),
+                                                 ('RLEG_ANKLE_P', 'ankle-p'),
+                                                 ('RLEG_ANKLE_R', 'ankle-r')
+                                                 )
+                                 )
+        self.registerEndEffector('lleg', ## end-effector
+                                 'LLEG_ANKLE_R', ## tip-link
+                                 tip_link_to_eef = ic.coordinates(np.array([0, 0, -0.055])),
+                                 joint_tuples = (('LLEG_HIP_R',   'hip-p'),
+                                                 ('LLEG_HIP_P',   'hip-r'),
+                                                 ('LLEG_HIP_Y',   'hip-y'),
+                                                 ('LLEG_KNEE',    'knee-p'),
+                                                 ('LLEG_ANKLE_P', 'ankle-p'),
+                                                 ('LLEG_ANKLE_R', 'ankle-r')
+                                                 )
+                                 )
+        self.registerEndEffector('rarm', ## end-effector
+                                 'RARM_WRIST_R', ## tip-link
+                                 tip_link_to_eef = ic.coordinates(np.array([0.0, 0.0, -0.14]),
+                                                                  ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0]))),
+                                 joint_tuples = (('RARM_SHOULDER_P', 'shoulder-p'),
+                                                 ('RARM_SHOULDER_R', 'shoulder-r'),
+                                                 ('RARM_SHOULDER_Y', 'shoulder-y'),
+                                                 ('RARM_ELBOW',      'elbow-p'),
+                                                 ('RARM_WRIST_Y',    'wrist-y'),
+                                                 ('RARM_WRIST_P',    'wrist-p'),
+                                                 ('RARM_WRIST_R',    'wrist-r'),
+                                                 )
+                                 )
+        self.registerEndEffector('larm', ## end-effector
+                                 'LARM_WRIST_R', ## tip-link
+                                 tip_link_to_eef = ic.coordinates(np.array([0.0, 0.0, -0.14]),
+                                                                  ic.angleAxisNormalized(math.pi/2, np.array([0, 1, 0]))),
+                                 joint_tuples = (('RARM_SHOULDER_P', 'shoulder-p'),
+                                                 ('RARM_SHOULDER_R', 'shoulder-r'),
+                                                 ('RARM_SHOULDER_Y', 'shoulder-y'),
+                                                 ('RARM_ELBOW',      'elbow-p'),
+                                                 ('RARM_WRIST_Y',    'wrist-y'),
+                                                 ('RARM_WRIST_P',    'wrist-p'),
+                                                 ('RARM_WRIST_R',    'wrist-r'),
+                                                 )
+                                 )
+        #
+        self.registerNamedPose('default',
+                               [ 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## rleg
+                                 0.523599, 0.0, 0.0, -1.74533, 0.15708, -0.113446, 0.637045, ## rarm
+                                 0.0, -0.349066, 0.0, 0.820305, -0.471239, 0.0, ## lleg
+                                 0.523599, 0.0, 0.0, -1.74533, -0.15708, -0.113446, -0.637045, ## larm
+                                 0.0, 0.0, 0.0, ## waist
+                                ])
