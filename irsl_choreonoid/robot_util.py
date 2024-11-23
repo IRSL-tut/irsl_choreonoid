@@ -1,5 +1,5 @@
 import cnoid.Body
-#import cnoid.Util
+import cnoid.Util
 import cnoid.BodyPlugin as BodyPlugin
 
 from .cnoid_util import *
@@ -2187,6 +2187,20 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         self.addLink(name, parentLink, offset,
                      Mass=0.0, Inertia=np.array([[0, 0., 0.], [0., 0, 0.], [0., 0., 0]]) )
+
+    ##
+    def generateCurrentVisual(self, scalable=False, init_coords=None):
+        root_coords = coordinates(self.robot.rootLink.T)
+        allgrp = cnoid.Util.SgPosTransform()
+        for l in self.linkList:
+            cds = root_coords.transformation(coordinates(l.T))
+            trs = cnoid.Util.SgPosTransform()
+            trs.T = cds.cnoidPosition
+            trs.addChild(cnoid.Util.SgGroup(l.getVisualShape()))
+            allgrp.addChild(trs)
+        if init_coords is None:
+            init_coords = root_coords
+        return coordsWrapper(allgrp, init_coords=init_coords, scalable=scalable)
 
     ## wrappedMethod to cnoid.Body
     def joint(self, name):
