@@ -1223,13 +1223,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 dict[str, float] : Keyword is a joint name and value is a joint angle.
 
             """
-            if len(args) or self.__joint_list is None:
+            if len(args) == 0 or self.__joint_list is None:
                 ### warning
                 return {}
-            if hasattr(args[0], '__iter__'):
+            if type(args[0]) is str:
+                name_list = args
+            elif hasattr(args[0], '__iter__'):
                 name_list = args[0]
             else:
-                name_list = args
+                ### warning
+                return {}
             res = {}
             for name in name_list:
                 nm = self.rename(name)
@@ -1532,13 +1535,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             dict[str, float] : Keyword is a joint name and value is a joint angle.
 
         """
-        if len(args) or self.__joint_list is None:
+        if len(args) == 0 or self.__joint_list is None:
             ### warning
             return {}
-        if hasattr(args[0], '__iter__'):
+        if type(args[0]) is str:
+            name_list = args
+        elif hasattr(args[0], '__iter__'):
             name_list = args[0]
         else:
-            name_list = args
+            ### warning
+            return {}
         res = {}
         for name in name_list:
             if name in self.__joint_map:
