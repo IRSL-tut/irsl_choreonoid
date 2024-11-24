@@ -7,17 +7,11 @@ import numpy as np
 
 import math
 
-class SampleRobot(ru.RobotModelWrapped):
-    def __init__(self, robot=None, **kwargs):
-        if robot is None:
-            fname = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
-            if cu.isInChoreonoid():
-                ### in choreonoid
-                robot = cb.loadRobotItem(fname, 'SampleRobot', True)
-            else:
-                ### not in choreonoid
-                robot = cu.loadRobot(fname)
-        super().__init__(robot, **kwargs)
+class SampleRobot(ru.ImportedRobotModel):
+    def __init__(self, robot=None, item=True, world=False, **kwargs):
+        super().__init__(robot=robot, item=item, world=world, **kwargs)
+
+    def _init_ending(self, **kwargs):
         #
         self.registerEndEffector('rleg', ## end-effector
                                  'RLEG_ANKLE_R', ## tip-link
@@ -75,3 +69,13 @@ class SampleRobot(ru.RobotModelWrapped):
                                  0.523599, 0.0, 0.0, -1.74533, -0.15708, -0.113446, -0.637045, ## larm
                                  0.0, 0.0, 0.0, ## waist
                                 ])
+
+### settings of model_file
+SampleRobot.model_file = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
+
+### robot_class: 
+robot_class = SampleRobot
+
+### makeRobot(robot=None, item=True, **kwargs): 
+def makeRobot(robot=None, item=True, **kwargs):
+    return robot_class(robot, item=item, **kwargs)

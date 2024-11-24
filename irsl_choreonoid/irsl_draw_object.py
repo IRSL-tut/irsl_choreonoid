@@ -25,24 +25,27 @@ Then, you can run some process when the position of the target is updated.
             scalable (boolean, default=False) : call setScalable() within constructor
         """
         super().__init__()
+        ##
+        self.children = []
+        self._resetParent()
+        ##
         self.__target = target
         self._original_object=original_object
         ##if hasattr(target, 'coords'):
         ##    target.coords = self
         ##else:
         ##    setattr(target, 'coords', self)
-
         self.__update_callback = update_callback
         self.__kinematics_callback = kinematics_callback
+        ##
+        if scalable:
+            self.setScalable()
+        ##
         if init_coords is not None:
             self.newcoords(init_coords)
         else:
             self.cnoidPosition =  self.__target.T
 
-        if scalable:
-            self.setScalable()
-        self.children = []
-        self._resetParent()
 ### cascaded-coordinates
     def assoc(self, child, coords=None):
         if child._parent is None:

@@ -1,5 +1,5 @@
 import cnoid.Body
-#import cnoid.Util
+import cnoid.Util
 import cnoid.BodyPlugin as BodyPlugin
 
 from .cnoid_util import *
@@ -1223,13 +1223,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 dict[str, float] : Keyword is a joint name and value is a joint angle.
 
             """
-            if len(args) or self.__joint_list is None:
+            if len(args) == 0 or self.__joint_list is None:
                 ### warning
                 return {}
-            if hasattr(args[0], '__iter__'):
+            if type(args[0]) is str:
+                name_list = args
+            elif hasattr(args[0], '__iter__'):
                 name_list = args[0]
             else:
-                name_list = args
+                ### warning
+                return {}
             res = {}
             for name in name_list:
                 nm = self.rename(name)
@@ -1532,13 +1535,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             dict[str, float] : Keyword is a joint name and value is a joint angle.
 
         """
-        if len(args) or self.__joint_list is None:
+        if len(args) == 0 or self.__joint_list is None:
             ### warning
             return {}
-        if hasattr(args[0], '__iter__'):
+        if type(args[0]) is str:
+            name_list = args
+        elif hasattr(args[0], '__iter__'):
             name_list = args[0]
         else:
-            name_list = args
+            ### warning
+            return {}
         res = {}
         for name in name_list:
             if name in self.__joint_map:
@@ -2182,6 +2188,20 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.addLink(name, parentLink, offset,
                      Mass=0.0, Inertia=np.array([[0, 0., 0.], [0., 0, 0.], [0., 0., 0]]) )
 
+    ##
+    def generateCurrentVisual(self, scalable=False, init_coords=None):
+        root_coords = coordinates(self.robot.rootLink.T)
+        allgrp = cnoid.Util.SgPosTransform()
+        for l in self.linkList:
+            cds = root_coords.transformation(coordinates(l.T))
+            trs = cnoid.Util.SgPosTransform()
+            trs.T = cds.cnoidPosition
+            trs.addChild(cnoid.Util.SgGroup(l.getVisualShape()))
+            allgrp.addChild(trs)
+        if init_coords is None:
+            init_coords = root_coords
+        return coordsWrapper(allgrp, init_coords=init_coords, scalable=scalable)
+
     ## wrappedMethod to cnoid.Body
     def joint(self, name):
         return self.__robot.joint(name)
@@ -2217,6 +2237,52 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     def loadModelItem(cls, fname, **kwargs):
         rb=loadRobotItem(fname, **kwargs)
         return cls(rb, **kwargs)
+
+class ImportedRobotModel(RobotModelWrapped):
+    """Class for making specific robot model
+
+    1. Set model_cls.model_file in the module
+
+    2. model_module.robot_class should be set
+    robot_class = model_cls
+
+    3. model_module.makeRobot should be set
+    def makeRobot(robot=None, item=True, **kwargs):
+        return robot_class(robot, item=item, **kwargs)
+
+    Note:
+
+    """
+    model_file = None
+    ##
+    def __init__(self, robot=None, item=True, world=False, **kwargs):
+        """
+        Args:
+            robot ( cnoid.Body.Body or cnoid.BodyPlugin.BodyItem ) :
+            item (boolean, default=True) : If true, loading as BodyItem
+            world (boolean, default=True) : If true, BodyItem will be loaded under WorldItem
+        """
+        if robot is None:
+            robot = self._loadRobotModel(item=item, world=world)
+        ##
+        self._setting_before_init(robot, **kwargs)
+        super().__init__(robot, **kwargs)
+        self._init_ending(**kwargs)
+
+    def _setting_before_init(self, robot, **kwargs):
+        ### override at inherited class
+        pass
+
+    def _init_ending(self, **kwargs):
+        ### override at inherited class
+        pass
+
+    def _loadRobotModel(self, item=True, world=False):
+        if isInChoreonoid() and item:
+            res = loadRobotItem(self.model_file, world=world)
+        else:
+            res = loadRobot(self.model_file)
+        return res
 
 ### flush in Base, etc.
 if isInChoreonoid():

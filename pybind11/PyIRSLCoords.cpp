@@ -212,6 +212,8 @@ Returns:
                   { Matrix3 m(rot); return new coordinates(m); }))
     .def(py::init([](ref_vec4 rot)
                   { Quaternion q(rot); return new coordinates(q); }))
+    .def(py::init([](ref_vec3 trs, ref_vec3 rot)
+                  { Vector3 v(trs); Vector3 rpy(rot); return new coordinates(v, rpy); }))
     .def(py::init([](ref_vec3 trs, ref_vec4 rot)
                   { Quaternion q(rot); return new coordinates(trs, q); }))
     .def(py::init([](ref_mat4 position)
@@ -252,6 +254,12 @@ Returns:
     .def_static("normalizeVector", [](ref_noconst_vec4 v4) { v4.normalize(); return v4; })
     .def_static("normalized", [](ref_vec3 v3) { return v3.normalized(); })
     .def_static("normalized", [](ref_vec4 v4) { return v4.normalized(); })
+    .def_static("init2D", [](double x, double y, double theta) {
+        Vector3 v; v(0) = x; v(1) = y; v(2) = 0.0;
+        AngleAxis a; a.angle() = theta;
+        a.axis()(0) = 0.0; a.axis()(1) = 0.0; a.axis()(2) = 1.0;
+        return new coordinates(v, a);
+    })
     .def_property("pos",
                   [](coordinates &self) { return self.pos; },
                   [](coordinates &self, ref_vec3 vec) { self.pos = vec; }, R"__IRSL__(
