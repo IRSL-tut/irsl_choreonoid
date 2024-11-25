@@ -2210,10 +2210,20 @@ class ImportedRobotModel(RobotModelWrapped):
     robot_class = model_cls
 
     3. model_module.makeRobot should be set
-    def makeRobot(robot=None, item=True, **kwargs):
-        return robot_class(robot, item=item, **kwargs)
+    def makeRobot(robot=None, item=True, world=True, **kwargs):
+        return robot_class(robot, item=item, world=world, **kwargs)
 
-    Note:
+    Example:
+        ### SpecificRobotClass
+        class SpecificRobotClass(ImportedRobotModel):
+            def __init__(self, robot=None, item=True, world=False, **kwargs):
+                super().__init__(robot=robot, item=item, world=world, **kwargs)
+
+            def _setting_before_init(self, robot, **kwargs):  ## override
+                pass
+
+            def _init_ending(self, **kwargs): ## override
+                pass
 
     """
     model_file = None

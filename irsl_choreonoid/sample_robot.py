@@ -73,9 +73,9 @@ class SampleRobot(ru.ImportedRobotModel):
 ### settings of model_file
 SampleRobot.model_file = cnoid.Util.getShareDirectory() + '/model/SR1/SR1.body'
 
-### robot_class: 
+### robot_class:
 robot_class = SampleRobot
 
-### makeRobot(robot=None, item=True, **kwargs): 
-def makeRobot(robot=None, item=True, **kwargs):
-    return robot_class(robot, item=item, **kwargs)
+### makeRobot(robot=None, item=True, world=True, **kwargs):
+def makeRobot(robot=None, item=True, world=True, **kwargs):
+    return robot_class(robot, item=item, world=world, **kwargs)
