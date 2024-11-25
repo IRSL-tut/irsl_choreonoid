@@ -2136,7 +2136,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         Args:
             name (str) : Name of the adding link
             parentLink ( str or cnoid.Body.Link ) : Link name or instance of link which the adding link is connected to
-            offset ( cnoid.IRSLCoords.coordinates) : Offset from parentLink to the adding link ( on parentLink coordinates )
+            offset ( cnoid.IRSLCoords.coordinates ) : Offset from parentLink to the adding link ( on parentLink coordinates )
 
         """
         self.addLink(name, parentLink, offset,
@@ -2144,6 +2144,15 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
     ##
     def generateCurrentVisual(self, scalable=False, init_coords=None):
+        """Generate visual (scene graph) of robot with current state
+
+        Args:
+            scalable (boolean, default=False) : Enable methods, scale and switch
+            init_coords (cnoid.IRSLCoords.coordinates, optional) : Coordinates of root-coords of generated visual
+
+        Returns:
+            ( irsl_draw_object.coordsWrapper ) : Wrapped SceneGrap (can visualize with DrawInterface)
+        """
         root_coords = coordinates(self.robot.rootLink.T)
         allgrp = cnoid.Util.SgPosTransform()
         for l in self.linkList:
