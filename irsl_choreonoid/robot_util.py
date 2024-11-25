@@ -1563,6 +1563,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         if coords is not None:
             self.newcoords(coords)
+        else:
+            self.revert()
         return self.copy()
 
     def hook(self):
