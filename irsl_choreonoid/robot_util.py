@@ -2209,12 +2209,8 @@ class ImportedRobotModel(RobotModelWrapped):
     2. model_module.robot_class should be set
     robot_class = model_cls
 
-    3. model_module.makeRobot should be set
-    def makeRobot(robot=None, item=True, world=True, **kwargs):
-        return robot_class(robot, item=item, world=world, **kwargs)
-
     Example:
-        ### SpecificRobotClass
+        ### SpecificRobotClass.py
         class SpecificRobotClass(ImportedRobotModel):
             def __init__(self, robot=None, item=True, world=False, **kwargs):
                 super().__init__(robot=robot, item=item, world=world, **kwargs)
@@ -2224,6 +2220,8 @@ class ImportedRobotModel(RobotModelWrapped):
 
             def _init_ending(self, **kwargs): ## override
                 pass
+        SpecificRobotClass.model_file = 'path_to_model_file'
+        robot_class = SpecificRobotClass
 
     """
     model_file = None
@@ -2256,6 +2254,11 @@ class ImportedRobotModel(RobotModelWrapped):
         else:
             res = loadRobot(self.model_file)
         return res
+
+    @classmethod
+    def makeRobot(cls, robot=None, item=True, world=True, **kwargs):
+        print(cls)
+        return cls(robot=robot, item=item, world=world, **kwargs)
 
 ### flush in Base, etc.
 if isInChoreonoid():
