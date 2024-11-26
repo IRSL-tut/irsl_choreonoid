@@ -1563,6 +1563,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         if coords is not None:
             self.newcoords(coords)
+        else:
+            self.revert()
         return self.copy()
 
     def hook(self):
@@ -1881,7 +1883,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             if min_d > result:
                 result = min_d
         return ratio * result
-
 ##>    @staticmethod
 ##>    def parseConstraint(const):
 ##>        if const is None or const == '6D':
@@ -1909,88 +1910,15 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 ##>        else:
 ##>            return const
 ##>        return constraint
-##>
-##>    ## pos_constraint  (target, joint_lst, link, link_offset, weight, constraint)
-##>    ## base_constraint (target, link_offset, weight, constraint)
-##>    ## com_constraint  (pos, weight)
-##>    ## joint_limits
-##>    ## joint_const
-##>    ## extra
-##>    def fullbodyInverseKinematics(self, **kwargs): ## limbs, targets, weight_list, constraints, use_joint_limit, extra_constraints
-##>        ik_size = len(limbs)
-##>        if len(targets) != ik_size:
-##>            return
-##>        if weight_list is None:
-##>            weight_list = []
-##>            for i in range(ik_size):
-##>                weight_list.append(1.0)
-##>        else len(weight_list) != ik_size:
-##>            return
-##>        if constraints is None:
-##>            constraints = []
-##>            for i in range(ik_size):
-##>                constraints.append([1.0]*6)
-##>        else len(constraints) != ik_size:
-##>            return
-##>        lst_joints = []
-##>        lst_limb = []
-##>        lst_const = []
-##>        for l, c in zip(limbs, constraints):
-##>            lst_limb.append(self.getLimb(l))
-##>            lst_const.append(self.parseConstraint(c))
-##>            if type(limb) is cnoid.Body.Link:
-##>                lst_joints.append(limb)
-##>            else:
-##>                jlist += limb.jointList
-##>        constraints0 = IK.Constraints()
-##>        for limb, tgt, const, weight, zip(lst_limbs, targets, lst_const, weight_list):
-##>            tmp_constraint = IK.PositionConstraint()
-##>            if type(limb) is cnoid.Body.Link:
-##>                tmp_constraint.A_link     = limb
-##>                tmp_constraint.A_localpos = coordinates().toPosition()
-##>                #constraint.B_link() = nullptr;
-##>                if type(tgt) is coordinates:
-##>                    tmp_constraint.B_localpos = tgt.toPosition()
-##>                else:
-##>                    tmp_constraint.B_localpos = tgt
-##>                tmp_constraint.weight     = weight * np.array(constraint)
-##>            else:
-##>                tmp_constraint.A_link     = limb.tipLink
-##>                tmp_constraint.A_localpos = limb.tipLinkToEEF.toPosition()
-##>                #constraint.B_link() = nullptr;
-##>                if type(tgt) == coordinates:
-##>                    tmp_constraint.B_localpos = tgt.toPosition()
-##>                else:
-##>                    tmp_constraint.B_localpos = tgt
-##>                tmp_constraint.weight     = weight * np.array(constraint)
-##>            constraints0.push_back(tmp_constraint)
-##>        #
-##>        tasks = IK.Tasks()
-##>        dummy_const = IK.Constraints()
-##>        constraints = [ dummy_const, constraints0 ]
-##>        ### constraint joint-limit
-##>        if use_joint_limit:
-##>            constraints1 = IK.Constraints()
-##>            for j in lst_joints:
-##>                if type(j) is not cnoid.Body.Link:
-##>                    const = IK.JointLimitConstraint()
-##>                    const.joint = j
-##>                    const.precision = joint_limit_precision
-##>                    const.maxError  = joint_limit_max_error
-##>                    constraints1.push_back(const)
-##>            constraints.append(constraints1)
-##>        if extra_constraints:
-##>            if type(extra_constraints) is list:
-##>                constraints += extra_constraints
-##>            else:
-##>                constraints.append(extra_constraints)
-
-    def moveCentroidOnFoot(self, p = 0.5, constraint='6D', base_type='parallel2D', weight = 1.0, base_weight = 1.0,
-                           debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
-                           joint_limit_precision=0.1, **kwargs):
-        rleg = self.getLimb('rleg')
-        lleg = self.getLimb('lleg')
-        foot_mid = self.footMidCoords(p)
+    ##
+    def fullBodyIK(self, targets, limbs, com_target=None,
+                   constraint='6D', base_type='xy', com_constraint = [1, 1, 0], weight = 1.0, base_weight = 1.0,
+                   debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
+                   position_precision = None, com_precision = None, joint_limit_precision=0.1, **kwargs):
+        """
+        """
+        if len(targets) != len(limbs):
+            raise Exception('{len(targts) is not euqal to len(limbs), {} != {}}'.format(len(targets), len(limbs)))
         ## constraint
         if constraint is None or constraint == '6D':
             constraint = [1, 1, 1, 1, 1, 1]
@@ -2015,56 +1943,53 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                     constraint[4] = 1
                 elif ss == 'Y':
                     constraint[5] = 1
-        ## base_type
+        ## base_type (invert constraint)
         if base_type == '2D' or base_type == 'planer':
-            base_const = np.array([0, 0, 1, 1, 1, 0])
-        elif base_type == 'parallel2D':
-            base_const = np.array([0, 0, 0, 1, 1, 0])
+            base_const = np.array([0, 0, 1, 1, 1, 0]) ## move x, y, Yaw
+        elif base_type == '3D-yaw':
+            base_const = np.array([0, 0, 0, 1, 1, 0]) ## move x, y, z, Yaw
         elif base_type == 'position':
-            base_const = np.array([0, 0, 0, 1, 1, 1])
+            base_const = np.array([0, 0, 0, 1, 1, 1]) ## move x, y, z
         elif base_type == 'rotation':
-            base_const = np.array([1, 1, 1, 0, 0, 0])
+            base_const = np.array([1, 1, 1, 0, 0, 0]) ## move Roll, Pitch, Yaw
+        elif base_type == 'free':
+            base_const = np.array([0, 0, 0, 0, 0, 0]) ## free
         elif type(base_type) is str:
             ## 'xyzRPY'
             wstr = base_type
-            _bweight = [0, 0, 0, 0, 0, 0]
+            _bweight = [1, 1, 1, 1, 1, 1]
             for ss in wstr:
                 if ss == 'x':
-                    _bweight[0] = 1
+                    _bweight[0] = 0
                 elif ss == 'y':
-                    _bweight[1] = 1
+                    _bweight[1] = 0
                 elif ss == 'z':
-                    _bweight[2] = 1
+                    _bweight[2] = 0
                 elif ss == 'R':
-                    _bweight[3] = 1
+                    _bweight[3] = 0
                 elif ss == 'P':
-                    _bweight[4] = 1
+                    _bweight[4] = 0
                 elif ss == 'Y':
-                    _bweight[5] = 1
+                    _bweight[5] = 0
             base_const = np.array(_bweight)
         elif base_type is not None:
             base_const = np.array(base_type)
-        ##
+
+        ### constraints for IK(limbs)
+        constraints0 = IK.Constraints()
+        for target, limb in zip(targets, limbs):
+            tmp_constraint = IK.PositionConstraint()
+            tmp_constraint.A_link =     limb.tipLink
+            tmp_constraint.A_localpos = limb.tipLinkToEEF.toPosition()
+            #constraint.B_link() = nullptr;
+            tmp_constraint.B_localpos = target.toPosition()
+            tmp_constraint.weight     = weight * np.array(constraint)
+            if position_precision is not None:
+                tmp_constraint.precision = np.array(position_precision)
+            constraints0.push_back(tmp_constraint)
+        ### constraints for base
         if base_type is not None:
             base_const = base_weight * base_const
-        ### constraints for IK
-        constraints0 = IK.Constraints()
-        rf_constraint = IK.PositionConstraint()
-        rf_constraint.A_link =     rleg.tipLink
-        rf_constraint.A_localpos = rleg.tipLinkToEEF.toPosition()
-        #constraint.B_link() = nullptr;
-        rf_constraint.B_localpos = rleg.endEffector.toPosition()
-        rf_constraint.weight     = weight * np.array(constraint)
-        constraints0.push_back(rf_constraint)
-        lf_constraint = IK.PositionConstraint()
-        lf_constraint.A_link =     lleg.tipLink
-        lf_constraint.A_localpos = lleg.tipLinkToEEF.toPosition()
-        #constraint.B_link() = nullptr;
-        lf_constraint.B_localpos = lleg.endEffector.toPosition()
-        lf_constraint.weight     = weight * np.array(constraint)
-        constraints0.push_back(lf_constraint)
-        ##
-        if base_type is not None:
             if debug:
                 print('use base : {}'.format(base_const))
             b_constraint = IK.PositionConstraint()
@@ -2073,22 +1998,25 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             #constraint.B_link() = nullptr;
             b_constraint.B_localpos = self.robot.rootLink.T
             b_constraint.weight     = np.array(base_const)
+            if position_precision is not None:
+                b_constraint.precision = np.array(position_precision)
             constraints0.push_back(b_constraint)
         ### COM constraint
-        com_constraint = IK.COMConstraint()
-        com_constraint.A_robot = self.robot
-        com_constraint.B_localp = foot_mid.pos
-        w = com_constraint.weight
-        w[2] = 0.0
-        com_constraint.weight = w
-        constraints0.push_back(com_constraint)
+        if com_target is not None:
+            _com_constraint = IK.COMConstraint()
+            _com_constraint.A_robot = self.robot
+            _com_constraint.B_localp = com_target
+            _com_constraint.weight   = np.array(com_constraint)
+            if com_precision is not None:
+                _com_constraint.precision = np.array(com_precision)
+            constraints0.push_back(_com_constraint)
         #
         tasks = IK.Tasks()
         dummy_const = IK.Constraints()
         constraints = [ dummy_const, constraints0 ]
         jlist = []
-        jlist += rleg.jointList
-        jlist += lleg.jointList
+        for limb in limbs:
+            jlist += limb.jointList
         ### constraint joint-limit
         if use_joint_limit:
             constraints1 = IK.Constraints()
@@ -2130,6 +2058,32 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 break
         self.hook()
         return (conv, loop)
+    ##
+    def legsCOM_IK(self, r_target, l_target, com_target=None, **kwargs):
+        """
+        """
+        rleg = self.getLimb('rleg')
+        lleg = self.getLimb('lleg')
+        return self.fullBodyIK( (r_target, l_target), (rleg, lleg),
+                                com_target=com_target, **kwargs)
+    def armsCOM_IK(self, r_target, l_target, com_target=None, **kwargs):
+        """
+        """
+        rarm = self.getLimb('rarm')
+        larm = self.getLimb('larm')
+        return self.fullBodyIK( (r_target, l_target), (rarm, larm),
+                                com_target=com_target, **kwargs)
+    def moveCentroidOnFoot(self, p = 0.5, **kwargs):
+        """
+        """
+        rleg = self.getLimb('rleg')
+        lleg = self.getLimb('lleg')
+        r_cds = rleg.endEffector
+        l_cds = lleg.endEffector
+        foot_mid = r_cds.mid_coords(p, l_cds)
+        ##foot_mid = self.footMidCoords(p)
+        return self.fullBodyIK( (r_cds, l_cds), (rleg, lleg),
+                                com_target=foot_mid.pos, **kwargs)
     ##
     def addLink(self, name, parentLink, offset, jointType=Link.JointType.FixedJoint, visualShape=None, collisionShape=None, **kwargs):
         """Adding new link
@@ -2182,7 +2136,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         Args:
             name (str) : Name of the adding link
             parentLink ( str or cnoid.Body.Link ) : Link name or instance of link which the adding link is connected to
-            offset ( cnoid.IRSLCoords.coordinates) : Offset from parentLink to the adding link ( on parentLink coordinates )
+            offset ( cnoid.IRSLCoords.coordinates ) : Offset from parentLink to the adding link ( on parentLink coordinates )
 
         """
         self.addLink(name, parentLink, offset,
@@ -2190,6 +2144,15 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
     ##
     def generateCurrentVisual(self, scalable=False, init_coords=None):
+        """Generate visual (scene graph) of robot with current state
+
+        Args:
+            scalable (boolean, default=False) : Enable methods, scale and switch
+            init_coords (cnoid.IRSLCoords.coordinates, optional) : Coordinates of root-coords of generated visual
+
+        Returns:
+            ( irsl_draw_object.coordsWrapper ) : Wrapped SceneGrap (can visualize with DrawInterface)
+        """
         root_coords = coordinates(self.robot.rootLink.T)
         allgrp = cnoid.Util.SgPosTransform()
         for l in self.linkList:
