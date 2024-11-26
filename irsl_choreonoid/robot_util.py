@@ -1272,6 +1272,16 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.__robot
 
     @property
+    def item(self):
+        """Robot-model using wrapped by this instance
+
+        Returns:
+            cnoid.BodyPlugin.BodyItem : Instance of robot-item currently using
+
+        """
+        return self.__item
+
+    @property
     def T(self):
         return self.__robot.rootLink.T
     @T.setter
