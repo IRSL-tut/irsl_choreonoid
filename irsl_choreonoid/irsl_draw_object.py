@@ -53,7 +53,7 @@ Then, you can run some process when the position of the target is updated.
             self.children.append(child)
 
     def dissoc(self, child):
-        if self is child.parent:
+        if self is child._parent:
             child._resetParent()
             if child in self.children:
                 self.children.remove(child)
