@@ -948,6 +948,10 @@ def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[
     ls.addLine(0,1)
     ls.addLine(0,2)
     ls.addLine(0,3)
+    if color is not None:
+        x_color = color
+        y_color = color
+        z_color = color
     ls.setColors(npa([x_color, y_color, z_color], dtype='float32'))
     ls.resizeColorIndicesForNumLines(ls.numLines)
     ls.setLineColor(0, 0)
