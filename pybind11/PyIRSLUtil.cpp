@@ -14,6 +14,12 @@
 #include <cnoid/SceneGraph>
 #include <cnoid/SceneDrawables>
 
+//
+#include <QCoreApplication>
+
+//
+#include <QMutex>
+
 #include <vector>
 #include <algorithm>
 
@@ -74,6 +80,22 @@ void fixMesh(SgMesh &_mesh)
     }
 }
 
+class MyMutex
+{
+public:
+    QMutex mutex;
+
+    void lock() {  mutex.lock(); }
+    void unlock() {  mutex.unlock(); }
+    bool try_lock(int wait) {
+        if (wait >= 0) {
+            return mutex.tryLock(wait);
+        } else {
+            return mutex.tryLock();
+        }
+    }
+};
+
 PYBIND11_MODULE(IRSLUtil, m)
 {
     m.doc() = "utilitiy for choreonoid (IRSL)";
@@ -92,6 +114,24 @@ PYBIND11_MODULE(IRSLUtil, m)
     // fix for left-hand coordinates
     m.def("fixSgPosTransform", &fixSgPosTransform);
     m.def("fixMesh", &fixMesh);
+
+    m.def("processEvent", [](){
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+    });
+
+    py::class_< MyMutex >(m, "Mutex")
+    .def(py::init<>())
+    .def("lock", &MyMutex::lock)
+    .def("unlock", &MyMutex::unlock)
+    .def("try_lock", &MyMutex::try_lock)
+    .def("__enter__", [] (MyMutex &self) {
+        self.lock();
+        //return self;
+    })
+    .def("__exit__", [] (MyMutex &self, py::object &exc_type, py::object &exc_value, py::object &traceback) {
+        self.unlock();
+    })
+    ;
 
     // bind C++ output-stream
     py::add_ostream_redirect(m, "ostream_redirect");
