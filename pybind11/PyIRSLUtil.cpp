@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/iostream.h> // add_ostream_redirect
+#include <pybind11/numpy.h>
 //
 #include <cnoid/PyUtil>
 #include <cnoid/PyEigenTypes>
@@ -19,9 +20,11 @@
 
 //
 #include <QMutex>
+#include <QThread>
 
 #include <vector>
 #include <algorithm>
+//#include <iostream>
 
 using namespace cnoid;
 namespace py = pybind11;
@@ -96,6 +99,54 @@ public:
     }
 };
 
+void setTextureImage(SgShape *shape, const py::array_t<unsigned char> &img, const std::string &name)
+{
+    SgTexture *tex = new SgTexture();
+    SgImage *sgimg = tex->getOrCreateImage();
+    sgimg->setUri(name, name);
+    int dim    = img.ndim();
+    int height = img.shape(0);
+    int width  = img.shape(1);
+    int comp   = 1;
+    if (dim > 2) {
+        comp   = img.shape(2);
+    }
+    //std::cout << "dim: " << dim << std::endl;
+    //std::cout << "height: " << height << std::endl;
+    //std::cout << "width: " << width << std::endl;
+    //std::cout << "comp: " << comp << std::endl;
+    sgimg->setSize(width, height, comp);
+    const unsigned char *src = (const unsigned char *)(img.data(0));
+    long len = width*height*comp - 1;
+    for (long i = 0; i < width*height*comp; i++) {
+        sgimg->pixels()[i] = src[i];
+    }
+    sgimg->image().applyVerticalFlip();
+    shape->setTexture(tex);
+}
+#if 0
+void debugTextureImage(SgShape *shape)
+{
+    SgTexture *tex = shape->getOrCreateTexture();
+    SgImage *sgimg = tex->getOrCreateImage();
+    int height = sgimg->height();
+    int width = sgimg->width();
+    int comp = sgimg->numComponents();
+    std::cout << "height: " << height << std::endl;
+    std::cout << "width: " << width << std::endl;
+    std::cout << "comp: " << comp << std::endl;
+    long cntr = 0;
+    for (long i = 0; i < height; i++) {
+        for (long j = 0; j < width; j++) {
+            for (long k = 0; k < comp; k++) {
+                std::cout << (int)sgimg->pixels()[cntr++] << " ";
+            }
+            std::cout << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+#endif
 PYBIND11_MODULE(IRSLUtil, m)
 {
     m.doc() = "utilitiy for choreonoid (IRSL)";
@@ -118,6 +169,9 @@ PYBIND11_MODULE(IRSLUtil, m)
     m.def("processEvent", [](){
         QCoreApplication::processEvents(QEventLoop::AllEvents);
     });
+    m.def("usleep", [](int usec){
+        QThread::usleep(usec);
+    });
 
     py::class_< MyMutex >(m, "Mutex")
     .def(py::init<>())
@@ -132,6 +186,9 @@ PYBIND11_MODULE(IRSLUtil, m)
         self.unlock();
     })
     ;
+
+    m.def("setTextureImage", &setTextureImage);
+    //m.def("debugTextureImage", &debugTextureImage);
 
     // bind C++ output-stream
     py::add_ostream_redirect(m, "ostream_redirect");
