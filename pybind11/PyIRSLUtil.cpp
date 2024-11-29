@@ -20,9 +20,11 @@
 
 //
 #include <QMutex>
+#include <QThread>
 
 #include <vector>
 #include <algorithm>
+//#include <iostream>
 
 using namespace cnoid;
 namespace py = pybind11;
@@ -166,6 +168,9 @@ PYBIND11_MODULE(IRSLUtil, m)
 
     m.def("processEvent", [](){
         QCoreApplication::processEvents(QEventLoop::AllEvents);
+    });
+    m.def("usleep", [](int usec){
+        QThread::usleep(usec);
     });
 
     py::class_< MyMutex >(m, "Mutex")
