@@ -41,8 +41,11 @@ try:
 except ImportError:
     pass
 ## utility
-def exec_script(fname):
-    exec(open(fname).read())
+def exec_script(fname, *args):
+    """Execute python code written to textfile
+    Usage: exec_script('filename.py', locals(), globals())
+    """
+    exec(open(fname).read(), *args)
 ### reload module
 #import X
 # >>> reaload( X )
