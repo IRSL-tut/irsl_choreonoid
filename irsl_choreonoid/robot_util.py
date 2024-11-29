@@ -5,8 +5,10 @@ import cnoid.BodyPlugin as BodyPlugin
 from .cnoid_util import *
 
 import cnoid.IRSLCoords as ic
-import cnoid.IKSolvers as IK
-
+try:
+    import cnoid.IKSolvers as IK
+except ImportError:
+    pass
 import numpy as np
 import random
 import math
