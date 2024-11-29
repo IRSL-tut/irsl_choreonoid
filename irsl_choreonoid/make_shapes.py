@@ -287,8 +287,9 @@ def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, 
 def __genShape(mesh, meshScale=None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     sg = cutil.SgShape()
     sg.setMesh(mesh)
-    if texture is not None:
+    if type(texture) is str:
         sg.setTextureImage(texture)
+
     mat = generateMaterial(**kwargs)
 
     if mat is not None:
