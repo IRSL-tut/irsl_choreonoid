@@ -16,8 +16,8 @@ class SampleRobot(ru.ImportedRobotModel):
         self.registerEndEffector('rleg', ## end-effector
                                  'RLEG_ANKLE_R', ## tip-link
                                  tip_link_to_eef = ic.coordinates(np.array([0, 0, -0.055])),
-                                 joint_tuples = (('RLEG_HIP_R',   'hip-p'),
-                                                 ('RLEG_HIP_P',   'hip-r'),
+                                 joint_tuples = (('RLEG_HIP_R',   'hip-r'),
+                                                 ('RLEG_HIP_P',   'hip-p'),
                                                  ('RLEG_HIP_Y',   'hip-y'),
                                                  ('RLEG_KNEE',    'knee-p'),
                                                  ('RLEG_ANKLE_P', 'ankle-p'),
@@ -27,8 +27,8 @@ class SampleRobot(ru.ImportedRobotModel):
         self.registerEndEffector('lleg', ## end-effector
                                  'LLEG_ANKLE_R', ## tip-link
                                  tip_link_to_eef = ic.coordinates(np.array([0, 0, -0.055])),
-                                 joint_tuples = (('LLEG_HIP_R',   'hip-p'),
-                                                 ('LLEG_HIP_P',   'hip-r'),
+                                 joint_tuples = (('LLEG_HIP_R',   'hip-r'),
+                                                 ('LLEG_HIP_P',   'hip-p'),
                                                  ('LLEG_HIP_Y',   'hip-y'),
                                                  ('LLEG_KNEE',    'knee-p'),
                                                  ('LLEG_ANKLE_P', 'ankle-p'),
