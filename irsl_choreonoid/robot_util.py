@@ -2217,23 +2217,21 @@ class ImportedRobotModel(RobotModelWrapped):
     """Class for making specific robot model
 
     1. Set model_cls.model_file in the module
-
     2. model_module.robot_class should be set
-    robot_class = model_cls
 
-    Example:
-        ### SpecificRobotClass.py
-        class SpecificRobotClass(ImportedRobotModel):
-            def __init__(self, robot=None, item=True, world=False, **kwargs):
-                super().__init__(robot=robot, item=item, world=world, **kwargs)
-
-            def _setting_before_init(self, robot, **kwargs):  ## override
-                pass
-
-            def _init_ending(self, **kwargs): ## override
-                pass
-        SpecificRobotClass.model_file = 'path_to_model_file'
-        robot_class = SpecificRobotClass
+    Examples:
+        >>> ### SpecificRobotClass.py
+        >>> class SpecificRobotClass(ImportedRobotModel):
+        >>>     def __init__(self, robot=None, item=True, world=False, **kwargs):
+        >>>         super().__init__(robot=robot, item=item, world=world, **kwargs)
+        >>> 
+        >>>     def _setting_before_init(self, robot, **kwargs):  ## override
+        >>>         pass
+        >>> 
+        >>>     def _init_ending(self, **kwargs): ## override
+        >>>         pass
+        >>> SpecificRobotClass.model_file = 'path_to_model_file' ## 1. ##
+        >>> robot_class = SpecificRobotClass ## 2. ##
 
     """
     model_file = None
