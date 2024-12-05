@@ -10,6 +10,7 @@ from cnoid.AssimpPlugin import *
 ## IRSL (not base)
 from cnoid.IRSLCoords import coordinates
 import cnoid.IRSLCoords as IC
+import cnoid.IRSLUtil as IU
 from irsl_choreonoid.draw_coords import GeneralDrawInterfaceWrapped as DrawInterface
 from irsl_choreonoid.draw_coords import DrawCoordsListWrapped as DrawCoords
 import irsl_choreonoid.make_shapes as mkshapes

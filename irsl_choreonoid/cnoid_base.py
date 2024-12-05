@@ -180,7 +180,7 @@ def findItemsByName(name):
     """
     return findItemsByQuery( lambda itm : (itm.name == name) )
 
-def findItemsByClass(cls):
+def findItemsByClassExact(cls):
     """Finding item with class given as the argument in ItemTreeView
 
     Args:
@@ -191,6 +191,18 @@ def findItemsByClass(cls):
 
     """
     return findItemsByQuery( lambda itm : (type(itm) == cls) )
+
+def findItemsByClass(cls):
+    """Finding item with class given as the argument in ItemTreeView
+
+    Args:
+        cls (class) : class of item to be searched
+
+    Returns:
+        list [ cnoid.Base.Item ] : all found items which has the name
+
+    """
+    return findItemsByQuery( lambda itm : isinstance(itm, cls) )
 
 def removeItem(item_):
     """Removing item
