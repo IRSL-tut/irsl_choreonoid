@@ -90,6 +90,8 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
     """
     if world is None:
         world = getOrAddWorld()
+    elif type(world) is str:
+        world = getOrAddWorld(world=world)
     sim_ = world.findItem(simulator_name)
     if sim_ == None:
         sim_ = AISTSimulatorItem()
