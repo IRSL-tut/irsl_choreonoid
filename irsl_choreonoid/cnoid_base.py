@@ -134,7 +134,7 @@ def loadRobotItem(fname, name = None, world = True, addItem = True):
         ItemTreeView.instance.checkItem(bI)
     return bI
 
-def findItem(name):
+def findItem(name, root=None):
     """Finding item in ItemTreeView
 
     Args:
@@ -144,9 +144,11 @@ def findItem(name):
         cnoid.Base.Item : found item (first one)
 
     """
-    return RootItem.instance.findItem(name)
+    if root is None:
+        root = RootItem.instance
+    return root.findItem(name)
 
-def findItems(name):
+def findItems(name, root=None):
     """Finding item in ItemTreeView
 
     Args:
@@ -156,9 +158,11 @@ def findItems(name):
         list [ cnoid.Base.Item ] : all found items which has the name
 
     """
-    return [ itm for itm in RootItem.instance.getDescendantItems() if itm.name == name ]
+    if root is None:
+        root = RootItem.instance
+    return [ itm for itm in root.getDescendantItems() if itm.name == name ]
 
-def findItemsByQuery(query):
+def findItemsByQuery(query, root=None):
     """Finding item which is query returning True in ItemTreeView
 
     Args:
@@ -168,9 +172,11 @@ def findItemsByQuery(query):
         list [ cnoid.Base.Item ] : all found items that query returns True
 
     """
-    return [ itm for itm in RootItem.instance.getDescendantItems() if query(itm) ]
+    if root is None:
+        root = RootItem.instance
+    return [ itm for itm in root.getDescendantItems() if query(itm) ]
 
-def findItemsByName(name):
+def findItemsByName(name,root=None):
     """Finding item with the same name in ItemTreeView
 
     Args:
@@ -180,9 +186,11 @@ def findItemsByName(name):
         list [ cnoid.Base.Item ] : all found items which has the name
 
     """
-    return findItemsByQuery( lambda itm : (itm.name == name) )
+    if root is None:
+        root = RootItem.instance
+    return findItemsByQuery( lambda itm : (itm.name == name) , root=root)
 
-def findItemsByClassExact(cls):
+def findItemsByClassExact(cls, root=None):
     """Finding item with class given as the argument in ItemTreeView
 
     Args:
@@ -192,9 +200,11 @@ def findItemsByClassExact(cls):
         list [ cnoid.Base.Item ] : all found items which has the name
 
     """
-    return findItemsByQuery( lambda itm : (type(itm) == cls) )
+    if root is None:
+        root = RootItem.instance
+    return findItemsByQuery( lambda itm : (type(itm) == cls) , root=root )
 
-def findItemsByClass(cls):
+def findItemsByClass(cls, root=None):
     """Finding item with class given as the argument in ItemTreeView
 
     Args:
@@ -204,7 +214,9 @@ def findItemsByClass(cls):
         list [ cnoid.Base.Item ] : all found items which has the name
 
     """
-    return findItemsByQuery( lambda itm : isinstance(itm, cls) )
+    if root is None:
+        root = RootItem.instance
+    return findItemsByQuery( lambda itm : isinstance(itm, cls) , root=root)
 
 def removeItem(item_):
     """Removing item
@@ -215,7 +227,7 @@ def removeItem(item_):
     """
     item_.detachFromParentItem()
 
-def findBodyItem(name_or_body):
+def findBodyItem(name_or_body, root=None):
     """Seaching BodyItem
 
     Args:
@@ -227,7 +239,7 @@ def findBodyItem(name_or_body):
     """
     ret = None
     if type(name_or_body) is str:
-        for itm in findItems(name_or_body):
+        for itm in findItems(name_or_body, root=root):
             if type(itm) is cnoid.BodyPlugin.BodyItem:
                 ret = itm
                 break
