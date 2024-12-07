@@ -6,13 +6,13 @@ import cnoid.IRSLUtil as IU
 import math
 
 class SimulationEnvironment(object):
-    def __init__(self, robotName, simulator=None, addSimulator=True):
+    def __init__(self, robotName, simulator=None, addSimulator=True, world=None):
         self.robot_name = robotName
         if simulator is None:
             res = ib.findItemsByClass( BodyPlugin.SimulatorItem )
             if len(res) == 0:
                 if addSimulator:
-                    simulator = ib.addSimulator()
+                    simulator = ib.addSimulator(world=world)
                 else:
                     raise Exception('No simulator found')
             else:
@@ -43,6 +43,12 @@ class SimulationEnvironment(object):
         self.sim.stopSimulation()
     def restart(self):
         pass
+    def sendAngleVector(self, angle_vector, tm=1.0, **kwargs):
+        if self.sequencer is not None:
+            self.sequencer.pushNextAngle(angle_vector, tm)
+    def sendAngleVectorSequence(self, angle_vector_list, tm_list, **kwargs):
+        if self.sequencer is not None:
+            self.sequencer.pushNextAngles(angle_vector_list, tm_list)
     ## stop
     ## restart
     ## isRunning
