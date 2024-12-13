@@ -1183,7 +1183,7 @@ class RobotBuilder(object):
         def setMass(self, mass):
             self.mass = mass
             if self.volume != 0.0:
-                self.density = self.volume/mass
+                self.density = mass/self.volume
         @property
         def Inertia(self):
             return self.mass * self.unit_inertia
