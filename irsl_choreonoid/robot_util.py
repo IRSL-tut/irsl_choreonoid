@@ -1872,9 +1872,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         """
         mc = self.footMidCoords(p)
-        cds = mc.inverse_transformation()
-        cds.transform(coords)
+        self.fixSelfCoordsToTarget(mc, coords)
+
+    def fixSelfCoordsToTarget(self, selfcoords, target_coords):
+        """
+        """
+        cds = selfcoords.inverse_transformation()
         cds.transform(self.__robot.rootLink.getCoords())
+        cds.transform(target_coords, wrt=ic.coordinates.wrt.world)
         self.newcoords(cds)
         #self.__robot.rootLink.setCoords(cds)
         #self.hook()
