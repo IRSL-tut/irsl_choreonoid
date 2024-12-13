@@ -799,6 +799,8 @@ class IKWrapper(object):
 
 ### functions for Body
 def linkDirectChildren(lk):
+    """
+    """
     ch = lk.child
     if ch is None:
         return []
@@ -810,6 +812,8 @@ def linkDirectChildren(lk):
         return child_list
 
 def linkDescendants(lk):
+    """
+    """
     ch = lk.child
     if ch is None:
         return []
@@ -822,6 +826,34 @@ def linkDescendants(lk):
             res = linkDescendants(ch)
             child_list.extend(res)
         return child_list
+
+def mergedMassPropertyOfAllDescendants(plink):
+    """
+    """
+    plink_mass = plink.mass
+    plink_c = plink.c
+    plink_I = plink.I
+    for clink in linkDescendants(plink):
+        plink_mass, plink_c, plink_I = mergeMassProperty(plink_mass, plink_c, plink_I, clink)
+    return plink_mass, plink_c, plink_I
+
+def mergeMassProperty(plink_mass, plink_c, plink_I, clink):
+    """
+    """
+    new_mass = plink_mass + clink.mass
+    ##
+    cds_Tb = coordinates(clink.Tb)
+    p_c_c = np.copy(clink.c)
+    cds_Tb.transformVector(p_c_c)
+    new_c = ((clink.mass * p_c_c) + (plink_mass * plink_c))/new_mass
+    ##
+    pIc = cds_Tb.rot * clink.I * np.transpose(cds_Tb.rot)
+    h_c = hat(new_c - p_c_c);
+    h_p = hat(new_c - plink_c)
+    ##
+    new_I = (pIc - clink.mass * (h_c * h_c)) + (plink_I - plink_mass * (h_p * h_p))
+    ##
+    return (new_mass, new_c, new_I)
 
 ## add methods to choreonoid's class
 def __joint_list(self):
