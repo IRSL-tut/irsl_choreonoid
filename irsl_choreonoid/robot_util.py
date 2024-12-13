@@ -1641,9 +1641,14 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.setNamedPose('default')
 
     def setInitialPose(self):
-        """Setting default pose if registered
+        """Setting initial pose if registered
         """
         self.setNamedPose('initial')
+
+    def setZeroPose(self):
+        """Setting all joint angles to zero
+        """
+        self.angleVector(np.zeros(self.numJoints))
 
     def setNamedPose(self, name):
         """Setting named pose, name should be registered by irsl_choreonoid.robot_util.RobotModelWrapped.registerNamedPose
