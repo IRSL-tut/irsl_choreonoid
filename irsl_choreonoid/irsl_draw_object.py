@@ -58,35 +58,59 @@ Then, you can run some process when the position of the target is updated.
 
 ### cascaded-coordinates
     def assoc(self, child, coords=None):
+        """Associate coordinates as a child
+
+        Args:
+            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) : child coordinates
+            coords ( cnoid.Body.Link or cnoid.Util.SgPosTransform) : Coordinates on parent
+        """
         if child._parent is None:
             child._setParent(self, coords=coords)
             self.children.append(child)
 
     def dissoc(self, child):
+        """Finish association with child coordinates
+
+        Args:
+            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) :
+        """
         if self is child._parent:
             child._resetParent()
             if child in self.children:
                 self.children.remove(child)
 
     def dissocFromParent(self):
+        """Finish association with parent coordinates
+        """
         if self._parent is not None:
             self._parent.dissoc(self)
 
     def clearChildren(self):
+        """Clear all children
+        """
         for c in self.children:
             self.dissoc(c)
         self.children = []
 
+    @property
     def descendants(self):
+        """Getting all children
+        """
         return self.children
 
     def isChild(self, coords):
+        """Query: Is it a child ?
+        """
         return coords in self.children
 
     def isParent(self, coords):
+        """Query: Is it a parent ?
+        """
         return coords is self._parent
 
     def hasChild(self):
+        """Query: Does it have child ?
+        """
         return len(self.children) > 0
 
     def _resetParent(self):
