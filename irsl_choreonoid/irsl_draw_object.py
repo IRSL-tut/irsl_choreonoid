@@ -4,6 +4,16 @@ import cnoid.Util as cutil
 # from cnoid.Util import SgPosTransform
 # from cnoid.DrawInterface import GeneralDrawInterface as GDI
 
+### COPY from make_shapes.py
+def _extractShape(sg_node):
+    res = []
+    if type(sg_node) is cutil.SgShape:
+        res.append(sg_node)
+    elif hasattr(sg_node, 'numChildren'):
+        for idx in range(sg_node.numChildren):
+            res += _extractShape(sg_node.getChild(idx))
+    return res
+
 class coordsWrapper(coordinates):
     """class coordsWrapper(cnoid.IRSLCoords.coordinates)
 
@@ -48,35 +58,59 @@ Then, you can run some process when the position of the target is updated.
 
 ### cascaded-coordinates
     def assoc(self, child, coords=None):
+        """Associate coordinates as a child
+
+        Args:
+            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) : child coordinates
+            coords ( cnoid.Body.Link or cnoid.Util.SgPosTransform) : Coordinates on parent
+        """
         if child._parent is None:
             child._setParent(self, coords=coords)
             self.children.append(child)
 
     def dissoc(self, child):
+        """Finish association with child coordinates
+
+        Args:
+            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) :
+        """
         if self is child._parent:
             child._resetParent()
             if child in self.children:
                 self.children.remove(child)
 
     def dissocFromParent(self):
+        """Finish association with parent coordinates
+        """
         if self._parent is not None:
             self._parent.dissoc(self)
 
     def clearChildren(self):
+        """Clear all children
+        """
         for c in self.children:
             self.dissoc(c)
         self.children = []
 
+    @property
     def descendants(self):
+        """Getting all children
+        """
         return self.children
 
     def isChild(self, coords):
+        """Query: Is it a child ?
+        """
         return coords in self.children
 
     def isParent(self, coords):
+        """Query: Is it a parent ?
+        """
         return coords is self._parent
 
     def hasChild(self):
+        """Query: Does it have child ?
+        """
         return len(self.children) > 0
 
     def _resetParent(self):
@@ -132,7 +166,35 @@ Then, you can run some process when the position of the target is updated.
             trs.addChild(org)
             self.__target = trs
             self.setScalable()
+###
+    def setColorChangeable(self):
+        """Enabling to use methods, changeColor
 
+        """
+        self._materials_ = []
+        res = _extractShape(self.target)
+        for r in res:
+            self._materials_.append(r.getOrCreateMaterial())
+
+    def changeColor(self, color=None, ambient=None, emissive=None, specular=None, specularExponent=None, transparent=None, update=False):
+        """Changing color ( use setColorChangeable method before using this method )
+        """
+        for m in self._materials_:
+            if color is not None:
+                m.setDiffuseColor(color)
+            if ambient is not None:
+                m.setAmbientIntensity(ambient)
+            if emissive is not None:
+                m.setEmissiveColor(emissive)
+            if specular is not None:
+                m.setSpecularColor(specular)
+            if specularExponent is not None:
+                m.setSpecularExponent(specularExponent)
+            if transparent is not None:
+                m.setTransparency(transparent)
+        if update:
+            self.updateTarget()
+###
     #def __del__(self):
     #    print('destruct: coordsWrapper')
 

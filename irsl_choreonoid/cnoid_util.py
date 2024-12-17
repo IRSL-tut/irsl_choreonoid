@@ -398,6 +398,11 @@ def fv(*args, **kwargs):
     """
     return np.array(args, **kwargs)
 
+def hat(vec3):
+    return np.array([[     0.0, -vec3[2],  vec3[1]],
+                     [ vec3[2],      0.0, -vec3[0]],
+                     [-vec3[1],  vec3[0],      0.0]])
+
 ## only this function use cnoid.Base module
 def isInChoreonoid():
     """isInChoreonoid

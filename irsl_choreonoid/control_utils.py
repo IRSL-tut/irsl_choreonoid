@@ -202,6 +202,14 @@ class Sequencer(object):
         res = np.array(angles)
         self.prev_angle_vec = res
         return res
+    ##
+    @property
+    def remainCount(self):
+        return len(self.sequence[0])
+    ##
+    def clear(self, start=0, end=None):
+        for lst in self.sequence:
+            del lst[start:end]
     #def lastAngleVector(self):
     #    pass
     #def lastVelocityVector(self):
