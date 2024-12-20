@@ -1,44 +1,50 @@
-import irsl_choreonoid.cnoid_base as ib
 import cnoid.BodyPlugin as BodyPlugin
 import cnoid.Body as cbody
+import cnoid.IRSLUtil as IU
+import irsl_choreonoid.cnoid_base as ib
 from .control_utils import PDController
 from .control_utils import BodySequencer
-import cnoid.IRSLUtil as IU
+from .robot_util import mergedMassPropertyOfAllDescendants
+import numpy as np
 import math
 
 ## generatesettings of body
-def _generatePDParameters(body, dt=0.001, P='normal', D='normal', I='normal', updateRotorInertia=False, **kwargs):
+def _generatePDParameters(body, dt=0.001, weightP=0.05, weightD=1.0, weightI=1.0, updateRotorInertia=False, **kwargs):
     res = {}
-    kk=0.05
-    if P == 'hard':
-        kk=0.5
-    elif P == 'soft':
-        kk=0.0005
-    kd=0.5
-    if D == 'hard':
-        kd=2.0
-    elif D == 'soft':
-        kd=0.1
-    kI=1.0
-    if I == 'hard':
-        kI=0.1
-    elif I == 'soft':
-        kI=10
+    kk=0.05 * weightP
+#    if P == 'hard':
+#        kk=0.5
+#    elif P == 'soft':
+#        kk=0.0005
+    kd=0.5 * weightD
+#    if D == 'hard':
+#        kd=2.0
+#    elif D == 'soft':
+#        kd=0.1
+    kI=1.0 * weightI
+#    if I == 'hard':
+#        kI=0.1
+#    elif I == 'soft':
+#        kI=10
     ##
     for idx in range(body.numJoints):
         j = body.joint(idx)
         ax = j.jointAxis
-        lk_mass, lk_c, lk_I = ru.mergedMassPropertyOfAllDescendants(j)
-        joint_m = np.linalg.norm(np.cross(ax, lk_c)) + np.dot(ax, lk_I @ ax)
-        K = 2*kk*joint_m/dt/dt
-        D = K * kd * ( 10 ** (math.log10(joint_m/5)/4 - 1.5) )
+        lk_mass, lk_c, lk_I = mergedMassPropertyOfAllDescendants(j)
+        joint_m = lk_mass * ( np.linalg.norm(np.cross(ax, lk_c)) ** 2) + np.dot(ax, lk_I @ ax)
+        P = 2*kk*joint_m/dt/dt
+        D = P * kd * ( 10 ** (math.log10(joint_m/5)/4 - 1.5) )
         if updateRotorInertia:
             I = kI * joint_m
             j.setEquivalentRotorInertia(I)
-        res[j.jointName] = {'K': K, 'D': D}
+        res[j.jointName] = {'P': P, 'D': D}
     ##
     return res
-
+##
+## TODO
+## record item
+## record images
+##
 class SimulationEnvironment(object):
     def __init__(self, robotName, simulator=None, addSimulator=True, fixed=False, world=None):
         """
@@ -66,8 +72,7 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer = None
         self._world  = None
-        if fixed:
-            self.setFixed()
+        self.findRobot(fixed)
 
     @property
     def world(self):
@@ -76,9 +81,9 @@ class SimulationEnvironment(object):
         """
         if self._world is None:
             itm = self.sim.parentItem
-            if type(item) is BodyPlugin.WorldItem:
+            if type(itm) is BodyPlugin.WorldItem:
                 ## simulation should be under worldItem
-                self._world = item
+                self._world = itm
         return self._world
 
     @property
@@ -124,12 +129,17 @@ class SimulationEnvironment(object):
         else:
             return self.sim.findSimulationBody(name)
 
-    def setFixed():
+    def findRobot(self, fixed=False):
         """Robot is fixed to the environment
         """
         res = ib.findItemsByName(self.robot_name, root=self.world)
-        for r in res:
-            r.body.rootLink.setJointType(cbody.Link.FixedJoint)
+        if len(res) > 1:
+            pass
+        if len(res) == 0:
+            raise Exception('No robot({}) found under {}'.format(self.robot_name, self.world))
+        self.robotItem = res[0]
+        if fixed:
+            self.robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
 
     def start(self, addCountroller=True, addSequencer=True, controllerSettings=None, P=10000, D=200, generatePDSettings=False, **kwargs):
         """Start simulation
@@ -142,6 +152,9 @@ class SimulationEnvironment(object):
             D (float, default=200) :
             generatePDSettings (boolean, default=False) :
         """
+        if generatePDSettings:
+            controllerSettings=_generatePDParameters(self.robotItem.body, **kwargs)
+            self.PDSettings=controllerSettings
         self.sim.startSimulation()
         sim_body = self.sim.findSimulationBody(self.robot_name)
         if sim_body is None:
@@ -151,12 +164,10 @@ class SimulationEnvironment(object):
         self.body = sim_body.body()
         self.controller = None
         self.sequencer = None
-        if generatePDSettings:
-            controllerSettings=_generatePDParameters(self.body, P=P, D=D, **kwargs)
         if addCountroller:
-            self.controller = PDController(self.body, dt=sim.worldTimeStep, P=P, D=D, settings=controllerSettings)
+            self.controller = PDController(self.body, dt=self.sim.worldTimeStep, P=P, D=D, settings=controllerSettings)
         if addSequencer:
-            self.sequencer = BodySequencer(self.body, dt=sim.worldTimeStep)
+            self.sequencer = BodySequencer(self.body, dt=self.sim.worldTimeStep)
 
     def storeInitialState(self):
         """Storing initial state of all objects in this world

@@ -2307,10 +2307,10 @@ class ImportedRobotModel(RobotModelWrapped):
             res = loadRobot(self.model_file)
         return res
 
-    @classmethod
-    def makeRobot(cls, robot=None, item=True, world=True, **kwargs):
-        print(cls)
-        return cls(robot=robot, item=item, world=world, **kwargs)
+#    @classmethod
+#    def makeRobot(cls, robot=None, item=True, world=True, **kwargs):
+#        print(cls)
+#        return cls(robot=robot, item=item, world=world, **kwargs)
 
 ### flush in Base, etc.
 if isInChoreonoid():
