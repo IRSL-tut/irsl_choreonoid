@@ -367,10 +367,10 @@ class RobotBuilder(object):
             lname0 = '{}_ballx'.format(namebase)
             lname1 = '{}_bally'.format(namebase)
             lk_0 = self.createLink(name=lname0, JointType=Link.JointType.RevoluteJoint,
-                                   mass=0.0, inertia=np.zeros((3,3)), com=np.zeros(3),
+                                   mass=0.0, inertia=np.zeros((3,3)), COM=np.zeros(3),
                                    JointAxis=aac.x_axis, JointId=jid, **new_kwargs)
             lk_1 = self.createLink(name=lname1, JointType=Link.JointType.RevoluteJoint,
-                                   mass=0.0, inertia=np.zeros((3,3)), com=np.zeros(3),
+                                   mass=0.0, inertia=np.zeros((3,3)), COM=np.zeros(3),
                                    JointAxis=aac.y_axis, JointId=jid+1, **new_kwargs)
             ##
             lk=self.createLink(name=name, mass=info['mass'], COM=info['COM'], inertia=info['inertia'],
