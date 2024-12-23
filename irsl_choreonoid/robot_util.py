@@ -1970,7 +1970,45 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 ##>            return const
 ##>        return constraint
     ##
-    def fullBodyIK(self, targets, limbs, com_target=None,
+    def fullBodyIK(self, targets, limbs, com_target=None, base_target=None, revert_if_failed=True, retry=10, **kwargs):
+        """Top method to solve fullbody inverse-kinematics
+
+        Args:
+            targets (cnoid.IRSLCoords.coordinates) : List of coordinates as target for inverse-kinematics
+            limbs (irsl_choreonoid.robot_util.RobotModelWrapped.EndEffector) : List of limb(EndEffector), size of limbs should be equal to size of targets
+            com_target (numpy.array) : Target of COM ( Center of Mass )
+            base_target (cnoid.IRSLCoords.coordinates) : Target of base (root_link)
+            revert_if_failed (boolean, default = True) : if True, no modification (moving joint and root-link) to robot-model when calculation of IK is failed
+            retry (int, defualt = 100) : number of retrying solving IK
+            \*\*kwargs (dict) : Other keywords just passing to fullBodyIKRaw (See irsl_choreonoid.robot_util.RobotModelWrapped.fullBodyIKRaw)
+
+        Returns:
+             (boolean, int) : IK was success or not, and total count of calculation
+
+        Note:
+              constraint : [1,1,1, 1,1,1]
+              base_type : [1,1,1, 1,1,1]
+
+        """
+        init_angle = self.angleVector()
+        init_coords = self.rootCoords()
+        if base_target is None:
+            base_target = init_coords
+        succ = False
+        _total = 0
+        while retry >= 0:
+            succ, _iter = self.fullBodyIKRaw(targets, limbs, com_target=com_target, base_target=base_target, **kwargs)
+            _total += _iter
+            if succ:
+                break
+            retry -= 1
+        if (not succ) and revert_if_failed:
+            self.angleVector(init_angle)
+            self.rootCoords(init_coords)
+        self.hook()
+        return (succ, _total)
+    ##
+    def fullBodyIKRaw(self, targets, limbs, com_target=None, base_target=None,
                    constraint='6D', base_type='xy', com_constraint = [1, 1, 0], weight = 1.0, base_weight = 1.0,
                    debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
                    position_precision = None, com_precision = None, joint_limit_precision=0.1, **kwargs):
@@ -2055,7 +2093,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             b_constraint.A_link =     self.robot.rootLink
             b_constraint.A_localpos = ic.coordinates().cnoidPosition
             #constraint.B_link() = nullptr;
-            b_constraint.B_localpos = self.robot.rootLink.T
+            if base_target is None:
+                b_constraint.B_localpos = self.robot.rootLink.T
+            else:
+                b_constraint.B_localpos = base_target.cnoidPosition
             b_constraint.weight     = np.array(base_const)
             if position_precision is not None:
                 b_constraint.precision = np.array(position_precision)
@@ -2115,7 +2156,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                     break
             if not conv:
                 break
-        self.hook()
         return (conv, loop)
     ##
     def legsCOM_IK(self, r_target, l_target, com_target=None, **kwargs):
