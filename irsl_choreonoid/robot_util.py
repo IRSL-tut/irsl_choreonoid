@@ -833,16 +833,18 @@ def mergedMassPropertyOfAllDescendants(plink):
     plink_mass = plink.mass
     plink_c = plink.c
     plink_I = plink.I
+    plink_coords = coordinates(plink.T)
     for clink in linkDescendants(plink):
-        plink_mass, plink_c, plink_I = mergeMassProperty(plink_mass, plink_c, plink_I, clink)
+        plink_mass, plink_c, plink_I = mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_mass, plink_c, plink_I
 
-def mergeMassProperty(plink_mass, plink_c, plink_I, clink):
+def mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     """
     """
     new_mass = plink_mass + clink.mass
     ##
-    cds_Tb = coordinates(clink.Tb)
+    #cds_Tb = coordinates(clink.Tb)
+    cds_Tb = plink_coords.transformation( coordinates(clink.T) )
     p_c_c = np.copy(clink.c)
     cds_Tb.transformVector(p_c_c)
     if new_mass > 0:
