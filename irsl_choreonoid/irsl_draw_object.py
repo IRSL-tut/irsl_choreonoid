@@ -113,6 +113,14 @@ Then, you can run some process when the position of the target is updated.
         """
         return len(self.children) > 0
 
+    def setFromParent(self, coords, update=True):
+        if self._parent is not None:
+            self._from_parent = coords
+            self._update_from_parent(update=False)
+            self._updateChildren(update=False)
+            if update and callable(self.__update_callback):
+                self.__update_callback()
+
     def _resetParent(self):
         self._parent = None
         self._from_parent = None
