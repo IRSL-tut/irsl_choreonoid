@@ -1283,7 +1283,7 @@ class RobotBuilder(object):
                                            [-x*y, x*x + z*z, -y*z],
                                            [-x*z, -y*z, x*x + y*y]])
             rot = masspara.coords.rot
-            i_rot = np.transpose(rot).dot(masspara.Inertia).dot(rot)
+            i_rot = rot.dot(masspara.Inertia).dot(np.transpose(rot))
             #print("i_trans: {}, i_rot: {}".format(i_trans, i_rot))
             newIner_w += (i_trans + i_rot)
             #print("newIner: {}".format(newIner_w))
