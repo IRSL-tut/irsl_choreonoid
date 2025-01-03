@@ -843,8 +843,9 @@ def mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     """
     new_mass = plink_mass + clink.mass
     ##
-    #cds_Tb = coordinates(clink.Tb)
     cds_Tb = plink_coords.transformation( coordinates(clink.T) )
+    #inv_p = plink_coords.inverse_transformation()
+    #cds_Tb = inv_p.transform( coordinates(clink.T) )
     p_c_c = np.copy(clink.c)
     cds_Tb.transformVector(p_c_c)
     if new_mass > 0:
@@ -852,11 +853,11 @@ def mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     else:
         new_c = np.zeros(3)
     ##
-    pIc = cds_Tb.rot * clink.I * np.transpose(cds_Tb.rot)
-    h_c = hat(new_c - p_c_c);
+    pIc = cds_Tb.rot @ clink.I @ np.transpose(cds_Tb.rot)
+    h_c = hat(new_c - p_c_c)
     h_p = hat(new_c - plink_c)
     ##
-    new_I = (pIc - clink.mass * (h_c * h_c)) + (plink_I - plink_mass * (h_p * h_p))
+    new_I = (pIc - clink.mass * (h_c @ h_c)) + (plink_I - plink_mass * (h_p @ h_p))
     ##
     return (new_mass, new_c, new_I)
 
