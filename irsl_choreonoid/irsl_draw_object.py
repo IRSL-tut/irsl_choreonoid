@@ -113,6 +113,14 @@ Then, you can run some process when the position of the target is updated.
         """
         return len(self.children) > 0
 
+    def setFromParent(self, coords, update=True):
+        if self._parent is not None:
+            self._from_parent = coords
+            self._update_from_parent(update=False)
+            self._updateChildren(update=False)
+            if update and callable(self.__update_callback):
+                self.__update_callback()
+
     def _resetParent(self):
         self._parent = None
         self._from_parent = None
@@ -128,6 +136,10 @@ Then, you can run some process when the position of the target is updated.
                 self._from_parent = coords.transformation(self)
         else:
             self._from_parent = parent.transformation(self)
+
+    def _updateParent(self): ## updating self._from_parent
+        if self._parent is not None:
+            self._setParent(self._parent, self._parent_coords)
 
     def _updateChildren(self, update=False):
         for c in self.children:
@@ -208,6 +220,7 @@ Then, you can run some process when the position of the target is updated.
         self.__target.T = self.cnoidPosition
         if callable(self.__kinematics_callback):
             self.__kinematics_callback()
+        self._updateParent()
         self._updateChildren(update=False)
         if update and callable(self.__update_callback):
             self.__update_callback()
