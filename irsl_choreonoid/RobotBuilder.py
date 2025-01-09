@@ -19,6 +19,8 @@ from numpy import array as npa
 from numpy.linalg import norm
 import math
 from math import pi as PI
+
+import cnoid.IRSLUtil
 ##
 if iu.isInChoreonoid():
     ## in base
@@ -1176,6 +1178,13 @@ class RobotBuilder(object):
                 self.COM = shape.COM
             if hasattr(shape, 'inertia'):
                 self.unit_inertia = shape.inertia
+            else:
+                res_ = cnoid.IRSLUtil.calcMassProperties(shape)
+                self.volume = res_[0]
+                self.COM = npa([res_[1], res_[2], res_[3]])
+                self.unit_inertia = npa([[res_[4], res_[7], res_[9]],
+                                         [res_[7], res_[5], res_[8]],
+                                         [res_[9], res_[8], res_[6]]]) / self.volume
         def setDensity(self, density=1000.0):
             if self.volume != 0.0:
                 self.mass = density * self.volume
@@ -1241,11 +1250,12 @@ class RobotBuilder(object):
                         pri = m
                 res = [ RobotBuilder.MassParam(pri, currentCoords) ]
             else:
+                ## not enter here
                 res = [(gnode, currentCoords)]
         return res
 
     @staticmethod
-    def mergeResults(result, newcoords=coordinates(), mass=None, density=None):
+    def mergeResults(result, newcoords=coordinates(), mass=None, density=None, debug=False):
         if mass is None and density is None:
             raise Exception('set weight or density')
         ##
@@ -1263,6 +1273,12 @@ class RobotBuilder(object):
             else:
                 masspara.setDensity(density)
             total_mass += masspara.mass
+        if debug:
+            for masspara in result:
+                print('{}, {} at {}, {}'.format(masspara.coords,
+                                                masspara.mass,
+                                                masspara.COM,
+                                                masspara.Inertia))
         ##
         newCOM_w = npa([0., 0., 0.])
         for masspara in result:

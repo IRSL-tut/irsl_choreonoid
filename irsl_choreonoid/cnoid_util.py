@@ -169,12 +169,23 @@ def exportURDF(fname, body, **kwargs):
         fname (str) :
         body ( cnoid.Body.Body ) :
         kwargs ( dict[str, param] ) :
+        AddGeometry (boolean, default=True) : Add geometries
+        AddOffset (boolean, default=True) : Add offset of links
+        ExportDevices (boolean) :
+        MeshFilePrefix (str) : Prefix of files exporting as mesh-files(.dae, .stl)
+        MeshURLPrefix (str) : Prefix of file-name written in URDF
+        RobotName (str) : Name of exporting robot
+        UseURDFPrimitiveGeometry (boolean, default=True) : Use primitive defined at URDF
+        UseXacro (boolean) :
+        Verbose (boolean) :
 
     """
     ubw = URDFBodyWriter()
     ubw.setMessageSinkStdErr()
     for k, v in kwargs.items():
-        exec('ubw.set{}(v)'.format(k))
+        method_ = 'set{}'.format(k)
+        if hasattr(ubw, method_):
+            exec('ubw.{}(v)'.format(method_, k))
     return ubw.writeBody(body, fname)
 
 def exportBodyAsMesh(fname, input_body, meshScale=None, offset=None, useCollision=False, **kwargs):
