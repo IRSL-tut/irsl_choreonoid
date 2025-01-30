@@ -1,11 +1,13 @@
 - git:
     local-name: choreonoid
     uri: https://github.com/IRSL-tut/choreonoid.git
-    version: stable
+    #version: stable
+    version: devel_one_24.04
 - git:
     local-name: irsl_choreonoid
     uri: https://github.com/IRSL-tut/irsl_choreonoid.git
-### IK solver    
+    version: devel_one_24.04
+### IK solver
 - git:
     local-name: ik_solvers
     uri: https://github.com/YoheiKakiuchi/ik_solvers.git
