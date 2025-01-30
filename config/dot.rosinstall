@@ -5,6 +5,7 @@
 - git:
     local-name: irsl_choreonoid
     uri: https://github.com/IRSL-tut/irsl_choreonoid.git
+    version: devel_ros2_24.04
 ### IK solver
 - git: ### should move to IRSL-tut
     local-name: ik_solvers
