@@ -194,6 +194,20 @@ class Sequencer(object):
     def pushTargetAngles(self, angle_vectors, times_from_start):
         tt, vec = interpolateVector(times_from_start, angle_vectors, math.ceil(1/self.dt))
         self._appendAngles(vec)
+    def setNoInterpolation(self, angle_vectors, step=1):
+        """
+        """
+        if step > 1:
+            avs = []
+            for av, nav in zip(angle_vectors[:-1], angle_vectors[1:]):
+                for i in range(step):
+                    avs.append( ( (step - i)*av + i*nav ) / step )
+            avs.append( angle_vectors[-1] )
+        else:
+            avs = angle_vectors
+        mat = np.array(avs)
+        tmat = mat.transpose()
+        self.sequence = tmat.tolist()
     ## def insert(self),###
     def pop(self):
         if len(self.sequence[0]) == 0:
