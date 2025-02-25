@@ -55,3 +55,6 @@ def exec_script(fname, *args):
 # >>> reload(X)
 # >>> from X import Y
 from importlib import reload
+## import from current-directory ( change behavior from cnoid-2.3 )
+import sys
+sys.path.append('.')
