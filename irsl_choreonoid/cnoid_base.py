@@ -240,7 +240,7 @@ def findBodyItem(name_or_body, root=None):
     ret = None
     if type(name_or_body) is str:
         for itm in findItems(name_or_body, root=root):
-            if type(itm) is cnoid.BodyPlugin.BodyItem:
+            if type(itm) is BodyItem:
                 ret = itm
                 break
     elif type(name_or_body) is Body:
