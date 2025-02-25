@@ -2,7 +2,9 @@
 
 set -e
 
-PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-2.0/python
+CNOID_VER="$(echo $(find $(dirname $(which choreonoid))/../share -maxdepth 1 -name choreonoid-*) | sed -e 's@.*choreonoid-\(.*\)@\1@g')"
+
+PYTHONPATH=$PYTHONPATH:$(dirname $(which choreonoid))/../lib/choreonoid-${CNOID_VER}/python
 
 TEST_FILES=$(ls -1 *.py)
 
