@@ -202,8 +202,8 @@ class SimulationEnvironment(object):
         """Set target angle-vector to the robot (similar to RobotInterface)
 
         Args:
-            angle_vector () :
-            tm (float, default=1.0) :
+            angle_vector (numpy.array) : Target angle-vector
+            tm (float, default=1.0) : Target duration of motion
         """
         if self.sequencer is not None:
             self.sequencer.pushNextAngle(angle_vector, tm)
@@ -212,8 +212,8 @@ class SimulationEnvironment(object):
         """Set target angle-vectors to the robot (similar to RobotInterface)
 
         Args:
-            angle_vector_list () :
-            tm_list ( list[ float ] ) :
+            angle_vector_list ( list[ numpy.array ] ) : Target list of angle-vector
+            tm_list ( list[ float ] ) : Target list of motion duration
         """
         if self.sequencer is not None:
             self.sequencer.pushNextAngles(angle_vector_list, tm_list)
