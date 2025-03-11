@@ -94,7 +94,7 @@ class PDController(object):
         if self.settings is not None and lnm in self.settings:
             s_ = self.settings[lnm]
         elif self.settings is not None and jnm in self.settings:
-            s_ = self.settings[lnm]
+            s_ = self.settings[jnm]
         else:
             return JointPD(joint, dt=self.dt, P=self.default_P, D=self.default_D, VP=self.default_VP)
         return JointPD(joint, dt=self.dt,
