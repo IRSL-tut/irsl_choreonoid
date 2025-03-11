@@ -72,7 +72,7 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer = None
         self._world  = None
-        self.findRobot(fixed)
+        self._findRobot(fixed)
 
     @property
     def world(self):
@@ -129,7 +129,7 @@ class SimulationEnvironment(object):
         else:
             return self.sim.findSimulationBody(name)
 
-    def findRobot(self, fixed=False):
+    def _findRobot(self, fixed=False):
         """Robot is fixed to the environment
         """
         res = ib.findItemsByName(self.robot_name, root=self.world)
