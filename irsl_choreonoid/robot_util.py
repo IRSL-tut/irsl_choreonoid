@@ -2173,8 +2173,12 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         larm = self.getLimb('larm')
         return self.fullBodyIK( (r_target, l_target), (rarm, larm),
                                 com_target=com_target, **kwargs)
-    def moveCentroidOnFoot(self, p = 0.5, **kwargs):
-        """
+    def moveCentroidOnFoot(self, p = 0.5, com_height=None, **kwargs):
+        """Move projected centroid to the center of feet
+
+        Args:
+            p (float, default = 0.5) : Parameter of center position (p == 0.5 means center, p == 0.0 means right-foot, p == 1.0 means left-foot)
+            com_height(float, optional) : Set target of height of CenterOfMass
         """
         rleg = self.getLimb('rleg')
         lleg = self.getLimb('lleg')
@@ -2182,8 +2186,15 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         l_cds = lleg.endEffector
         foot_mid = r_cds.mid_coords(p, l_cds)
         ##foot_mid = self.footMidCoords(p)
+        com = foot_mid.pos
+        if com_height is not None:
+            com[2] = com_height
+            if not 'com_constraint' in kwargs:
+                kwargs['com_constraint'] = [1, 1, 1]
+            if not 'base_type' in kwargs:
+                kwargs['base_type'] = 'xyz'
         return self.fullBodyIK( (r_cds, l_cds), (rleg, lleg),
-                                com_target=foot_mid.pos, **kwargs)
+                                com_target=com, **kwargs)
     ##
     def addLink(self, name, parentLink, offset, jointType=Link.JointType.FixedJoint, visualShape=None, collisionShape=None, **kwargs):
         """Adding new link

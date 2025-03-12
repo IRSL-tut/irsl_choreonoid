@@ -94,7 +94,7 @@ class PDController(object):
         if self.settings is not None and lnm in self.settings:
             s_ = self.settings[lnm]
         elif self.settings is not None and jnm in self.settings:
-            s_ = self.settings[lnm]
+            s_ = self.settings[jnm]
         else:
             return JointPD(joint, dt=self.dt, P=self.default_P, D=self.default_D, VP=self.default_VP)
         return JointPD(joint, dt=self.dt,
@@ -175,7 +175,13 @@ def interpolateCoords(tt, coords_list):
     pass
 
 class Sequencer(object):
+    """ Sequencer to set target-angles every cycle with interpolatin
+    """
     def __init__(self, dt=0.001):
+        """
+        Args:
+            dt (float, default=0.001) :
+        """
         self.sequence = [[]]
         self.dt = dt
         self.prev_angle_vec = None
@@ -195,7 +201,11 @@ class Sequencer(object):
         tt, vec = interpolateVector(times_from_start, angle_vectors, math.ceil(1/self.dt))
         self._appendAngles(vec)
     def setNoInterpolation(self, angle_vectors, step=1):
-        """
+        """Set angle-vectors without interpolation
+
+        Args:
+            angle_vectors ( list[ numpy.array ] ) : List of angle-vector
+            step (int, default=1) : Target angle is updated every step-times of cycle
         """
         if step > 1:
             avs = []
@@ -208,6 +218,18 @@ class Sequencer(object):
         mat = np.array(avs)
         tmat = mat.transpose()
         self.sequence = tmat.tolist()
+    def setWithSteps(self, angle_vector, step=2):
+        """Set single angle-vector with linear interpolation
+
+        Args:
+            angle_vector ( numpy.array ) : Target angle-vector
+            step (int, default=2) : After step cycle, target-angles equals to angle_vector
+        """
+        if self.prev_angle_vec is not None:
+            self._appendAngles(angle_vector)
+        else:
+            mat = np.array( [(self.prev_angle_vec + angle_vector)*0.5, angle_vector] )
+            self.sequence = at.transpose().tolist()
     ## def insert(self),###
     def pop(self):
         if len(self.sequence[0]) == 0:
@@ -231,6 +253,8 @@ class Sequencer(object):
 
 class BodySequencer(Sequencer):
     def __init__(self, body, dt=0.001):
+        """
+        """
         super().__init__(dt=dt)
         self.body = body
     def pushNextAngle(self, target_angle_vector, time):

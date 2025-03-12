@@ -72,7 +72,7 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer = None
         self._world  = None
-        self.findRobot(fixed)
+        self._findRobot(fixed)
 
     @property
     def world(self):
@@ -129,7 +129,7 @@ class SimulationEnvironment(object):
         else:
             return self.sim.findSimulationBody(name)
 
-    def findRobot(self, fixed=False):
+    def _findRobot(self, fixed=False):
         """Robot is fixed to the environment
         """
         res = ib.findItemsByName(self.robot_name, root=self.world)
@@ -141,20 +141,30 @@ class SimulationEnvironment(object):
         if fixed:
             self.robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
 
-    def start(self, addCountroller=True, addSequencer=True, controllerSettings=None, P=10000, D=200, generatePDSettings=False, **kwargs):
+    def start(self, addCountroller=True, addSequencer=True, controllerSettings=None,
+              P=10000, D=200, generatePDSettings=False, rotorInertia=None, **kwargs):
         """Start simulation
 
         Args:
-            addCountroller (boolean, default=True) :
-            addSequencer (boolean, default=True) :
-            controllerSettings (optional) :
-            P (float, default=10000) :
-            D (float, default=200) :
+            addCountroller (boolean, default=True) : Adding PDcontroller to servo joints
+            addSequencer (boolean, default=True) : Adding sequencer to set target-angles with interpolatin
+            controllerSettings (optional) : {'joint_name0': {'P': pgain, 'D': dgain, 'rotorInertia': IM2}, ... }
+            P (float, default=10000) : default P-gain
+            D (float, default=200) : default D-gain
             generatePDSettings (boolean, default=False) :
         """
         if generatePDSettings:
             controllerSettings=_generatePDParameters(self.robotItem.body, **kwargs)
             self.PDSettings=controllerSettings
+        if rotorInertia is not None:
+            for j in self.robotItem.body.joints:
+                j.setEquivalentRotorInertia(rotorInertia)
+        if controllerSettings:
+            for k, v in controllerSettings.items():
+                if 'rotorInertia' in v:
+                    j = self.robotItem.body.joint(k)
+                    if j is not None:
+                        j.setEquivalentRotorInertia(v['rotorInertia'])
         self.sim.startSimulation()
         sim_body = self.sim.findSimulationBody(self.robot_name)
         if sim_body is None:
@@ -192,8 +202,8 @@ class SimulationEnvironment(object):
         """Set target angle-vector to the robot (similar to RobotInterface)
 
         Args:
-            angle_vector () :
-            tm (float, default=1.0) :
+            angle_vector (numpy.array) : Target angle-vector
+            tm (float, default=1.0) : Target duration of motion
         """
         if self.sequencer is not None:
             self.sequencer.pushNextAngle(angle_vector, tm)
@@ -202,8 +212,8 @@ class SimulationEnvironment(object):
         """Set target angle-vectors to the robot (similar to RobotInterface)
 
         Args:
-            angle_vector_list () :
-            tm_list ( list[ float ] ) :
+            angle_vector_list ( list[ numpy.array ] ) : Target list of angle-vector
+            tm_list ( list[ float ] ) : Target list of motion duration
         """
         if self.sequencer is not None:
             self.sequencer.pushNextAngles(angle_vector_list, tm_list)
