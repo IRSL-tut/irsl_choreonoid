@@ -225,11 +225,11 @@ class Sequencer(object):
             angle_vector ( numpy.array ) : Target angle-vector
             step (int, default=2) : After step cycle, target-angles equals to angle_vector
         """
-        if self.prev_angle_vec is not None:
-            self._appendAngles(angle_vector)
+        if self.prev_angle_vec is None:
+            self.setNoInterpolation( [angle_vector] )
         else:
             mat = np.array( [(self.prev_angle_vec + angle_vector)*0.5, angle_vector] )
-            self.sequence = at.transpose().tolist()
+            self.sequence = mat.transpose().tolist()
     ## def insert(self),###
     def pop(self):
         if len(self.sequence[0]) == 0:
