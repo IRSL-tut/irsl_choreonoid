@@ -292,7 +292,7 @@ class RobotBuilder(object):
             name='LINK_{}'.format(len(self.created_links))
         #groot=self.__di.target
         #hasattr(rb.draw, 'SgPosTransform' )
-        groot=cutil.SgPosTransform(self.__di.SgPosTransform)
+        groot=self.__di.SgPosTransform.clone()
         res = RobotBuilder.searchSceneGraph(groot, 'joint_root')
         if len(res) == 0:
             if root:
@@ -560,38 +560,47 @@ class RobotBuilder(object):
         if shape is not None:
             ## clone
             if type(shape) is cutil.SgGroup:
-                shape = cutil.SgGroup(shape)
+                ##shape = cutil.SgGroup(shape)
+                shape = shape.clone()
             elif type(shape) is cutil.SgPosTransform:
-                shape = cutil.SgPosTransform(shape)
+                ##shape = cutil.SgPosTransform(shape)
+                shape = shape.clone()
             else:
                 print('Invalid type?? shape: {}, type: {}'.format(shape, type(shape)))
                 tmp = cutil.SgGroup()
                 tmp.addChild(shape)
-                shape = cutil.SgGroup(tmp)
+                #shape = cutil.SgGroup(tmp)
+                shape = tmp.clone()
             baselk.addShapeNode(shape)
         if visual is not None:
             ## clone
             if type(visual) is cutil.SgGroup:
-                visual = cutil.SgGroup(visual)
+                #visual = cutil.SgGroup(visual)
+                visual = visual.clone()
             elif type(visual) is cutil.SgPosTransform:
-                visual = cutil.SgPosTransform(visual)
+                #visual = cutil.SgPosTransform(visual)
+                visual = visual.clone()
             else:
                 print('Invalid type?? visual: {}, type: {}'.format(visual, type(visual)))
                 tmp = cutil.SgGroup()
                 tmp.addChild(visual)
-                visual = cutil.SgGroup(tmp)
+                #visual = cutil.SgGroup(tmp)
+                visual = tmp.clone()
             baselk.addVisualShapeNode(visual)
         if collision is not None:
             ## clone
             if type(collision) is cutil.SgGroup:
-                collision = cutil.SgGroup(collision)
+                #collision = cutil.SgGroup(collision)
+                collision = collision.clone()
             elif type(collision) is cutil.SgPosTransform:
-                collision = cutil.SgPosTransform(collision)
+                #collision = cutil.SgPosTransform(collision)
+                collision = collision.clone()
             else:
                 print('Invalid type?? collision: {}, type: {}'.format(collision, type(collision)))
                 tmp = cutil.SgGroup()
                 tmp.addChild(collision)
-                collision = cutil.SgGroup(tmp)
+                #collision = cutil.SgGroup(tmp)
+                collision = tmp.clone()
             baselk.addCollisionShapeNode(collision)
         self.created_links.append(baselk)
         return baselk
