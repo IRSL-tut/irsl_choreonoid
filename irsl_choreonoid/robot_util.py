@@ -828,19 +828,39 @@ def linkDescendants(lk):
         return child_list
 
 def mergedMassPropertyOfAllDescendants(plink):
-    """
+    """Merge mass-property of all descendants of parent link
+
+    Args:
+        plink ( cnoid.Link ) : parent link
+    Returns:
+        (float, numpy.array, numpy.array) : (mass, center of mass[at parent link coordinates], inertia tensor[around center of mass])
     """
     plink_mass = plink.mass
     plink_c = plink.c
     plink_I = plink.I
     plink_coords = coordinates(plink.T)
     for clink in linkDescendants(plink):
-        plink_mass, plink_c, plink_I = mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
+        plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_mass, plink_c, plink_I
 
-def mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
+def mergedMassPropertyOfList(linkList):
+    """Merge mass-property of list of link
+
+    Args:
+        linkList ( list[cnoid.Link] ) : List of link, the first element is treated as the parent link
+    Returns:
+        (coordinates, float, numpy.array, numpy.array) : (base_coordinate, mass, center of mass[at base_coordinates], inertia tensor[around center of mass])
     """
-    """
+    plink = linkList[0]
+    plink_mass = plink.mass
+    plink_c = plink.c
+    plink_I = plink.I
+    plink_coords = coordinates(plink.T)
+    for clink in linkList[1:]:
+        plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
+    return plink_coords, plink_mass, plink_c, plink_I
+
+def _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     new_mass = plink_mass + clink.mass
     ##
     cds_Tb = plink_coords.transformation( coordinates(clink.T) )
