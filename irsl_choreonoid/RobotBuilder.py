@@ -523,10 +523,13 @@ class RobotBuilder(object):
         """
         lk = self.createLinkBase(name=name, mass=mass, COM=COM, density=density, inertia=inertia, shape=shape, visual=visual, collision=collision)
         for k, v in kwargs.items():
-            if type(v) is tuple or type(v) is list:
-                exec('lk.set{}(*v)'.format(k))
-            else:
-                exec('lk.set{}(v)'.format(k))
+            if hasattr(lk, 'set{}'.format(k)):
+                if type(v) is tuple or type(v) is list:
+                    exec('lk.set{}(*v)'.format(k))
+                else:
+                    exec('lk.set{}(v)'.format(k))
+            elif hasattr(lk, '{}'.format(k)):
+                exec('lk.{} = v'.format(k))
         return lk
 
     def createRootLink(self, **kwargs):
