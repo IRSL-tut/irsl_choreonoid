@@ -420,10 +420,10 @@ class RobotBuilder(object):
         """Showing information of links. (joint-type, joint-axis, mass, center-of-mass, inertia)
         Args:
             autoScale (boolean, default=False) :
-            \*\*kwargs :
+            \*\*kwargs : The other keywords will be passed to irsl_choreonoid.RobotBuilder.RobotBuilder.createVisualizedLinkShape
 
         Returns:
-            [] : Created shapes
+            list [ SceneGraph ] : Created shapes
 
         """
         if autoScale:
@@ -890,19 +890,20 @@ class RobotBuilder(object):
         ## TODO / not implemented yet ##
         pass
 
-    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, addDevice=True, addToLink=False, useCollision=False, useInertiaBox=False):
+    def createVisualizedLinkShape(self, alink, scale=0.1, wrapped=True, addCOM=True, addInertia=True, addJoint=True, addDevice=True, addToLink=False, noLinkShape=False, useCollision=False, useInertiaBox=False):
         """
         Args:
-            alink (cnoid.Body.Link) :
-            scale (float, default=0.1) :
-            wrapped (boolean, default=True) :
-            addCOM (boolean, default=True) :
-            addInertia (boolean, default=True) :
-            addJoint (boolean, default=True) :
-            addDevice (boolean, default=True) :
-            addToLink (boolean, default=False) :
-            useCollision (boolean, default=False) :
-            useInertiaBox (boolean, default=False) :
+            alink (cnoid.Body.Link) : Target link to be visualized
+            scale (float, default=0.1) : Scale factor of shapes
+            wrapped (boolean, default=True) : Returns wrapped object
+            addCOM (boolean, default=True) : Add COM(Center Of Mass) shapes
+            addInertia (boolean, default=True) : Add inertia-tensor shapes
+            addJoint (boolean, default=True) : Add joint-type shapes
+            addDevice (boolean, default=True) : Add device-type shapes
+            addToLink (boolean, default=False) : Add shapes directly to alink
+            noLinkShape : (boolean, default=False) :
+            useCollision (boolean, default=False) : Use collision shape as visualized shape
+            useInertiaBox (boolean, default=False) : Use box shape for visualizing inertia-tensor (default: ellipsoid)
 
         Returns:
             Shape : Created shape
@@ -910,9 +911,15 @@ class RobotBuilder(object):
         """
         ## SgTransform(linkPos) / SgTransform(shapeBase)
         if addToLink:
-            cloneed_lk = alink
+            cloned_lk = alink
         else:
             cloned_lk = self.body.createLink(alink)
+            if noLinkShape:
+                cloned_lk.clearShapeNodes()
+            elif useCollision:
+                col = cloned_lk.collisionShape
+                cloned_lk.clearShapeNodes()
+                cloned_lk.addVisualShape(col)
         if addCOM:
             self.addCOMShape(cloned_lk)
         if addInertia:
