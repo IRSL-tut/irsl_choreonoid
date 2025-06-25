@@ -1,5 +1,6 @@
 import cnoid.BodyPlugin as BodyPlugin
 import cnoid.Body as cbody
+import cnoid.Util as cutil
 import cnoid.IRSLUtil as IU
 import irsl_choreonoid.cnoid_base as ib
 from .control_utils import PDController
@@ -255,3 +256,28 @@ class SimulationEnvironment(object):
                 callback(self)
         if stop:
             self.sim.stopSimulation()
+
+def setupSimEnv(robot_class, addFloor=True, initialCoords=None):
+    mrobot = robot_class(world=True)
+    if addFloor:
+        ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor.body')
+    if hasattr(mrobot, 'setSimDefaultPose'):
+        mrobot.setSimDefaultPose()
+    elif hasattr(mrobot, 'setDefaultPose'):
+        mrobot.setDefaultPose()
+    elif hasattr(mrobot, 'setInitialPose'):
+        mrobot.setInitialPose()
+    mrobot.fixLegToCoords(initialCoords)
+    mrobot.item.storeInitialState()
+
+    simenv = SimulationEnvironment(mrobot.item.name)
+
+    return simenv, mrobot
+
+def startSimEnv(simenv, mrobot, pre_wait=2.0, post_wait=2.0, **kwargs):
+    simenv.stop()
+    if hasattr(mrobot, 'getJointSettings'):
+        simenv.start(controllerSettings=mrobot.getJointSettings())
+    else:
+        simenv.start(generatePDSettings=True, **kwargs)
+    simenv.run(pre_wait)
