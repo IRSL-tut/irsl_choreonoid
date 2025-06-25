@@ -1885,11 +1885,11 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         cds = self.rlegEndEffector
         return cds.mid_coords(p, self.llegEndEffector)
 
-    def fixLegToCoords(self, coords, p = 0.5):
+    def fixLegToCoords(self, coords=None, p = 0.5):
         """Locating the robot by fixing the legs to designated coordinates
 
         Args:
-            coords (cnoid.IRSLCoords.coordinates) : Target coordinates ( footMidCoords of this robot will be the same as this coordinates )
+            coords (cnoid.IRSLCoords.coordinates, optional) : Target coordinates ( footMidCoords of this robot will be the same as this coordinates )
             p (float, default=0.5) : Parameter of mid-point. (0.5, 0.0, 1.0 represents the center, rleg, lleg, respectively)
 
         Note:
@@ -1898,6 +1898,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         """
         mc = self.footMidCoords(p)
+        if coords is None:
+            coords = coordinates()
         self.fixSelfCoordsToTarget(mc, coords)
 
     def fixSelfCoordsToTarget(self, selfcoords, target_coords):
