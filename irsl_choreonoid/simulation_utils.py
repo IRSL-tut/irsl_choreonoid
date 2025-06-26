@@ -257,17 +257,33 @@ class SimulationEnvironment(object):
         if stop:
             self.sim.stopSimulation()
 
-def setupSimEnv(robot_class, addFloor=True, initialCoords=None):
+def setupSimEnv(robot_class, addFloor=True, initialCoords=None, initialPose=None):
     mrobot = robot_class(world=True)
     if addFloor:
         ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor.body')
-    if hasattr(mrobot, 'setSimDefaultPose'):
-        mrobot.setSimDefaultPose()
-    elif hasattr(mrobot, 'setDefaultPose'):
-        mrobot.setDefaultPose()
-    elif hasattr(mrobot, 'setInitialPose'):
-        mrobot.setInitialPose()
-    mrobot.fixLegToCoords(initialCoords)
+    if type(initialPose) is str:
+        if hasattr(mrobot, initialPose):
+            setpose = getattr(mrobot, initialPose)
+            setpose()
+        if initialCoords is not None:
+            mrobot.fixLegToCoords(initialCoords)
+    elif type(initialPose) is np.array:
+        mrobot.angleVector(initialPose)
+        mrobot.fixLegToCoords(initialCoords)
+    elif initialPose:
+        if initialCoords is not None:
+            mrobot.fixLegToCoords(initialCoords)
+    else:
+        if hasattr(mrobot, 'setSimDefaultPose'):
+            mrobot.setSimDefaultPose()
+        elif hasattr(mrobot, 'setDefaultPose'):
+            mrobot.setDefaultPose()
+        elif hasattr(mrobot, 'setInitialPose'):
+            mrobot.setInitialPose()
+
+        if initialCoords is not None:
+            mrobot.fixLegToCoords(initialCoords)
+
     mrobot.item.storeInitialState()
 
     simenv = SimulationEnvironment(mrobot.item.name)
@@ -277,7 +293,7 @@ def setupSimEnv(robot_class, addFloor=True, initialCoords=None):
 def startSimEnv(simenv, mrobot, pre_wait=2.0, post_wait=2.0, **kwargs):
     simenv.stop()
     if hasattr(mrobot, 'getJointSettings'):
-        simenv.start(controllerSettings=mrobot.getJointSettings())
+        simenv.start(controllerSettings=mrobot.getJointSettings(**kwargs))
     else:
         simenv.start(generatePDSettings=True, **kwargs)
     simenv.run(pre_wait)
