@@ -618,7 +618,9 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     if colorIndices is not None:
         ps.setColorIndices(colorIndices)
     elif colors is not None:
-        ps.setColorIndices( [0]*ps.sizeOfVertices )
+        lc = len(colors)
+        lp = ps.sizeOfVertices
+        ps.setColorIndices( [ i % lc for i in range(lp) ] )
     ps.updateBoundingBox()
     if rawShape:
         return ps
