@@ -190,8 +190,8 @@ class Sequencer(object):
         if len(self.sequence[0]) == 0:
             self.sequence = vec
         else:
-            if len(self.sequence[0]) != len(vec):
-                raise Exception('invalid length of angles, org: {}, new: {}', len(self.sequence[0]), len(vec))
+            if len(self.sequence) != len(vec):
+                raise Exception('invalid length of angles, org: {}, new: {}', len(self.sequence), len(vec))
             for seq, v in zip(self.sequence, vec):
                 seq += v
     def pushTargetAngle(self, start_angle_vector, angle_vector, time, startVel=None, stopVel=None):
