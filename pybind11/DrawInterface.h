@@ -429,6 +429,7 @@ namespace cnoid {
         void remove_object(SgShapePtr &obj, bool update) {
             posTrans->removeChild(obj, update);
         }
+        SceneWidget *sceneWidget() { return sw; }
     private:
         SgGroup *root;
     };
