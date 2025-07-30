@@ -4,11 +4,53 @@
 // copied from jsk_choreonoid ( https://github.com/kindsenior/jsk_choreonoid )
 #include <cnoid/PyUtil>
 #include "DrawInterface.h"
-
+#include <cstring> // memcpy
 #include <pybind11/pybind11.h>
 
 using namespace cnoid;
 namespace py = pybind11;
+
+typedef unsigned char uchar;
+
+py::array QImageToNumpy(const QImage &in)
+{
+    py::array_t<uchar> res;
+    QImage::Format fm = in.format();
+#if 0
+    printf("format = %d, width = %d, height = %d, bytes = %d, p_line = %d\n",
+           fm, in.width(), in.height(), in.sizeInBytes(), in.bytesPerLine());
+#endif
+    int pixelSize = 4;
+
+    // set Format
+    //QImage::Format_RGB888
+    //QImage::Format_BGR888
+    //QImage::Format_Grayscale8
+    //QImage::Format_Grayscale16
+    pixelSize = 3;
+    QImage tmp = in.convertToFormat(QImage::Format_RGB888);
+    //QImage tmp = in.convertToFormat(QImage::Format_RGB888).rgbSwapped();
+#if 0
+    printf("format = %d, width = %d, height = %d, bytes = %d, p_line = %d\n",
+           tmp.format(), tmp.width(), tmp.height(), tmp.sizeInBytes(), tmp.bytesPerLine());
+#endif
+    res.resize({tmp.height(), tmp.width(), pixelSize});
+
+    py::buffer_info b = res.request();
+    uchar *ptr = static_cast<uchar *>(b.ptr);
+    //
+    if ( tmp.width() * pixelSize == tmp.bytesPerLine() ) {
+        std::memcpy(ptr, tmp.bits(), tmp.sizeInBytes());
+    } else {
+        uchar *src = tmp.bits();
+        for(int i = 0; i < tmp.height(); i++) {
+            std::memcpy(ptr, src, tmp.width()*pixelSize);
+            src += tmp.bytesPerLine();
+            ptr += tmp.width()*pixelSize;
+        }
+    }
+    return res;
+}
 
 PYBIND11_MODULE(DrawInterface, m)
 {
@@ -118,6 +160,12 @@ Returns:
             SgNode *nd = _o.cast<SgNode *>();
             if (!!nd) {  SgNodePtr ptr(nd); self.remove_object(ptr, _update); return true; }
             return false; }, py::arg("obj"), py::arg("update") = false)
+        .def("getImage", [] (GeneralDrawInterface &self) {
+            SceneWidget *sw = self.sceneWidget();
+            if (!!sw) {
+                return QImageToNumpy(sw->getImage());
+            }
+        })
         ;
 
     m.def("flush", &DrawInterface::flushAll); //Deprecated??
