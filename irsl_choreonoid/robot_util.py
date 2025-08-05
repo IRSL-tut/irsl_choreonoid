@@ -2298,6 +2298,33 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             init_coords = root_coords
         return coordsWrapper(allgrp, init_coords=init_coords, scalable=scalable)
 
+    ## device
+    def getDeviceMap(self):
+        """
+            Generates a list of device information dictionaries for all devices
+
+            Returns:
+                list of dict: A list where each element is a dictionary containing the device's coordinates map, type, name, id, and associated link name.
+
+        """
+        return getDeviceMap(self.robot)
+
+    def addDeviceFromMap(self, dev_map):
+        """
+            Adds devices to a robot body from a device map.
+
+            Args:
+                inBody (object): The robot body or RobotModel instance to which devices will be added.
+                dev_map (list of dict): A list of dictionaries, each specifying a device to add.
+                    Each dictionary should contain at least the 'type' and 'link' keys, and may
+                    optionally include 'name', 'id', and other configuration parameters.
+
+            Note:
+                The style of dev_map is the same as the returns from getDeviceMap
+
+        """
+        addDeviceFromMap(self.robot, dev_map)
+
     ## wrappedMethod to cnoid.Body
     def joint(self, name):
         return self.__robot.joint(name)
@@ -2390,6 +2417,58 @@ class ImportedRobotModel(RobotModelWrapped):
 #    def makeRobot(cls, robot=None, item=True, world=True, **kwargs):
 #        print(cls)
 #        return cls(robot=robot, item=item, world=world, **kwargs)
+
+def getDeviceMap(inBody):
+    """
+    Generates a list of device information dictionaries for all devices in the given robot body.
+
+    Args:
+        inBody (object): The robot body object. If it is an instance of `RobotModel`, devices are accessed via `inBody.robot.devices`, otherwise via `inBody.devices`.
+
+    Returns:
+        list of dict: A list where each element is a dictionary containing the device's coordinates map, type, name, id, and associated link name.
+
+    """
+    dlst = inBody.robot.devices if isinstance(inBody, RobotModel) else inBody.devices
+    res = []
+    for d in dlst:
+        tmp_ = ru.make_coords_map(coordinates(d.T_local), method='rotation')
+        tmp_['type'] = d.typeName
+        tmp_['name'] = d.name
+        tmp_['id'] = d.id
+        tmp_['link'] = d.link().name
+        res.append(tmp_)
+    return res
+
+def addDeviceFromMap(inBody, dev_map):
+    """
+    Adds devices to a robot body from a device map.
+
+    Args:
+        inBody (object): The robot body or RobotModel instance to which devices will be added.
+        dev_map (list of dict): A list of dictionaries, each specifying a device to add.
+            Each dictionary should contain at least the 'type' and 'link' keys, and may
+            optionally include 'name', 'id', and other configuration parameters.
+
+    Note:
+        The style of dev_map is the same as the returns from getDeviceMap
+
+    """
+    rbt = inBody.robot if isinstance(inBody, RobotModel) else inBody
+    cntr = 0
+    for d in dev_map:
+        if d['type'] in ['ForceSensor', 'AccelerationSensor', 'RateGyroSensor', 'Imu']:
+            exec('_dev = cnoid.Body.{}()'.format(d['type']))
+            _name = d['name'] if 'name' in d else '{}_{}'.format(d['type'], cntr)
+            _dev.setName(_name)
+            _id = d['id'] if 'id' in d else cntr
+            _dev.setId(_id)
+            _lk=rbt.link( d['link'] )
+            _cds = ru.make_coordinates( d )
+            _dev.T_local(_cds.cnoidPosition)
+            if _lk is not None:
+                rbt.addDevice(_dev, _lk)
+    cntr += 1
 
 ### flush in Base, etc.
 if isInChoreonoid():
