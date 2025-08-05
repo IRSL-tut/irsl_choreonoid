@@ -10,19 +10,19 @@
 - git: ### should move to IRSL-tut
     local-name: ik_solvers
     uri: https://github.com/YoheiKakiuchi/ik_solvers.git
-    version: add_python_with_prioritized_latest
+    version: add_python_with_prioritized_ros2
 - git:
     local-name: prioritized_qp
     uri: https://github.com/IRSL-tut/CNOID_IK_prioritized_qp.git
-    version: irsl_stable
+    version: irsl_ros2
 - git:
     local-name: qp_solvers
     uri: https://github.com/IRSL-tut/CNOID_IK_qp_solvers.git
-    version: irsl_stable
+    version: irsl_ros2
 - git: ### for osqp-cpp
     local-name: abseil_catkin
     uri: https://github.com/IRSL-tut/CNOID_IK_abseil_catkin.git
-    version: irsl_stable
+    version: irsl_ros2
 - git: ### not required ...
     local-name: osqp-eigen
     uri: https://github.com/robotology/osqp-eigen.git
