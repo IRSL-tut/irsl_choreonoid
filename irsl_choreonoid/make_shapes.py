@@ -3,6 +3,7 @@ from numpy import array as npa
 import cnoid.AssimpPlugin
 import cnoid.Util as cutil
 from math import pi as PI
+import math
 
 from .irsl_draw_object import *
 
@@ -1370,6 +1371,34 @@ def makeLineAlignedWall(points, height=1.0, thickness=0.1, **kwargs):
         qlst.append(npa([p[0], -p[1]]))
     qlst.append(qlst[0])
     return makeExtrusion(qlst, [[0., 0., 0.], [0., 0., height]], **kwargs)
+
+def makeLineAxis(from_point, to_point, axis_length=1.0, axis_angle=0.5, ortho_axis=None, **kwargs):
+    """Making simple line and axis
+
+    Args:
+        from_point (numpy.array) : Start of the line
+        to_point (numpy.array) : End of the line, axis tip will indicate at this point
+        axis_length (float, default = 1.0) : Length of the axis tip arrows
+        axis_angle (float, default = 0.5) : Angle of axis tip
+        ortho_axis (numpy.array, optional) :
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+    """
+    import irsl_choreonoid.cnoid_base as ib
+    v = to_point - from_point
+    coordinates.normalizeVector(v)
+    #
+    if ortho_axis is None:
+        cds, fov = ib.getCameraCoords()
+        ray = to_point - cds.pos
+        coordinates.normalizeVector(ray)
+        ortho_axis = numpy.cross(v, ray)
+    #
+    coordinates.normalizeVector(ortho_axis)
+    offa = axis_length *(-math.cos(axis_angle) * v + math.sin(axis_angle) * ortho_axis)
+    offb = axis_length *(-math.cos(axis_angle) * v - math.sin(axis_angle) * ortho_axis)
+    return makeLines([from_point, to_point, to_point + offa, to_point + offb], [(0,1), (1,2), (1,3)], **kwargs)
 ##
 ## Function for exporting
 ##
