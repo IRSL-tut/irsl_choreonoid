@@ -2037,7 +2037,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     ##
     def fullBodyIKRaw(self, targets, limbs, com_target=None, base_target=None,
                    constraint='6D', base_type='xy', com_constraint = [1, 1, 0], weight = 1.0, base_weight = 1.0,
-                   debug = False, max_iteration = 32, threshold = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
+                   debug = False, max_iteration = 32, threshold = 5e-5, threshold_we = 5e-5, use_joint_limit=True, joint_limit_max_error=1e-2,
                    position_precision = None, com_precision = None, joint_limit_precision=0.1, **kwargs):
         """
         """
@@ -2165,8 +2165,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         d_level = 0
         if debug:
             d_level = 1
-        loop = IK.prioritized_solveIKLoop(variables, constraints, tasks,
-                                          max_iteration, threshold, d_level)
+        loop = IK.prioritized_solveIKLoop(variables, constraints, tasks, [0.0],
+                                          max_iteration, threshold, threshold_we, d_level)
         if debug:
             for cntr, consts in enumerate(constraints):
                 for idx, const in enumerate(consts):
