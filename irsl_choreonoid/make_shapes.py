@@ -746,6 +746,32 @@ def makeTetrahedron(base_width, base_height, height, base_center=None, center_x=
     mf.generateNormals(mesh, 1.57, False)
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
+def makeTriangles(vertices, indices=None, wrapped=True, rawShape=False, coords=None, **kwargs):
+    """Making 'Raw Triangle Mesh' shape
+
+    Args:
+        vertices (numpy.array) : N x 3 matrix (N is number of vertices) or list[numpy.array]
+        indices (list[int], optional) : size of this list should be M x 3 (M is number of faces)
+        wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
+        rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
+        coords (cnoid.IRSLCoords.coordinates, optional) :
+        kwargs ( dict[str, param] ) : Keywords for generating material and mesh
+
+    Returns:
+        cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
+
+    """
+    mesh = cutil.SgMesh()
+    vt = npa(vertices, dtype='float32')
+    if indices is None:
+        size = vt.shape[0]//3
+        indices = list(range(size*3))
+    mesh.setVertices(vt)
+    mesh.setFaceVertexIndices(indices)
+    mf = cutil.MeshFilter()
+    mf.generateNormals(mesh, 1.57, False)
+    return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
+
 ### utility functions
 def makeAxis(radius=0.075, length=1.0, axisLength=0.35, axisRadius=0.125, axisRatio=None, color=None, scale=None, coords=None, wrapped=True, **kwargs):
     """Makeing single axis shape using cylinder and cone
