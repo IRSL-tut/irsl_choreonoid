@@ -949,7 +949,7 @@ class RobotBuilder(object):
         Args:
             fname (str) : Name of file
             modelName (str, optional) :
-            mode (int, default=0) :  0:EmbedModels, 1:LinkToOriginalModelFiles, 2:ReplaceWithStdSceneFiles, 3:ReplaceWithObjModelFiles
+            mode (int, default=0) :  0; EmbedModels, 1; LinkToOriginalModelFiles, 2; CopyModelFiles, 3; ReplaceWithStdSceneFiles, 4; ReplaceWithObjModelFiles
             kwargs (dict) :
 
         """
