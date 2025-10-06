@@ -842,7 +842,7 @@ def mergedMassPropertyOfAllDescendants(plink):
     plink_mass = plink.mass
     plink_c = plink.c
     plink_I = plink.I
-    plink_coords = coordinates(plink.T)
+    plink_coords = ic.coordinates(plink.T)
     for clink in linkDescendants(plink):
         plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_mass, plink_c, plink_I
@@ -859,7 +859,7 @@ def mergedMassPropertyOfList(linkList):
     plink_mass = plink.mass
     plink_c = plink.c
     plink_I = plink.I
-    plink_coords = coordinates(plink.T)
+    plink_coords = ic.coordinates(plink.T)
     for clink in linkList[1:]:
         plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_coords, plink_mass, plink_c, plink_I
@@ -867,7 +867,7 @@ def mergedMassPropertyOfList(linkList):
 def _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     new_mass = plink_mass + clink.mass
     ##
-    cds_Tb = plink_coords.transformation( coordinates(clink.T) )
+    cds_Tb = plink_coords.transformation( ic.coordinates(clink.T) )
     #inv_p = plink_coords.inverse_transformation()
     #cds_Tb = inv_p.transform( coordinates(clink.T) )
     p_c_c = np.copy(clink.c)
@@ -1903,7 +1903,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         mc = self.footMidCoords(p)
         if coords is None:
-            coords = coordinates()
+            coords = ic.coordinates()
         self.fixSelfCoordsToTarget(mc, coords)
 
     def fixSelfCoordsToTarget(self, selfcoords, target_coords):
@@ -2290,10 +2290,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         Returns:
             ( irsl_draw_object.coordsWrapper ) : Wrapped SceneGrap (can visualize with DrawInterface)
         """
-        root_coords = coordinates(self.robot.rootLink.T)
+        root_coords = ic.coordinates(self.robot.rootLink.T)
         allgrp = cnoid.Util.SgPosTransform()
         for l in self.linkList:
-            cds = root_coords.transformation(coordinates(l.T))
+            cds = root_coords.transformation(ic.coordinates(l.T))
             trs = cnoid.Util.SgPosTransform()
             trs.T = cds.cnoidPosition
             trs.addChild(cnoid.Util.SgGroup(l.getVisualShape()))
@@ -2436,7 +2436,7 @@ def getDeviceMap(inBody):
     dlst = inBody.robot.devices if isinstance(inBody, RobotModel) else inBody.devices
     res = []
     for d in dlst:
-        tmp_ = ru.make_coords_map(coordinates(d.T_local), method='rotation')
+        tmp_ = ru.make_coords_map(ic.coordinates(d.T_local), method='rotation')
         tmp_['type'] = d.typeName
         tmp_['name'] = d.name
         tmp_['id'] = d.id
