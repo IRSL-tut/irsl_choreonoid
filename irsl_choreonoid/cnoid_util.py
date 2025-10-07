@@ -130,7 +130,7 @@ def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True,
     Args:
         fname (str) :
         body ( cnoid.Body.Body ) :
-        extModelFileMode (int, optional): 0; EmbedModels, 1; LinkToOriginalModelFiles, 2; ReplaceWithStdSceneFiles, 3; ReplaceWithObjModelFiles
+        extModelFileMode (int, optional): 0; EmbedModels, 1; LinkToOriginalModelFiles, 2; CopyModelFiles, 3; ReplaceWithStdSceneFiles, 4; ReplaceWithObjModelFiles
         filePrefix (str, optional) : Add URI for exporting mesh files
         allInOne (boolean, default=True) : Using with filePrefix, if True, all shapes will be exported as a file.
         fixMassParam (boolean, default=False) : If True, links with mass==1.0 and inertia is identity is set small mass-parameter (they may loaded without mass parameter)

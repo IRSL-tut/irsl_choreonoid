@@ -86,6 +86,22 @@ PYBIND11_MODULE(IRSLCoords, m)
         af.computeRotationScaling(&(res[0]), &(res[1]));
         return res;
     });
+    m.def("computeScalingRotation", [] (ref_mat3 affine) {
+        Eigen::Affine3d af;
+        af.matrix()(0, 0) = affine(0, 0);
+        af.matrix()(0, 1) = affine(0, 1);
+        af.matrix()(0, 2) = affine(0, 2);
+        af.matrix()(1, 0) = affine(1, 0);
+        af.matrix()(1, 1) = affine(1, 1);
+        af.matrix()(1, 2) = affine(1, 2);
+        af.matrix()(2, 0) = affine(2, 0);
+        af.matrix()(2, 1) = affine(2, 1);
+        af.matrix()(2, 2) = affine(2, 2);
+        //Eigen::Matrix3d rot, scl;
+        std::vector<Matrix3RM> res(2);
+        af.computeScalingRotation(&(res[0]), &(res[1]));
+        return res;
+    });
 
     /// for cnoid::Position
     m.def("PositionInverse", [](ref_mat4 _position) -> Matrix4RM { cnoidPosition p(_position); return p.inverse().matrix(); }, R"__IRSL__(
