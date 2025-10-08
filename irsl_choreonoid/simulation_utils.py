@@ -116,6 +116,28 @@ class SimulationEnvironment(object):
         """
         return [ self.sim.findSimulationBody(bd.name) for bd in self.bodies ]
 
+    @property
+    def worldTimeStep(self):
+        """
+        Time step of this simulation
+
+        Returns:
+            float : Time-Step [second]
+
+        """
+        return self.sim.worldTimeStep
+
+    @worldTimeStep.setter
+    def worldTimeStep(self, sec):
+        """
+        Set time step of this simulation
+
+        Args:
+            src (float) : Time-Step [second]
+
+        """
+        self.sim.setTimeStep(sec)
+
     def simulationBody(self, name=None):
         """Search simulation body by name
 
@@ -142,11 +164,12 @@ class SimulationEnvironment(object):
         if fixed:
             self.robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
 
-    def start(self, addCountroller=True, addSequencer=True, controllerSettings=None,
+    def start(self, dt=None, addCountroller=True, addSequencer=True, controllerSettings=None,
               P=10000, D=200, generatePDSettings=False, rotorInertia=None, **kwargs):
         """Start simulation
 
         Args:
+            dt (float) : Time step of this simulation [second]
             addCountroller (boolean, default=True) : Adding PDcontroller to servo joints
             addSequencer (boolean, default=True) : Adding sequencer to set target-angles with interpolatin
             controllerSettings (optional) : {'joint_name0': {'P': pgain, 'D': dgain, 'rotorInertia': IM2}, ... }
@@ -154,6 +177,9 @@ class SimulationEnvironment(object):
             D (float, default=200) : default D-gain
             generatePDSettings (boolean, default=False) :
         """
+        if dt is not None:
+            self.worldTimeStep = dt
+
         if generatePDSettings:
             controllerSettings=_generatePDParameters(self.robotItem.body, **kwargs)
             self.PDSettings=controllerSettings
@@ -176,9 +202,9 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer = None
         if addCountroller:
-            self.controller = PDController(self.body, dt=self.sim.worldTimeStep, P=P, D=D, settings=controllerSettings)
+            self.controller = PDController(self._sbody, dt=self.worldTimeStep, P=P, D=D, settings=controllerSettings)
         if addSequencer:
-            self.sequencer = BodySequencer(self.body, dt=self.sim.worldTimeStep)
+            self.sequencer = BodySequencer(self._sbody, dt=self.worldTimeStep)
 
     def storeInitialState(self):
         """Storing initial state of all objects in this world
@@ -219,11 +245,11 @@ class SimulationEnvironment(object):
         if self.sequencer is not None:
             self.sequencer.pushNextAngles(angle_vector_list, tm_list)
 
-    def run(self, sec, update=33, stop=False, callback=None, update_callback=None, **kwargs):
+    def runCount(self, count, update=33, stop=False, callback=None, update_callback=None, **kwargs):
         """Run simulation
 
         Args:
-            sec (float) : Duration for running the simulation
+            count (int) : Number of simulation time steps to run
             update (int, default=33) : Update visual each count of this argument
             stop (boolean, default=False) : If True, stop simulation at the end of this method
             callback ( callable, optional ) : Callback function called every control cycle
@@ -231,7 +257,7 @@ class SimulationEnvironment(object):
         """
         if not self.sim.isRunning():
             self.start(**kwargs)
-        for i in range(math.floor(sec*1000)):
+        for i in range(count):
             if not self.sim.isRunning():
                 break
             ##
@@ -256,6 +282,21 @@ class SimulationEnvironment(object):
                 callback(self)
         if stop:
             self.sim.stopSimulation()
+
+    def run(self, sec, update=33, stop=False, callback=None, update_callback=None, **kwargs):
+        """Run simulation
+
+        Args:
+            sec (float) : Duration for running the simulation
+            update (int, default=33) : Update visual each count of this argument
+            stop (boolean, default=False) : If True, stop simulation at the end of this method
+            callback ( callable, optional ) : Callback function called every control cycle
+            update_callback ( callable, optional ) : Callback function called every update
+        """
+        return self.runCount(math.floor(sec/self.worldTimeStep),
+                             update = update, stop = stop,
+                             callback = callback, update_callback = update_callback,
+                             **kwargs)
 
 def setupSimEnv(robot_class, addFloor=True, initialCoords=None, initialPose=None):
     mrobot = robot_class(world=True)
