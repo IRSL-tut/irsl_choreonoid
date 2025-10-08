@@ -73,7 +73,32 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer = None
         self._world  = None
+        self._sim_body = None
+        self._sbody = None
+        self._robotItem = None
         self._findRobot(fixed)
+
+
+    @property
+    def robot(self):
+        """
+        RobotItem that this instance is treated as main-robot
+        """
+        return self._robotItem
+
+    @property
+    def simBody(self):
+        """
+        SimulationBody that this instance is treated as main-robot
+        """
+        return self._sim_body
+
+    @property
+    def sbody(self):
+        """
+        Body that this instance is treated as main-robot (equal simBody.body)
+        """
+        return self._sbody
 
     @property
     def world(self):
@@ -160,9 +185,9 @@ class SimulationEnvironment(object):
             pass
         if len(res) == 0:
             raise Exception('No robot({}) found under {}'.format(self.robot_name, self.world))
-        self.robotItem = res[0]
+        self._robotItem = res[0]
         if fixed:
-            self.robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
+            self._robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
 
     def start(self, dt=None, addCountroller=True, addSequencer=True, controllerSettings=None,
               P=10000, D=200, generatePDSettings=False, rotorInertia=None, **kwargs):
@@ -181,15 +206,15 @@ class SimulationEnvironment(object):
             self.worldTimeStep = dt
 
         if generatePDSettings:
-            controllerSettings=_generatePDParameters(self.robotItem.body, **kwargs)
+            controllerSettings=_generatePDParameters(self._robotItem.body, **kwargs)
             self.PDSettings=controllerSettings
         if rotorInertia is not None:
-            for j in self.robotItem.body.joints:
+            for j in self._robotItem.body.joints:
                 j.setEquivalentRotorInertia(rotorInertia)
         if controllerSettings:
             for k, v in controllerSettings.items():
                 if 'rotorInertia' in v:
-                    j = self.robotItem.body.joint(k)
+                    j = self._robotItem.body.joint(k)
                     if j is not None:
                         j.setEquivalentRotorInertia(v['rotorInertia'])
         self.sim.startSimulation()
@@ -197,10 +222,10 @@ class SimulationEnvironment(object):
         if sim_body is None:
             self.sim.stopSimulation()
             raise Exception('No body found : {}'.format(self.robot_name))
-        self.sim_body = sim_body
-        self.body = sim_body.body()
+        self._sim_body = sim_body
+        self._sbody = sim_body.body()
         self.controller = None
-        self.sequencer = None
+        self.sequencer  = None
         if addCountroller:
             self.controller = PDController(self._sbody, dt=self.worldTimeStep, P=P, D=D, settings=controllerSettings)
         if addSequencer:
@@ -298,8 +323,8 @@ class SimulationEnvironment(object):
                              callback = callback, update_callback = update_callback,
                              **kwargs)
 
-def setupSimEnv(robot_class, addFloor=True, initialCoords=None, initialPose=None):
-    mrobot = robot_class(world=True)
+def setupSimEnv(robot_class, robotName=None, addFloor=True, initialCoords=None, initialPose=None):
+    mrobot = robot_class(world=True, name=robotName)
     if addFloor:
         ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor.body')
     if type(initialPose) is str:
