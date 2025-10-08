@@ -2388,15 +2388,16 @@ class ImportedRobotModel(RobotModelWrapped):
     """
     model_file = None
     ##
-    def __init__(self, robot=None, item=True, world=False, **kwargs):
+    def __init__(self, robot=None, item=True, world=False, name=None, **kwargs):
         """
         Args:
             robot ( cnoid.Body.Body or cnoid.BodyPlugin.BodyItem ) :
             item (boolean, default=True) : If true, loading as BodyItem
             world (boolean, default=True) : If true, BodyItem will be loaded under WorldItem
+            name (str, optional) : name of loaded model
         """
         if robot is None:
-            robot = self._loadRobotModel(item=item, world=world)
+            robot = self._loadRobotModel(item=item, world=world, name=name)
         ##
         self._setting_before_init(robot, **kwargs)
         super().__init__(robot, **kwargs)
@@ -2410,11 +2411,11 @@ class ImportedRobotModel(RobotModelWrapped):
         ### override at inherited class
         pass
 
-    def _loadRobotModel(self, item=True, world=False):
+    def _loadRobotModel(self, item=True, world=False, name=None):
         if isInChoreonoid() and item:
-            res = loadRobotItem(self.model_file, world=world)
+            res = loadRobotItem(self.model_file, world=world, name=name)
         else:
-            res = loadRobot(self.model_file)
+            res = loadRobot(self.model_file, name=name)
         return res
 
 #    @classmethod
