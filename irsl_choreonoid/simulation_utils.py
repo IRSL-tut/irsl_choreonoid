@@ -231,7 +231,7 @@ class SimulationEnvironment(object):
         """
         if not self.sim.isRunning():
             self.start(**kwargs)
-        for i in range(math.floor(sec*1000)):
+        for i in range(math.floor(sec*1000/self.sim.worldTimeStep)):
             if not self.sim.isRunning():
                 break
             ##
