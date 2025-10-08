@@ -102,14 +102,15 @@ def parseURL(url):
 ##
 ## cnoid Util
 ##
-def loadRobot(fname):
+def loadRobot(fname, name=None, **kwargs):
     """Loading robot model (.body, .vrml, .urdf??)
 
     Args:
-        fname (str): filename of robot-model
+        fname (str) : filename of robot-model
+        name (str, optional) : name of loaded instance
 
     Returns:
-        cnoid.Body: instance of cnoid.Body.Body
+        cnoid.Body.Body : instance of cnoid.Body.Body
 
     """
     bl_ = BodyLoader()
@@ -118,6 +119,10 @@ def loadRobot(fname):
     rb = bl_.load(str(fname))
     if rb is None:
         return None
+    if name is not None:
+        rb.name = name
+    else:
+        rb.name = rb.modelName
     rb.updateLinkTree()
     rb.initializePosition()
     rb.calcForwardKinematics()
