@@ -72,15 +72,7 @@ PYBIND11_MODULE(IRSLCoords, m)
 
     m.def("computeRotationScaling", [] (ref_mat3 affine) {
         Eigen::Affine3d af;
-        af.matrix()(0, 0) = affine(0, 0);
-        af.matrix()(0, 1) = affine(0, 1);
-        af.matrix()(0, 2) = affine(0, 2);
-        af.matrix()(1, 0) = affine(1, 0);
-        af.matrix()(1, 1) = affine(1, 1);
-        af.matrix()(1, 2) = affine(1, 2);
-        af.matrix()(2, 0) = affine(2, 0);
-        af.matrix()(2, 1) = affine(2, 1);
-        af.matrix()(2, 2) = affine(2, 2);
+        af.matrix().topLeftCorner<3,3>() = affine;
         //Eigen::Matrix3d rot, scl;
         std::vector<Matrix3RM> res(2);
         af.computeRotationScaling(&(res[0]), &(res[1]));
@@ -88,16 +80,8 @@ PYBIND11_MODULE(IRSLCoords, m)
     });
     m.def("computeScalingRotation", [] (ref_mat3 affine) {
         Eigen::Affine3d af;
-        af.matrix()(0, 0) = affine(0, 0);
-        af.matrix()(0, 1) = affine(0, 1);
-        af.matrix()(0, 2) = affine(0, 2);
-        af.matrix()(1, 0) = affine(1, 0);
-        af.matrix()(1, 1) = affine(1, 1);
-        af.matrix()(1, 2) = affine(1, 2);
-        af.matrix()(2, 0) = affine(2, 0);
-        af.matrix()(2, 1) = affine(2, 1);
-        af.matrix()(2, 2) = affine(2, 2);
-        //Eigen::Matrix3d rot, scl;
+        af.matrix().topLeftCorner<3,3>() = affine;
+        //Eigen::Matrix3d scl, rot;
         std::vector<Matrix3RM> res(2);
         af.computeScalingRotation(&(res[0]), &(res[1]));
         return res;
@@ -350,6 +334,24 @@ Returns:
                   [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
                   [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.set(q); }, R"__IRSL__(
 Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
+    .def_property("quaternion_xyzw",
+                  [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.set(q); }, R"__IRSL__(
+Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
+    .def_property("quaternion_wxyz",
+                  [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.w(), q.x(), q.y(), q.z()); },
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in(0), q_in(1), q_in(2), q_in(3)); self.set(q); }, R"__IRSL__(
+Rotation part of transformation ( quaternion, real vector with 4 elements, w, x, y, z )
 
 Returns:
     numpy.array : 1x4 vector
