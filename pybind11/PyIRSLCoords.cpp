@@ -355,6 +355,24 @@ Returns:
     numpy.array : 1x4 vector
 
                  )__IRSL__")
+    .def_property("quaternion_xyzw",
+                  [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.x(), q.y(), q.z(), q.w()); },
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in); self.set(q); }, R"__IRSL__(
+Rotation part of transformation ( quaternion, real vector with 4 elements, x, y, z, w )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
+    .def_property("quaternion_wxyz",
+                  [](const coordinates &self) { Quaternion q(self.rot); return Vector4(q.w(), q.x(), q.y(), q.z()); },
+                  [](coordinates &self, ref_vec4 q_in) { Quaternion q(q_in(0), q_in(1), q_in(2), q_in(3)); self.set(q); }, R"__IRSL__(
+Rotation part of transformation ( quaternion, real vector with 4 elements, w, x, y, z )
+
+Returns:
+    numpy.array : 1x4 vector
+
+                 )__IRSL__")
     .def("setCoordsToPosition",
          [](coordinates &self, ref_noconst_mat4 position_to_be_set) {
              Isometry3 _T(Isometry3::Identity());
