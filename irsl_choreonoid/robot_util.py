@@ -2488,6 +2488,32 @@ def addDeviceFromMap(inBody, dev_map):
                 rbt.addDevice(_dev, _lk)
     cntr += 1
 
+def replaceCamera(oldcam, newcam):
+    """
+    Replace oldcam to newcam
+
+    Args:
+        oldcam (cnoid.Body.Camera) :
+        newcam (cnoid.Body.Camera) :
+
+    Returns:
+        cnoid.Body.Camera : replaced Camera
+
+    Note:
+        This is used to change device,Camera to device,DepthCamera
+    """
+    for n in ('name', 'T_local', 'id', 'imageType', 'resolutionX', 'resolutionY',
+              'farClipDistance', 'nearClipDistance', 'fieldOfView', ):
+        setattr(newcam, n, getattr(oldcam, n))
+    bd = oldcam.link().body
+    lk = oldcam.link()
+    bd.removeDevice(oldcam)
+    bd.addDevice(newcam, lk) ## link should be set in body.addDevice
+    for i in range(bd.numDevices):
+        d = bd.device(i)
+        d.index = i
+    return newcam
+
 ### flush in Base, etc.
 if isInChoreonoid():
     from .cnoid_base import *
