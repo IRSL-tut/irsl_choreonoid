@@ -227,7 +227,7 @@ class SimulationEnvironment(object):
         self.controller = None
         self.sequencer  = None
         if addCountroller:
-            self.controller = PDController(self._sbody, dt=self.worldTimeStep, P=P, D=D, settings=controllerSettings)
+            self.controller = PDController(self._sbody, dt=self.worldTimeStep, P=P, D=D, settings=controllerSettings, **kwargs)
         if addSequencer:
             self.sequencer = BodySequencer(self._sbody, dt=self.worldTimeStep)
 
