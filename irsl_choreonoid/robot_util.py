@@ -940,6 +940,11 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.pose_angle_map = {}
         self.pose_coords_map = {}
 
+        self.updateLists()
+
+        self.eef_map = {}
+
+    def updateLists(self):
         ##
         self.__joint_list = self.__robot.jointList()
         self.__joint_map = {}
@@ -960,8 +965,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             while name in self.__device_map:
                 name+='+'
             self.__device_map[name] = d
-            #d.name=name
-        self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
         """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
