@@ -9,6 +9,8 @@ from cnoid.BodyPlugin import AISTSimulatorItem
 from cnoid.BodyPlugin import BodyItem
 from cnoid.BodyPlugin import WorldItem
 
+from cnoid.GLVisionSimulatorPlugin import GLVisionSimulatorItem
+
 from cnoid.IRSLCoords import coordinates
 from numpy import array as npa
 
@@ -98,6 +100,41 @@ def addSimulator(world = None, simulator_name = 'AISTSimulator'):
         world.addChildItem(sim_)
         ItemTreeView.instance.checkItem(sim_)
     return sim_
+
+def createGLVisionSimulatorItem(targetBodies, targetSensors, **kwargs):
+    """
+    Args:
+        targetBodies (str) : name of body
+        targetSensors (str) : name of sensor
+        kwargs : optional settings
+
+    Returns:
+        cnoid.GLVisionSimulatorPlugin.GLVisionSimulatorItem : Creating a item for simulating camera
+
+    Examples:
+        >>> option = { 'MaxFrameRate': 1000,
+                       'MaxLatency': 0,
+                       'VisionDataRecordingEnabled': False,
+                       'DedicatedSensorThreadsEnabled': True,
+                       'BestEffortMode': True,
+                       'RangeSensorPrecisionRatio': 2.0,
+                       'AllSceneObjectsEnabled': True,
+                       'HeadLightEnabled': True,
+                       'AdditionalLightsEnabled': True, }
+
+        >>> vis = createGLVisionSimulatorItem('RobotName', 'LeftCamera,RightCamera', **option)
+    """
+    vsim = GLVisionSimulatorItem()
+    vsim.setTargetBodies(targetBodies)
+    vsim.setTargetSensors(targetSensors)
+    for k, v in kwargs.items():
+        try:
+            f_ = getattr(vsim, 'set{}'.format(k))
+        except Exception:
+            pass
+        else:
+            f_(v)
+    return vsim
 
 def loadRobotItem(fname, name = None, world = True, addItem = True):
     """Load robot model and add it as a BodyItem
