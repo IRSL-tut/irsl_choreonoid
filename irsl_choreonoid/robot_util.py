@@ -940,6 +940,11 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         self.pose_angle_map = {}
         self.pose_coords_map = {}
 
+        self.updateLists()
+
+        self.eef_map = {}
+
+    def updateLists(self):
         ##
         self.__joint_list = self.__robot.jointList()
         self.__joint_map = {}
@@ -960,8 +965,6 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             while name in self.__device_map:
                 name+='+'
             self.__device_map[name] = d
-            #d.name=name
-        self.eef_map = {}
 
     def registerNamedPose(self, name, angles = None, root_coords = None):
         """Registering named pose for using with irsl_choreonoid.robot_util.RobotModelWrapped.setNamedPose
@@ -2434,10 +2437,10 @@ def getDeviceMap(inBody):
         list of dict: A list where each element is a dictionary containing the device's coordinates map, type, name, id, and associated link name.
 
     """
-    dlst = inBody.robot.devices if isinstance(inBody, RobotModel) else inBody.devices
+    dlst = inBody.robot.devices if isinstance(inBody, RobotModelWrapped) else inBody.devices
     res = []
     for d in dlst:
-        tmp_ = ru.make_coords_map(ic.coordinates(d.T_local), method='rotation')
+        tmp_ = make_coords_map(ic.coordinates(d.T_local), method='rotation')
         tmp_['type'] = d.typeName
         tmp_['name'] = d.name
         tmp_['id'] = d.id
@@ -2459,21 +2462,60 @@ def addDeviceFromMap(inBody, dev_map):
         The style of dev_map is the same as the returns from getDeviceMap
 
     """
-    rbt = inBody.robot if isinstance(inBody, RobotModel) else inBody
+    rbt = inBody.robot if isinstance(inBody, RobotModelWrapped) else inBody
     cntr = 0
     for d in dev_map:
-        if d['type'] in ['ForceSensor', 'AccelerationSensor', 'RateGyroSensor', 'Imu']:
-            exec('_dev = cnoid.Body.{}()'.format(d['type']))
+        if 'type' in d:
+            try:
+                _dev = getattr(cnoid.Body, d['type'])()
+            except Exception:
+                continue
+            ##
             _name = d['name'] if 'name' in d else '{}_{}'.format(d['type'], cntr)
             _dev.setName(_name)
             _id = d['id'] if 'id' in d else cntr
             _dev.setId(_id)
             _lk=rbt.link( d['link'] )
-            _cds = ru.make_coordinates( d )
+            _cds = make_coordinates( d )
             _dev.T_local(_cds.cnoidPosition)
+            ##
+            if 'args' in  d:
+                for k, v in d['args'].items():
+                    try:
+                        f_ = getattr(_dev, 'set{}'.format(k))
+                    except Exception:
+                        pass
+                    else:
+                        f_(v)
             if _lk is not None:
                 rbt.addDevice(_dev, _lk)
     cntr += 1
+
+def replaceCamera(oldcam, newcam):
+    """
+    Replace oldcam to newcam
+
+    Args:
+        oldcam (cnoid.Body.Camera) :
+        newcam (cnoid.Body.Camera) :
+
+    Returns:
+        cnoid.Body.Camera : replaced Camera
+
+    Note:
+        This is used to change device,Camera to device,DepthCamera
+    """
+    for n in ('name', 'T_local', 'id', 'imageType', 'resolutionX', 'resolutionY',
+              'farClipDistance', 'nearClipDistance', 'fieldOfView', ):
+        setattr(newcam, n, getattr(oldcam, n))
+    bd = oldcam.link().body
+    lk = oldcam.link()
+    bd.removeDevice(oldcam)
+    bd.addDevice(newcam, lk) ## link should be set in body.addDevice
+    for i in range(bd.numDevices):
+        d = bd.device(i)
+        d.index = i
+    return newcam
 
 ### flush in Base, etc.
 if isInChoreonoid():

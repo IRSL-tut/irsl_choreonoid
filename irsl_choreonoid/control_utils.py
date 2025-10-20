@@ -7,7 +7,7 @@ import numpy as np
 #
 #####
 class ControlPD(object):
-    def __init__(self, dt=0.001, P=10, D=0.01, VP=None):
+    def __init__(self, dt=0.001, P=10, D=0.01, VP=None, simple=False):
         """
         """
         self.dt = dt
@@ -18,12 +18,19 @@ class ControlPD(object):
         self.P = P
         self.D = D
         self.VP = VP
+        if simple:
+            self._calc = ControlPD.calc_simple
+        else:
+            self._calc = ControlPD.calc
 
     def setTarget(self, target_q, target_dq = 0.0):
         """
         """
         self.target_angle    = target_q
         self.target_velocity = target_dq
+
+    def doCalc(self, q, vel=None):
+        return self._calc(self, q, vel)
 
     def calc(self, q, vel=None):
         """
@@ -47,16 +54,36 @@ class ControlPD(object):
         self.prev_angle = q
         return res
 
+    def calc_simple(self, q, vel=None):
+        """
+        """
+        if self.prev_angle is None:
+            self.prev_angle = q
+        if vel is None:
+            current_velocity = (q - self.prev_angle)/self.dt
+        else:
+            current_velocity = vel
+        ##
+        err = self.target_angle - q
+        self.prev_angle = q
+        return self.P * err - self.D * current_velocity
+
 class JointPD(ControlPD):
-    def __init__(self, joint, **kwargs):
+    def __init__(self, joint, effortRange=None, **kwargs):
         """
         """
         super().__init__(**kwargs)
         self.joint = joint
         self.target_angle    = joint.q
         self.target_velocity = joint.dq
-        self.joint.q_target = joint.q
+        self.joint.q_target  = joint.q
         self.joint.dq_target = joint.dq
+        self.erange = None
+        if effortRange is True:
+            self.erange = (joint.u_lower, joint.u_upper)
+        elif effortRange is not None:
+            self.erange = effortRange
+
     def setJointTarget(self):
         """
         """
@@ -66,17 +93,22 @@ class JointPD(ControlPD):
     def set(self):
         """
         """
-        u = self.calc(self.joint.q)
+        u = self.doCalc(self.joint.q)
+        if self.erange is not None:
+            u = max(self.erange[0], min(u, self.erange[1]))
         self.joint.u = u
 
     def setWithVel(self):
         """
         """
-        u = self.calc(self.joint.q, self.joint.dq)
+        u = self.doCalc(self.joint.q, self.joint.dq)
+        if self.erange is not None:
+            u = self.erange[1] if u > self.erange[1] else u
+            u = self.erange[0] if u < self.erange[0] else u
         self.joint.u = u
 
 class PDController(object):
-    def __init__(self, body, dt=0.001, P=100, D=0.01, VP=None, settings=None):
+    def __init__(self, body, dt=0.001, P=100, D=0.01, VP=None, settings=None, **kwargs):
         """
         """
         self.body = body
@@ -86,9 +118,10 @@ class PDController(object):
         self.default_D = D
         self.default_VP = VP
         self.settings = settings
-        self.controllers = [ self.setJointPD(body.joint(idx)) for idx in range(self.len) ]
+        self.controllers = [ self.setJointPD(body.joint(idx), **kwargs) for idx in range(self.len) ]
+        self._control = PDController.controlNoVel
 
-    def setJointPD(self, joint):
+    def setJointPD(self, joint, **kwargs):
         lnm = joint.name
         jnm = joint.jointName
         if self.settings is not None and lnm in self.settings:
@@ -96,13 +129,16 @@ class PDController(object):
         elif self.settings is not None and jnm in self.settings:
             s_ = self.settings[jnm]
         else:
-            return JointPD(joint, dt=self.dt, P=self.default_P, D=self.default_D, VP=self.default_VP)
+            return JointPD(joint, dt=self.dt, P=self.default_P, D=self.default_D, VP=self.default_VP, **kwargs)
         return JointPD(joint, dt=self.dt,
                        P  = s_['P']  if 'P'  in s_ else self.default_P,
                        D  = s_['D']  if 'D'  in s_ else self.default_D,
-                       VP = s_['VP'] if 'VP' in s_ else self.default_VP)
+                       VP = s_['VP'] if 'VP' in s_ else self.default_VP, **kwargs)
 
-    def control(self, setJointTarget=True):
+    def control(self, **kwargs):
+        self._control(self, **kwargs)
+
+    def controlNoVel(self, setJointTarget=True):
         """
         """
         for ctrl in self.controllers:
