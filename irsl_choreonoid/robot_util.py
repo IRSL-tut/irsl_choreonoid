@@ -2434,10 +2434,10 @@ def getDeviceMap(inBody):
         list of dict: A list where each element is a dictionary containing the device's coordinates map, type, name, id, and associated link name.
 
     """
-    dlst = inBody.robot.devices if isinstance(inBody, RobotModel) else inBody.devices
+    dlst = inBody.robot.devices if isinstance(inBody, RobotModelWrapped) else inBody.devices
     res = []
     for d in dlst:
-        tmp_ = ru.make_coords_map(ic.coordinates(d.T_local), method='rotation')
+        tmp_ = make_coords_map(ic.coordinates(d.T_local), method='rotation')
         tmp_['type'] = d.typeName
         tmp_['name'] = d.name
         tmp_['id'] = d.id
@@ -2459,18 +2459,31 @@ def addDeviceFromMap(inBody, dev_map):
         The style of dev_map is the same as the returns from getDeviceMap
 
     """
-    rbt = inBody.robot if isinstance(inBody, RobotModel) else inBody
+    rbt = inBody.robot if isinstance(inBody, RobotModelWrapped) else inBody
     cntr = 0
     for d in dev_map:
-        if d['type'] in ['ForceSensor', 'AccelerationSensor', 'RateGyroSensor', 'Imu']:
-            exec('_dev = cnoid.Body.{}()'.format(d['type']))
+        if 'type' in d:
+            try:
+                _dev = getattr(cnoid.Body, d['type'])()
+            except Exception:
+                continue
+            ##
             _name = d['name'] if 'name' in d else '{}_{}'.format(d['type'], cntr)
             _dev.setName(_name)
             _id = d['id'] if 'id' in d else cntr
             _dev.setId(_id)
             _lk=rbt.link( d['link'] )
-            _cds = ru.make_coordinates( d )
+            _cds = make_coordinates( d )
             _dev.T_local(_cds.cnoidPosition)
+            ##
+            if 'args' in  d:
+                for k, v in d['args'].items():
+                    try:
+                        f_ = getattr(_dev, 'set{}'.format(k))
+                    except Exception:
+                        pass
+                    else:
+                        f_(v)
             if _lk is not None:
                 rbt.addDevice(_dev, _lk)
     cntr += 1
