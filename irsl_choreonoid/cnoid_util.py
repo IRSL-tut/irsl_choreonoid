@@ -15,6 +15,7 @@ import cnoid.Util
 import numpy as np
 
 from .make_shapes import addUriToShape
+from .make_shapes import extractShapes
 from .make_shapes import exportMesh
 
 from urllib.parse import urlparse
@@ -128,7 +129,7 @@ def loadRobot(fname, name=None, **kwargs):
     rb.calcForwardKinematics()
     return rb
 
-def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True, fixMassParam=True):
+def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True, fixMassParam=True, fixMaterial=True):
     """
     Exporting .body file from an instance of cnoid.Body.Body
 
@@ -139,6 +140,7 @@ def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True,
         filePrefix (str, optional) : Add URI for exporting mesh files
         allInOne (boolean, default=True) : Using with filePrefix, if True, all shapes will be exported as a file.
         fixMassParam (boolean, default=False) : If True, links with mass==1.0 and inertia is identity is set small mass-parameter (they may loaded without mass parameter)
+        fixMaterial ( bool, default=True) : add empty material if shape does not has material
 
     """
     if filePrefix is not None:
@@ -152,6 +154,15 @@ def exportBody(fname, body, extModelFileMode=None, filePrefix='', allInOne=True,
             else:
                 addUriToShape(lk.visualShape, '{}{}_vis'.format(filePrefix, nm), 'file://')
                 addUriToShape(lk.collisionShape, '{}{}_col'.format(filePrefix, nm), 'file://')
+    ##
+    if fixMaterial: ## exporting may fail without material
+        for lk in body.links:
+            for top in (lk.visualShape, lk.collisionShape):
+                for shape, coords in extractShapes(top):
+                    if shape.mesh.primitiveType == cnoid.Util.SgMesh.MeshType:
+                        if shape.material is None:
+                            shape.getOrCreateMaterial()
+    ##
     bw = StdBodyWriter()
     bw.setMessageSinkStdErr()
     if extModelFileMode is not None:
