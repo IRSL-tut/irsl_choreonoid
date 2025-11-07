@@ -2477,7 +2477,7 @@ def addDeviceFromMap(inBody, dev_map):
             _dev.setId(_id)
             _lk=rbt.link( d['link'] )
             _cds = make_coordinates( d )
-            _dev.T_local(_cds.cnoidPosition)
+            _dev.T_local = _cds.cnoidPosition
             ##
             if 'args' in  d:
                 for k, v in d['args'].items():
