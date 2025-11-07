@@ -165,6 +165,182 @@ def extractDrawables(sg_node, currentCoords=None):
     """
     return extractNode(sg_node, currentCoords=currentCoords, nodeTypes=[cutil.SgShape, cutil.SgPlot, cutil.SgText])
 
+def removeCollisionInLink(inlink):
+    """Remove collision shapes from a specific link while preserving its visual shapes.
+
+    Args:
+        inlink (cnoid.Body.Link) : Link object
+
+    Notes:
+        The operation mutates `inlink` in place. Any collision geometry originally
+        attached to the link will be removed.
+    """
+    shape=inlink.visualShape.clone()
+    inlink.clearShapeNodes()
+    for i in range(shape.numChildren):
+        inlink.addVisualShapeNode(shape.getChild(i))
+
+def removeVisualInLink(inlink):
+    """Remove visual geometry from a link, preserving only its collision shapes.
+
+    Args:
+        inlink (cnoid.Body.Link) : Link object
+
+    Notes:
+        The operation mutates `inlink` in place. Any collision geometry originally
+        attached to the link will be removed.
+    """
+
+    shape=inlink.collisionShape.clone()
+    inlink.clearShapeNodes()
+    for i in range(shape.numChildren):
+        inlink.addCollisionShapeNode(shape.getChild(i))
+
+def addCollisionShape(target_link, shape_from_mkshapes):
+    """Add a collision shape node to a target link with the correct relative transform.
+
+    Args:
+        target_link (cnoid.Body.Link) : Link object
+        shape_from_mkshapes (irsl_choreonoid.irsl_draw_object.coordsWrapper) : A shape wrapper (e.g., from mkshapes)
+
+    Notes:
+        This function computes the relative transform between the target link's frame
+        and the provided shape, wraps the shape's scene graph node in an SgPosTransform
+        with that pose, and registers it as a collision shape on the link.
+
+    """
+
+    offset = target_link.getCoords().transformation(shape_from_mkshapes)
+    trans=cutil.SgPosTransform()
+    trans.T = offset.cnoidPosition
+    trans.addChild(shape_from_mkshapes.object)
+    target_link.addCollisionShapeNode(trans)
+
+def addVisualShape(target_link, shape_from_mkshapes):
+    """Add a visual shape node to a target link with the correct relative transform.
+
+    Args:
+        target_link (cnoid.Body.Link) : Link object
+        shape_from_mkshapes (irsl_choreonoid.irsl_draw_object.coordsWrapper) : A shape wrapper (e.g., from mkshapes)
+
+    Notes:
+        This function computes the relative transform between the target link's frame
+        and the provided shape, wraps the shape's scene graph node in an SgPosTransform
+        with that pose, and registers it as a collision shape on the link.
+
+    """
+    offset = target_link.getCoords().transformation(shape_from_mkshapes)
+    trans=cutil.SgPosTransform()
+    trans.T = offset.cnoidPosition
+    trans.addChild(shape_from_mkshapes.object)
+    target_link.addVisualShapeNode(trans)
+
+def replaceCollision(alink, madeShape):
+    """Replace the collision geometry attached to a link.
+
+    Removes all existing collision shapes from the given link and, if a new shape
+    is provided, attaches it as the current collision geometry.
+
+    Args:
+        alink (cnoid.Body.Link) : Link object
+        madeShape (irsl_choreonoid.irsl_draw_object.coordsWrapper) : A shape wrapper (e.g., from mkshapes) to be added
+
+    """
+
+    removeCollisionInLink(alink)
+    if madeShape is not None:
+        addCollisionShape(alink, madeShape)
+
+def replaceVisual(alink, madeShape):
+    """Replace the visual geometry attached to a link.
+
+    Removes all existing visual shapes from the given link and, if a new shape
+    is provided, attaches it as the current visual geometry.
+
+    Args:
+        alink (cnoid.Body.Link) : Link object
+        madeShape (irsl_choreonoid.irsl_draw_object.coordsWrapper) : A shape wrapper (e.g., from mkshapes) to be added
+
+    """
+    removeVisualInLink(alink)
+    if madeShape is not None:
+        addVisualShape(alink, madeShape)
+
+def removeNodes(sg_node, target_nodes):
+    """Recursively remove specified nodes from a scene-graph subtree.
+
+    Traverses the children of the given scene-graph node depth-first and removes
+    any child that appears in the provided target_nodes collection. Traversal only
+    descends into nodes identified as group nodes by isGroupNode(). Non-group nodes
+    are not traversed. This function mutates the scene graph in place.
+
+    Args:
+        sg_node (cnoit.Util.SgNode) : The root node of the subtree to process.
+        target_nodes ( [ cnoit.Util.SgNode ] ) : A collection of nodes to remove from the scene graph.
+
+    """
+
+    if sg_node.isGroupNode():
+        for idx in range(sg_node.numChildren):
+            ch = sg_node.getChild(idx)
+            if ch in target_nodes:
+                sg_node.removeChild(ch)
+            else:
+                removeNodes(ch, target_nodes)
+
+def removePrimitiveTypeNodes(sg_node, type_list=None):
+    """Remove shape nodes with specified primitive types from a scene graph node.
+
+    This function traverses the given scene graph node, collects shape nodes via
+    `extractShapes`, and removes those whose `mesh.primitiveType` matches any of the
+    values in `type_list`. If `type_list` is None, all extracted shape nodes are removed.
+
+    Args:
+        sg_node (cnoit.Util.SgNode) : The root or parent scene graph node to process.
+        type_list ([int]) : Optional iterable of primitive type identifiers to match against each shape's `mesh.primitiveType`. If None, all shapes are targeted for removal.
+
+    Notes:
+        - Condidates of type_list : [ SgMesh.MeshType, SgMesh.BoxType, SgMesh.SphereType, SgMesh.CylinderType, SgMesh.ConeType, SgMesh.CapsuleType ]
+
+    """
+
+    lst = extractShapes( sg_node )
+    tgt = [ l[0] for l in lst if l[0].mesh.primitiveType in type_list ] if type_list is not None else [ l[0] for l in lst ]
+    if len(tgt) > 0:
+        removeNodes(sg_node, tgt)
+
+def removePrimitiveTypeTrees(sg_group, meshTypes = [cutil.SgMesh.CylinderType]):
+    """Remove shape nodes with specified primitive types from a scene graph node.
+
+    This function traverses the given scene graph node, collects shape nodes via
+    `extractShapes`, and removes those whose `mesh.primitiveType` matches any of the
+    values in `type_list`. If `type_list` is None, all extracted shape nodes are removed.
+
+    Args:
+        sg_node (cnoit.Util.SgNode) : The root or parent scene graph node to process.
+        meshTypes ([int]) : Optional iterable of primitive type identifiers to match against each shape's `mesh.primitiveType`. If None, all shapes are targeted for removal.
+
+    Notes:
+        - Condidates of type_list : [ SgMesh.MeshType, SgMesh.BoxType, SgMesh.SphereType, SgMesh.CylinderType, SgMesh.ConeType, SgMesh.CapsuleType ]
+
+    """
+    if not hasattr(sg_group, 'numChildren'): ## not group node
+        return
+    rmv = []
+    for i in range(sg_group.numChildren):
+        ch = sg_group.getChild(i)
+        lst =  [ tpl[0].mesh.primitiveType for tpl in extractShapes(ch) ]
+        if len(lst) > 0:
+            if all([ l in  meshTypes for l in lst ]):
+                rmv.append(ch)
+    for r in rmv:
+        sg_group.removeChild(r)
+    ##
+    if sg_group.numChildren >= 1:
+        for i in range(sg_group.numChildren):
+            removeMeshType(sg_group.getChild(i), meshTypes)
+
+### load functions
 def loadScene(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, coords=None, **kwargs):
     """Loading scene(wrl, scene, ...) file using cnoid.Util.SceneLoader
 
@@ -285,6 +461,7 @@ def loadMesh(fname, meshScale=None, fileUri=None, wrapped=True, rawShape=False, 
             ret.setPosition(coords.cnoidPosition)
     return ret
 
+### draw functions
 def __genShape(mesh, meshScale=None, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
     sg = cutil.SgShape()
     sg.setMesh(mesh)
