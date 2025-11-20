@@ -1731,7 +1731,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : Current coordinates of end-effector of limb
 
         """
-        return self.getLimb(limb_name).EndEffector
+        return self.getLimb(limb_name).endEffector
 
     @property
     def rleg(self):
