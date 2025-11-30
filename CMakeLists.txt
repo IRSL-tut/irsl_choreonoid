@@ -7,6 +7,16 @@ project(irsl_choreonoid)
 #add_compile_options(-std=c++17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
+if(NOT (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR}) )
+  set(WITHOUT_CATKIN TRUE)
+  add_subdirectory(pybind11)
+  install(DIRECTORY irsl_choreonoid
+    DESTINATION ${CHOREONOID_PYTHON_SUBDIR}
+    USE_SOURCE_PERMISSIONS
+  )
+  return()
+endif()
+
 ##find_package(catkin REQUIRED COMPONENTS xxxx)
 find_package(catkin REQUIRED)
 find_package(choreonoid REQUIRED)
