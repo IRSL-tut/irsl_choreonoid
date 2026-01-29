@@ -277,7 +277,7 @@ class SetupCnoid(object):
         Args:
             info_dict ( dict['key': value] ) : Dictionary for representing objects on environment
             world (str, default='World') : Name of WorldItem, added objects under this item
-            craeteWorld (boolean, default=False) : If True, creating new WorldItem
+            createWorld (boolean, default=False) : If True, creating new WorldItem
             setCamera (boolean, default=False) : If True, set camera position
             offset (cnoid.IRSLCoords.coordinates) : Offset of objects
         """
@@ -448,7 +448,7 @@ class SetupCnoid(object):
             kwargs (dict) : Keyword to pass to setup_cnoid.buildEnvironment
 
         Returns:
-            irsl_choreonoid_ros.setup_cnoid : Instance of setup_cnoid
+            irsl_choreonoid.setup_cnoid : Instance of setup_cnoid
 
         """
         cnoid = cls()
@@ -465,7 +465,7 @@ class SetupCnoid(object):
             kwargs (dict) : Keyword to pass to setup_cnoid.createCnoid
 
         Returns:
-            irsl_choreonoid_ros.setup_cnoid : Instance of setup_cnoid
+            irsl_choreonoid.setup_cnoid : Instance of setup_cnoid
 
         """
         cnoid = cls()
@@ -479,7 +479,7 @@ class SetupCnoid(object):
         Args:
             info_dict ( dict['key': value] ) : Dictionary for representing objects on environment
             world (str, default='World') : Name of WorldItem, added objects under this item
-            craeteWorld (boolean, default=False) : If True, creating new WorldItem
+            createWorld (boolean, default=False) : If True, creating new WorldItem
             setCamera (boolean, default=False) : If True, set camera position
             offset (cnoid.IRSLCoords.coordinates) : Offset of objects
         """
