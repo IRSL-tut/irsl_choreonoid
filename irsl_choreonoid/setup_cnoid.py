@@ -195,7 +195,7 @@ class _BodyItemWrapper(object):
         check = True
         if 'no_check' in info and info['no_check']:
             check = False
-        else:
+        if check:
             ItemTreeView.instance.checkItem(self.body_item)
 
     def _addPrimitiveWithShape(self, shape, info):
@@ -649,4 +649,4 @@ class SetupCnoid(object):
             # script.setBackgroundMode(False)
             _applyParameter(script, param)
             self.world_item.addChildItem(script)## ? insert
-        itemTreeView.checkItem(script)
+            itemTreeView.checkItem(script)
