@@ -7,16 +7,17 @@ from cnoid.GLVisionSimulatorPlugin import GLVisionSimulatorItem
 from cnoid.BodyPlugin import BodyItem
 from cnoid.BodyPlugin import WorldItem
 from cnoid.BodyPlugin import SimulationBar
+
+# from cnoid.PythonSimScriptPlugin import PythonSimScriptItem
+
 ##
 import cnoid.Body as cbody
 
-import cnoid.Util
 from cnoid.IRSLCoords import coordinates
 
 from .cnoid_util import parseURL
 from .robot_util import make_coordinates
 
-import irsl_choreonoid.cnoid_util as iu
 import irsl_choreonoid.cnoid_base as ib
 import irsl_choreonoid.make_shapes as mkshapes
 
