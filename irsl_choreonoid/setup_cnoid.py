@@ -400,17 +400,20 @@ class SetupCnoid(object):
         files = _splitFiles(yamlFile)
         if files is None:
             fname = self._parseURL(yamlFile)
-            info_ = yaml.safe_load(open(fname))
+            with open(fname) as f:
+                info_ = yaml.safe_load(f)
             self.buildEnvironment(info_, **kwargs)
         else:
             fname = self._parseURL(files[0])
-            info_ = yaml.safe_load(open(fname))
+            with open(fname) as f:
+                info_ = yaml.safe_load(f)
             self.buildEnvironment(info_, **kwargs)
             kwargs['createWorld'] = False
             kwargs['setCamera'] = False
             for f in files[1:]:
                 fname = self._parseURL(f)
-                info_ = yaml.safe_load(open(fname))
+                with open(fname) as f:
+                    info_ = yaml.safe_load(f)
                 self.buildEnvironment(info_, **kwargs)
 
     def createCnoidFromYaml(self, yamlFile, **kwargs):
@@ -425,17 +428,20 @@ class SetupCnoid(object):
         files = _splitFiles(yamlFile)
         if files is None:
             fname = self._parseURL(yamlFile)
-            info_ = yaml.safe_load(open(fname))
+            with open(fname) as f:
+                info_ = yaml.safe_load(f)
             self.createCnoid(info_, **kwargs)
         else:
             fname = self._parseURL(files[0])
-            info_ = yaml.safe_load(open(fname))
+            with open(fname) as f:
+                info_ = yaml.safe_load(f)
             self.createCnoid(info_, **kwargs)
             kwargs['createWorld'] = False
             kwargs['setCamera'] = False
             for f in files[1:]:
                 fname = self._parseURL(f)
-                info_ = yaml.safe_load(open(fname))
+                with open(fname) as f:
+                    info_ = yaml.safe_load(f)
                 self.buildEnvironment(info_, **kwargs)
 
     @classmethod
