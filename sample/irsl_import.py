@@ -45,6 +45,7 @@ try:
     from irsl_choreonoid_ros.RobotInterface import RobotInterface
     from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
 except ImportError:
+    from irsl_choreonoid.setup_cnoid import SetupCnoid
     pass
 ## utility
 def exec_script(fname, *args):
