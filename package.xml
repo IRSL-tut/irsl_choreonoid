@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>irsl_choreonoid</name>
   <version>0.0.0</version>
   <description>choreonoid utility package</description>
@@ -8,13 +8,14 @@
 
   <license>MIT</license>
 
-  <buildtool_depend>ament</buildtool_depend>
-  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake_python</buildtool_depend>
 
   <depend>choreonoid</depend>
   <depend>ik_solvers_python</depend>
 
   <export>
-    <build_type>ament_cmake</build_type>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
   </export>
 </package>
