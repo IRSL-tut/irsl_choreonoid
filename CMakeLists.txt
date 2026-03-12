@@ -11,11 +11,19 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
 ament_python_install_package(irsl_choreonoid)
-else()
-
-endif()
 
 find_package(choreonoid REQUIRED)
+else()
+find_package(catkin REQUIRED)
+find_package(choreonoid REQUIRED)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES irsl_choreonoid
+  #CATKIN_DEPENDS choreonoid
+  DEPENDS CHOREONOID
+)
+endif()
 
 ### debug print variables
 ##get_cmake_property(_variableNames CACHE_VARIABLES)
