@@ -12,10 +12,10 @@ namespace py = pybind11;
 
 typedef unsigned char uchar;
 
-py::array QImageToNumpy(const QImage &in)
+py::array QImageToNumpy(const QImage &in, bool bgr = false)
 {
     py::array_t<uchar> res;
-    QImage::Format fm = in.format();
+    QImage::Format ifm = in.format();
 #if 0
     printf("format = %d, width = %d, height = %d, bytes = %d, p_line = %d\n",
            fm, in.width(), in.height(), in.sizeInBytes(), in.bytesPerLine());
@@ -28,8 +28,20 @@ py::array QImageToNumpy(const QImage &in)
     //QImage::Format_Grayscale8
     //QImage::Format_Grayscale16
     pixelSize = 3;
+#if QT_VERSION < QT_VERSION_CHECK(8, 14, 0)
     QImage tmp = in.convertToFormat(QImage::Format_RGB888);
-    //QImage tmp = in.convertToFormat(QImage::Format_RGB888).rgbSwapped();
+    if (bgr) {
+        tmp = tmp.rgbSwapped();
+    }
+#else
+    QImage::Format ofm;
+    if (bgr) {
+        ofm = QImage::Format_BGR888;
+    } else {
+        ofm = QImage::Format_RGB888;
+    }
+    QImage tmp = in.convertToFormat(ofm);
+#endif
 #if 0
     printf("format = %d, width = %d, height = %d, bytes = %d, p_line = %d\n",
            tmp.format(), tmp.width(), tmp.height(), tmp.sizeInBytes(), tmp.bytesPerLine());
@@ -160,12 +172,14 @@ Returns:
             SgNode *nd = _o.cast<SgNode *>();
             if (!!nd) {  SgNodePtr ptr(nd); self.remove_object(ptr, _update); return true; }
             return false; }, py::arg("obj"), py::arg("update") = false)
-        .def("getImage", [] (GeneralDrawInterface &self) {
+        .def("getImage", [] (GeneralDrawInterface &self, bool bgr) {
             SceneWidget *sw = self.sceneWidget();
+            py::object res = py::none();
             if (!!sw) {
-                return QImageToNumpy(sw->getImage());
+                res = QImageToNumpy(sw->getImage(), bgr);
             }
-        })
+            return res;
+        }, py::arg("bgr") = false)
         ;
 
     m.def("flush", &DrawInterface::flushAll); //Deprecated??
