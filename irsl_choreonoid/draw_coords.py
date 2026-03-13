@@ -474,3 +474,19 @@ Using for drawing SceneGraph objects interactively
             super().removePyObject(obj.target, update)
         else:
             super().removePyObject(obj, update)
+
+    def addAll(self, *objs, update=True):
+        """Add all objects contained in the arguments
+
+        Args:
+            objs* ( cnoid.Util.SgNode or list contained SgNode ) : objects to be drawn
+            update (boolean, default = True) : if True, rendering scene immediately
+        """
+        for o in objs:
+            tp=type(o)
+            if tp is list or tp is tuple:
+                self.addAll(*o, update=False)
+            else:
+                self.addPyObject(o, update=False)
+        if update:
+            self.flush()

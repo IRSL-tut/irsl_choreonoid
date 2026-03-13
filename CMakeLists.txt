@@ -1,13 +1,19 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0057 NEW)
 
 project(irsl_choreonoid)
 
-#add_compile_options(-std=c++17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-##find_package(catkin REQUIRED COMPONENTS xxxx)
+if($ENV{ROS_VERSION} EQUAL 2)
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+
+ament_python_install_package(irsl_choreonoid)
+
+find_package(choreonoid REQUIRED)
+else()
 find_package(catkin REQUIRED)
 find_package(choreonoid REQUIRED)
 
@@ -17,6 +23,7 @@ catkin_package(
   #CATKIN_DEPENDS choreonoid
   DEPENDS CHOREONOID
 )
+endif()
 
 ### debug print variables
 ##get_cmake_property(_variableNames CACHE_VARIABLES)
@@ -48,12 +55,18 @@ message("CHOREONOID_COMPILE_DEFINITIONS: ${CHOREONOID_COMPILE_DEFINITIONS}")
 # apply choreonoid cmake settings
 add_definitions(${CHOREONOID_DEFINITIONS})
 
-#include_directories(${CHOREONOID_INCLUDE_DIRS})
+if($ENV{ROS_VERSION} EQUAL 2)
+include_directories(
+  include
+  ${CHOREONOID_INCLUDE_DIRS}
+)
+else()
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${CHOREONOID_INCLUDE_DIRS}
 )
+endif()
 
 link_directories(${CHOREONOID_LIBRARY_DIRS})
 
@@ -71,26 +84,36 @@ link_directories(${CHOREONOID_LIBRARY_DIRS})
 #add_subdirectory(sample)
 add_subdirectory(pybind11)
 
-# for python module
-catkin_python_setup()
-
-#add_library(${PROJECT_NAME}
-#  src/EigenUtil.cpp
-#)
-#target_link_libraries(${PROJECT_NAME}
-#  ${catkin_LIBRARIES}
-#  ${CHOREONOID_BODY_LIBRARIES}
-#  )
-
+if($ENV{ROS_VERSION} EQUAL 2)
 #############
 ## Install ##
 #############
-#install(TARGETS ${PROJECT_NAME}
-#  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-#)
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION include/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.h"
+)
 
+install(DIRECTORY sample
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  )
+install(DIRECTORY settings
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  )
+install(DIRECTORY test
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+)
+
+ament_export_include_directories(include)
+ament_package()
+else()
+# for python module
+catkin_python_setup()
+#############
+## Install ##
+#############
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
@@ -108,3 +131,4 @@ install(DIRECTORY test
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )
+endif()

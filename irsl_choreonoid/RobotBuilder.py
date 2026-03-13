@@ -66,6 +66,16 @@ class DummyInterface(object):
 ## add inertia on shape
 class RobotBuilder(object):
     """Building robot interactively
+
+    Examples:
+        >>> bx = rb.makeBox(0.3)
+        >>> l_root = rb.createLinkFromShape(name='Root', root=True, density=400.0)
+        >>> j = rb.createJointShape(jointType=Link.JointType.RevoluteJoint)
+        >>> lg = rb.makeBox(x=0.2, y=0.2, z=0.6)
+        >>> lg.translate(fv(0, 0, 0.3))
+        >>> l0=rb.createLinkFromShape(name='LINK0', parentLink=l_root, density=400.0, JointId=0, JointName='JOINT0', InitialJointAngle=0.0, JointRange=[-PI, PI], JointVelocityRange=[-PI*10, PI*10], JointEffortRange=[-100, 100], EquivalentRotorInertia=0.1)
+        >>> rb.exportBody('/tmp/test.body', modelName='test')
+
     """
     class JointType(IntEnum):
         Fixed = Link.JointType.FixedJoint.value
