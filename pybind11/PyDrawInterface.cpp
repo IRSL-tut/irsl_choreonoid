@@ -28,7 +28,7 @@ py::array QImageToNumpy(const QImage &in, bool bgr = false)
     //QImage::Format_Grayscale8
     //QImage::Format_Grayscale16
     pixelSize = 3;
-#if QT_VERSION < QT_VERSION_CHECK(8, 14, 0)
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     QImage tmp = in.convertToFormat(QImage::Format_RGB888);
     if (bgr) {
         tmp = tmp.rgbSwapped();
