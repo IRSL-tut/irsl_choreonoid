@@ -1,3 +1,4 @@
+import os
 ## cnoid.Util
 import cnoid.Util as cutil
 ## cnoid.Body
@@ -38,15 +39,26 @@ if iu.isInChoreonoid():
     import irsl_choreonoid.cnoid_base as ib
     import cnoid.Base as cbase
     import cnoid.BodyPlugin as BodyPlugin
-## ROS
-try:
-    from irsl_choreonoid_ros.setup_cnoid import SetupCnoid
-    import irsl_choreonoid_ros.cnoid_ros_util as cru
-    from irsl_choreonoid_ros.RobotInterface import RobotInterface
-    from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
-except ImportError:
+
+if 'ROS_VERSION' in os.environ and os.environ['ROS_VERSION'] == '2':
+    ## ROS2
+    try:
+        import irsl_choreonoid_ros.cnoid_ros2_util as cru
+        from irsl_choreonoid_ros.cnoid_ros2_util import parseURLROS as parseURL
+        from irsl_choreonoid_ros.RobotInterface2 import RobotInterface
+    except ImportError:
+        pass
     from irsl_choreonoid.setup_cnoid import SetupCnoid
-    pass
+else:
+    ## ROS
+    try:
+        from irsl_choreonoid_ros.setup_cnoid import SetupCnoid
+        import irsl_choreonoid_ros.cnoid_ros_util as cru
+        from irsl_choreonoid_ros.RobotInterface import RobotInterface
+        from irsl_choreonoid_ros.cnoid_ros_util import parseURLROS as parseURL
+    except ImportError:
+        from irsl_choreonoid.setup_cnoid import SetupCnoid
+        pass
 ## utility
 def exec_script(fname, *args):
     """Execute python code written to textfile
