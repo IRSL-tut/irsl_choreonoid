@@ -6,6 +6,7 @@ from math import pi as PI
 import math
 
 from .irsl_draw_object import *
+import cnoid.IRSLUtil as IU
 
 ##
 RED    = npa([1, 0, 0], dtype='float32')
@@ -1602,6 +1603,41 @@ def makeLineAxis(from_point, to_point, axis_length=1.0, axis_angle=0.5, ortho_ax
     offa = axis_length *(-math.cos(axis_angle) * v + math.sin(axis_angle) * ortho_axis)
     offb = axis_length *(-math.cos(axis_angle) * v - math.sin(axis_angle) * ortho_axis)
     return makeLines([from_point, to_point, to_point + offa, to_point + offb], [(0,1), (1,2), (1,3)], **kwargs)
+
+def makeTexturedPlate(img_array, coords=None, width=1.0, height=None, aspectRatio=None, thickness=0.001):
+    """Creates a textured plate with the given image array.
+
+    Args:
+        img_array (np.ndarray): Image array with shape (height, width, channels).
+        coords (coordinates, optional): Pose coordinates for the plate.
+        width (float, default=1.0): Width of the plate in meters.
+        height (float, optional): Height of the plate in meters. If None, calculated from width and aspectRatio. Defaults to None.
+        aspectRatio (float, optional): Aspect ratio (height/width) of the plate.
+            If None, calculated from the image array dimensions. Defaults to None.
+        thickness (float, default=0.001): Thickness of the plate in meters.
+
+    Returns:
+        Box: A box object with the texture applied and positioned according to the given coordinates.
+
+    Note:
+        The coords parameter is expected to be in OpenCV camera coordinates.
+    """
+    im_h, im_w, px = img_array.shape
+    #
+    if aspectRatio is None:
+        aspectRatio = im_h / im_w
+    #
+    if height is None:
+        height = aspectRatio * width
+    #
+    bx = makeBox(x=width, y=height, z=thickness, texture=True)
+    IU.setTextureImage(bx.object, img_array, '<src>')
+    #
+    if coords is not None:
+        bx.newcoords(coords)
+        bx.rotate(PI, coordinates.Z)
+    #
+    return bx
 ##
 ## Function for exporting
 ##
