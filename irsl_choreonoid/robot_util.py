@@ -918,11 +918,17 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     """RobotModel for programming Interactively
 
     RobotModel is displayed as cnoid.Base.RobotItem
+
+    Examples:
+        >>> robot_kin = RobotModel.loadMode('/path/to/your/robot.body')
+        >>> ## robot_kin is just kinematic-model of the robot
+        >>> robot_itm = RobotModel.loadModelItem('/path/to/your/robot.body')
+        >>> ## robot_item is displayed at item-list
     """
     def __init__(self, robot, **kwargs):
         """
         Args:
-            robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using this class
+            robot (cnoid.Body.Body or cnoid.BodyPlugin.BodyItem) : robot model using in this class
 
         """
         self.__keep_limit = False
@@ -2368,10 +2374,30 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.__robot.numDevices
     @classmethod
     def loadModel(cls, fname, **kwargs):
+        """Load a robot model as a kinematic model from a file.
+            fname (str): The path to the robot model file to be loaded.
+            **kwargs: Additional keyword arguments to pass to both irsl_choreonoid.cnoid_util.loadRobot()
+                     and the class constructor.
+        Returns:
+            An instance of the current class initialized with the loaded robot model.
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            RuntimeError: If the robot model file cannot be parsed or loaded.
+        """
         rb=loadRobot(fname, **kwargs)
         return cls(rb, **kwargs)
     @classmethod
     def loadModelItem(cls, fname, **kwargs):
+        """Load a robot model as a BodyItem in the item-list.
+            fname (str): The path to the robot model file to be loaded.
+            **kwargs: Additional keyword arguments to pass to both irsl_choreonoid.cnoid_util.loadRobotItem()
+                     and the class constructor.
+        Returns:
+            An instance of the current class initialized with the loaded robot model.
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            RuntimeError: If the robot model file cannot be parsed or loaded.
+        """
         rb=loadRobotItem(fname, **kwargs)
         return cls(rb, **kwargs)
 
