@@ -306,6 +306,15 @@ Returns:
     numpy.array : 4x4 matrix
 
                  )__IRSL__")
+    .def_property("homogeneousTransformation",
+                  [](coordinates &self) -> Matrix4RM { cnoidPosition p; self.toPosition(p); return p.matrix(); },
+                  [](coordinates &self, ref_mat4 T) { cnoidPosition p(T); self.newcoords(p); }, R"__IRSL__(
+Transformation matrix ( 4x4 homogeneous transformation matrix, using in Choreonoid )
+
+Returns:
+    numpy.array : 4x4 matrix
+
+                 )__IRSL__")
     .def_property("angleAxis",
                   [](const coordinates &self) {
                       double an_; Vector3 ax_; self.rotationAngle(an_, ax_);
