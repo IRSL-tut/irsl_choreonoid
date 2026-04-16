@@ -920,7 +920,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     RobotModel is displayed as cnoid.Base.RobotItem
 
     Examples:
-        >>> robot_kin = RobotModel.loadMode('/path/to/your/robot.body')
+        >>> robot_kin = RobotModel.loadModel('/path/to/your/robot.body')
         >>> ## robot_kin is just kinematic-model of the robot
         >>> robot_itm = RobotModel.loadModelItem('/path/to/your/robot.body')
         >>> ## robot_item is displayed at item-list
@@ -2375,6 +2375,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     @classmethod
     def loadModel(cls, fname, **kwargs):
         """Load a robot model as a kinematic model from a file.
+
+        Args:
             fname (str): The path to the robot model file to be loaded.
             **kwargs: Additional keyword arguments to pass to both irsl_choreonoid.cnoid_util.loadRobot()
                      and the class constructor.
@@ -2389,6 +2391,8 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
     @classmethod
     def loadModelItem(cls, fname, **kwargs):
         """Load a robot model as a BodyItem in the item-list.
+
+        Args:
             fname (str): The path to the robot model file to be loaded.
             **kwargs: Additional keyword arguments to pass to both irsl_choreonoid.cnoid_util.loadRobotItem()
                      and the class constructor.
