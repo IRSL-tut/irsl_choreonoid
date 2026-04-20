@@ -1589,11 +1589,11 @@ def makeLineAxis(from_point, to_point, axis_length=1.0, axis_angle=0.5, ortho_ax
     Returns:
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
     """
-    import irsl_choreonoid.cnoid_base as ib
     v = to_point - from_point
     coordinates.normalizeVector(v)
     #
     if ortho_axis is None:
+        import irsl_choreonoid.cnoid_base as ib
         cds, fov = ib.getCameraCoords()
         ray = to_point - cds.pos
         coordinates.normalizeVector(ray)
@@ -1608,7 +1608,7 @@ def makeTexturedPlate(img_array, coords=None, width=1.0, height=None, aspectRati
     """Creates a textured plate with the given image array.
 
     Args:
-        img_array (np.ndarray): Image array with shape (height, width, channels).
+        img_array (numpy.ndarray): Image array with shape (height, width, channels).
         coords (coordinates, optional): Pose coordinates for the plate.
         width (float, default=1.0): Width of the plate in meters.
         height (float, optional): Height of the plate in meters. If None, calculated from width and aspectRatio. Defaults to None.
