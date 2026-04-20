@@ -12,6 +12,7 @@ from cnoid.BodyPlugin import WorldItem
 from cnoid.GLVisionSimulatorPlugin import GLVisionSimulatorItem
 
 from cnoid.IRSLCoords import coordinates
+import numpy
 from numpy import array as npa
 
 from .robot_util import make_coordinates
@@ -543,6 +544,45 @@ def unprojectPoints(uv_list, depth=1.0, depth_list=None, centerRelative=False, w
     else:
         return pts
 
+def makeCameraFacingCoords(origin):
+    """
+    Create a coordinate frame at ``origin`` that faces the current camera.
+    The returned frame is constructed so that:
+    - ``z`` axis points from ``origin`` toward the camera position.
+    - ``x`` axis is orthogonal to ``z`` and aligned using the camera's ``y`` axis
+        (via cross product).
+    - ``y`` axis is computed to complete a right-handed orthonormal basis.
+    Args:
+            origin (numpy.ndarray): 3D world position (shape ``(3,)``) where the new
+                    coordinate frame is placed.
+    Returns:
+            coordinates: A new ``coordinates`` object located at ``origin`` with
+            rotation matrix columns ``[x, y, z]`` oriented to face the camera.
+    Raises:
+            ValueError: If axis construction becomes degenerate (for example, when the
+                    camera direction and camera ``y`` axis are parallel), resulting in a
+                    zero-length cross-product vector during normalization.
+    """
+    origin = numpy.array(origin, dtype=float)
+    cds, _fov = getCameraCoords()
+    vc = cds.pos - origin
+    coordinates.normalizeVector(vc)
+    pc_z = vc
+    pc_x = numpy.cross(pc_z, cds.y_axis)
+    coordinates.normalizeVector(pc_x)
+    pc_y = numpy.cross(pc_z, pc_x)
+    ## axis for debug
+    #ax = mkshapes.makeLineAxis(origin, origin+pc_x, colors=[1, 0, 0])
+    #ay = mkshapes.makeLineAxis(origin, origin+pc_y, colors=[0, 1, 0])
+    #az = mkshapes.makeLineAxis(origin, origin+pc_z, colors=[0, 0, 1])
+    ##
+    rot=numpy.column_stack((pc_x, pc_y, pc_z))
+    newc = coordinates(origin, rot)
+    return newc
+
+##
+##
+##
 def setBackgroundColor(backgound_color):
     """Setting color of background
 
