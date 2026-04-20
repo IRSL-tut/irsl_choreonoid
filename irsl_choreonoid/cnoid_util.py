@@ -417,13 +417,13 @@ def fv(*args, **kwargs):
 
     Examples:
 
-         fv(0.1, 0.2, 0.3) => array([0, 1, 2])
+         fv(0.1, 0.2, 0.3) => array([0.1, 0.2, 0.3])
 
         Just reducing the number of typing
         numpy.array([0.1, 0.2, 0.3]) => fv(0.1, 0.2, 0.3)
 
     """
-    return np.array(args, **kwargs)
+    return np.array(args, dtype=float, **kwargs)
 
 def hat(vec3):
     return np.array([[     0.0, -vec3[2],  vec3[1]],
