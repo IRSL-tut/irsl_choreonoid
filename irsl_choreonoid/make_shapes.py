@@ -620,10 +620,10 @@ def makeCone(radius, height, wrapped=True, rawShape=False, coords=None, texture=
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
 def makeCapsule(radius, height, wrapped=True, rawShape=False, coords=None, **kwargs):
-    """Makeing 'Capsule' shape using cnoid.Util.MeshGenerator
+    """Making 'Capsule' shape using cnoid.Util.MeshGenerator
 
     Args:
-        radius (float) : Radius of the cupsule
+        radius (float) : Radius of the capsule
         height (float, optional) : Height of the capsule
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
@@ -634,7 +634,7 @@ def makeCapsule(radius, height, wrapped=True, rawShape=False, coords=None, **kwa
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
 
     Note:
-        Similar dimensions to 'makeCylinder' (bottom cricle is at minus y, cone's tip is at plus y)
+        Similar dimensions to 'makeCylinder' (bottom circle is at minus y, cone's tip is at plus y)
 
     """
     mg = cutil.MeshGenerator()
@@ -642,8 +642,8 @@ def makeCapsule(radius, height, wrapped=True, rawShape=False, coords=None, **kwa
     mesh = mg.generateCapsule(radius, height)
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
-def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wrapped=True, rawShape=False, coords=None, **kwargs):
-    """Makeing 'Torus' shape using cnoid.Util.MeshGenerator
+def makeTorus(radius, crossSectionRadius, beginAngle = None, endAngle = None, wrapped=True, rawShape=False, coords=None, **kwargs):
+    """Making 'Torus' shape using cnoid.Util.MeshGenerator
 
     Args:
         radius (float) : Outer radius of the torus
@@ -662,9 +662,9 @@ def makeTorus(radius, corssSectionRadius, beginAngle = None, endAngle = None, wr
     mg = cutil.MeshGenerator()
     parseMeshGeneratorOption(mg, **kwargs)
     if beginAngle is not None and endAngle is not None:
-        mesh = mg.generateTorus(radius, corssSectionRadius, beginAngle, endAngle)
+        mesh = mg.generateTorus(radius, crossSectionRadius, beginAngle, endAngle)
     else:
-        mesh = mg.generateTorus(radius, corssSectionRadius)
+        mesh = mg.generateTorus(radius, crossSectionRadius)
 
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
@@ -697,7 +697,7 @@ def _makeExtrusion(_extrusion=None, wrapped=True, rawShape=False, coords=None, t
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
 def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
-    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
+    """Making 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
         crossSection ( list[list[float]],  N x 2 matrix) : A 2D polygon defined on the XZ plane. The vertices must be ordered (typically counterclockwise).
@@ -709,7 +709,7 @@ def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None
         kwargs (dict[str, Any]):
             Optional parameters passed to MeshGenerator::Extrusion:
             orientation (list[AngleAxis], optional) : Per-spine-point orientation of the cross section. The length must match the number of spine points.
-            scale (list[list[float]], M x 2, optional): er-spine-point scaling factors for the cross section. Each element is [sx, sz], applied to the X and Z axes of the crossSection.
+            scale (list[list[float]], M x 2, optional): Per-spine-point scaling factors for the cross section. Each element is [sx, sz], applied to the X and Z axes of the crossSection.
             creaseAngle (float, optional): Threshold angle (in radians) used when generating normals. Edges with angles larger than this are treated as sharp.
             beginCap (bool, optional): If True, a cap (polygon) is generated at the beginning of the spine.
             endCap (bool, optional): If True, a cap (polygon) is generated at the end of the spine.
@@ -748,7 +748,7 @@ def _makeElevationGrid(_elevation_grid=None, wrapped=True, rawShape=False, coord
     return __genShape(mesh, wrapped=wrapped, rawShape=rawShape, coords=coords, texture=texture, **kwargs)
 
 def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrapped=True, rawShape=False, coords=None, texture=None, **kwargs):
-    """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
+    """Making 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
         xDimension (int) : Dimension of x-direction / arg for cnoid.Util.MeshGenerator.ElevationGrid
@@ -772,7 +772,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
     return _makeElevationGrid(param, wrapped=wrapped, rawShape=rawShape, coords=coords, **kwargs)
 
 def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=True, rawShape=False, coords=None, **kwargs):
-    """Makeing '3D point cloud' shape
+    """Making '3D point cloud' shape
 
     Args:
         points (numpy.array) : N x 3 matrix (N is number of points)
@@ -814,7 +814,7 @@ def makePoints(points, pointSize=10.0, colors=None, colorIndices=None, wrapped=T
     return res
 
 def makeText(text, textHeight=1.0, color=None, wrapped=True, rawShape=False, coords=None, **kwargs):
-    """Makeing 'Text' shape
+    """Making 'Text' shape
 
     Args:
         text (str) : String to be displayed
@@ -845,7 +845,7 @@ def makeText(text, textHeight=1.0, color=None, wrapped=True, rawShape=False, coo
     return res
 
 def makeLines(line_points, line_indices=None, lineWidth=5.0, colors=None, colorIndices=None, coords=None, wrapped=True, rawShape=False, **kwargs):
-    """Makeing Lines
+    """Making Lines
 
     Args:
         line_points (numpy.array) : N x 3 matrix (N is number of points)
@@ -954,7 +954,7 @@ def makeTriangles(vertices, indices=None, wrapped=True, rawShape=False, coords=N
 
 ### utility functions
 def makeAxis(radius=0.075, length=1.0, axisLength=0.35, axisRadius=0.125, axisRatio=None, color=None, scale=None, coords=None, wrapped=True, **kwargs):
-    """Makeing single axis shape using cylinder and cone
+    """Making single axis shape using cylinder and cone
 
     Args:
         radius (float, default=0.15) :
@@ -999,7 +999,7 @@ def makeAxis(radius=0.075, length=1.0, axisLength=0.35, axisRadius=0.125, axisRa
     return res
 
 def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRatio=None, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
-    """Makeing '3D-axis' shape using cylinder and cone
+    """Making '3D-axis' shape using cylinder and cone
 
     Args:
         radius (float, default=0.15) :
@@ -1079,7 +1079,7 @@ def make3DAxis(radius=0.15, length=0.8, axisLength=0.3, axisRadius=0.25, axisRat
     return res
 
 def make3DAxisBox(width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 0], y_color=[0, 1, 0], z_color=[0, 0, 1], coords=None, wrapped=True, **kwargs):
-    """Makeing '3D-axis' shape using box
+    """Making '3D-axis' shape using box
 
     Args:
         width (float, default=0.2) :
@@ -1134,7 +1134,7 @@ def make3DAxisBox(width=0.2, length=0.8, color=None, scale=None, x_color=[1, 0, 
     return res
 
 def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
-    """Makeing '3D-axis' shape using line
+    """Making '3D-axis' shape using line
 
     Args:
         length (float, default=0.8) :
@@ -1176,7 +1176,7 @@ def makeCoords(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[
     return res
 
 def makeCross(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0,1,0], z_color=[0,0,1], coords=None, wrapped=True, **kwargs):
-    """Makeing '3D-axis' shape using crossing line
+    """Making '3D-axis' shape using crossing line
 
     Args:
         length (float, default=0.8) :
@@ -1218,7 +1218,7 @@ def makeCross(length=1.0, lineWidth=2.0, color=None, x_color=[1,0,0], y_color=[0
     return res
 
 def makeLineAlignedShape(start, end, size=0.001, shape='box', verbose=False, **kwargs):
-    """Makeing object which is aligned with a desginated line
+    """Making object which is aligned with a desginated line
 
     Args:
         start (numpy.ndarray) : 3D vector representing start-point of a line
