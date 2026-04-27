@@ -700,18 +700,20 @@ def makeExtrusion(crossSection, spine, wrapped=True, rawShape=False, coords=None
     """Makeing 'Extrusion' shape using cnoid.Util.MeshGenerator
 
     Args:
-        crossSection ( list[list[float]],  N x 2 matrix) :  / arg for cnoid.Util.MeshGenerator.Extrusion
-        spine ( list[list[float]], M x 3 matrix) : / arg for cnoid.Util.MeshGenerator.Extrusion
-        orientation (list[AngleAxis], optional) :  / arg for cnoid.Util.MeshGenerator.Extrusion
-        scale ( list[list[float]],  N x 2 matrix, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
-        creaseAngle (float, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
-        beginCap (boolean, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
-        endCap (boolean, optional) : / arg for cnoid.Util.MeshGenerator.Extrusion
+        crossSection ( list[list[float]],  N x 2 matrix) : A 2D polygon defined on the XZ plane. The vertices must be ordered (typically counterclockwise).
+        spine ( list[list[float]], M x 3 matrix) : A 3D polyline representing the extrusion path. Each element is [x, y, z]. The crossSection is swept along this path.
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         coords (cnoid.IRSLCoords.coordinates, optional) :
         texture (str, optional) : Image file-name of texture
-        kwargs ( dict[str, param] ) : Keywords for generating material, mesh, and makeExtrusionParam
+        kwargs (dict[str, Any]):
+            Optional parameters passed to MeshGenerator::Extrusion:
+            orientation (list[AngleAxis], optional) : Per-spine-point orientation of the cross section. The length must match the number of spine points.
+            scale (list[list[float]], M x 2, optional): er-spine-point scaling factors for the cross section. Each element is [sx, sz], applied to the X and Z axes of the crossSection.
+            creaseAngle (float, optional): Threshold angle (in radians) used when generating normals. Edges with angles larger than this are treated as sharp.
+            beginCap (bool, optional): If True, a cap (polygon) is generated at the beginning of the spine.
+            endCap (bool, optional): If True, a cap (polygon) is generated at the end of the spine.
+            color (list[float], 3, optional):  RGB color applied to the entire extrusion. Overrides material color if specified.
 
     Returns:
         cnoid.Util.SgPosTransform or irsl_choreonoid.irsl_draw_object.coordsWrapper : Created object as a node of SceneGraph or wrapped class for interactive programming
@@ -755,7 +757,7 @@ def makeElevationGrid(xDimension, zDimension, xSpacing, zSpacing, height, wrappe
         zSpacing (float) : Z length is (zDimension - 1) x zSpacing / arg for cnoid.Util.MeshGenerator.ElevationGrid
         height (list[float]) : Size is ( xDimension x zDimension ) / arg for cnoid.Util.MeshGenerator.ElevationGrid
         ccw (boolean, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
-        creaseAngl (float, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
+        creaseAngle (float, optional) : / arg for cnoid.Util.MeshGenerator.ElevationGrid
         wrapped (boolean, default = True) : If True, the loaded scene is wrapped by irsl_choreonoid.irsl_draw_object.coordsWrapper
         rawShape (boolean, default = False) : If True, instance of cnoid.Util.SgShape will be returned (ignore wrapped)
         texture (str, optional) : Image file-name of texture
