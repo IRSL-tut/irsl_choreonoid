@@ -86,7 +86,32 @@ PYBIND11_MODULE(IRSLCoords, m)
         af.computeScalingRotation(&(res[0]), &(res[1]));
         return res;
     });
-
+    m.def("recomputeScalingRotation", [] (int axis, ref_mat3 org, ref_noconst_mat3 scl, ref_noconst_mat3 rot) {
+        Vector3 scale(scl.col(0).norm(), scl.col(1).norm(), scl.col(2).norm());
+        //
+        Matrix3 R_target;
+        R_target << org.col(0).normalized(), org.col(1).normalized(), org.col(2).normalized();
+        //
+        if (R_target.determinant() < 0) {
+            switch (axis) {
+            case 0:
+                scale.x() *= -1.0;
+                R_target.col(0) *= -1.0;
+                break;
+            case 1:
+                scale.y() *= -1.0;
+                R_target.col(1) *= -1.0;
+                break;
+            case 2:
+                scale.z() *= -1.0;
+                R_target.col(2) *= -1.0;
+                break;
+            }
+        }
+        //
+        rot = R_target;
+        scl = scale.asDiagonal();
+    });
     /// for cnoid::Position
     m.def("PositionInverse", [](ref_mat4 _position) -> Matrix4RM { cnoidPosition p(_position); return p.inverse().matrix(); }, R"__IRSL__(
 Generating inverse transformation matrix
