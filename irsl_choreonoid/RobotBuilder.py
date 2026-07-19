@@ -524,6 +524,45 @@ class RobotBuilder(object):
 #JointVelocityRange
 #JointEffortRange
 #EquivalentRotorInertia
+
+    def createDeviceShape(self, deviceType, wrapped=True, coords=None, add=True, scale=0.3, **kwargs):
+        """Creating and showing jointShape
+
+        Args:
+            jointType (cnoid.Body.Link.JointType, default=FixedJoint) :
+            wrapped (boolean, default=True) :
+            coords (cnoid.IRSLCoords.coordinates, optional) :
+            add (boolean, default=True) :
+            scale (float, default=0.3) :
+
+        Returns:
+            Shape : Created shape
+
+        """
+        kwargs['scale']=scale
+        typename=''
+        ## sh = add shape depends on deviceType
+#>AccelerationSensor.h AccelerationSensor : public Device
+#>RateGyroSensor.h RateGyroSensor : public Device
+#>Imu.h Imu : public Device
+#>#
+#>ForceSensor.h ForceSensor : public Device
+#>#
+#>Camera.h Camera : public VisionSensor
+#>RangeCamera.h RangeCamera : public Camera
+#>RangeSensor.h RangeSensor : public VisionSensor
+        sh.setName('device:{}'.format(typename))
+        trs=cutil.SgPosTransform()
+        trs.setName('device_root')
+        trs.addChild(sh)
+        if coords is not None:
+            trs.setPosition(coords.cnoidPosition)
+        if wrapped:
+            trs = mkshapes.coordsWrapper(trs)
+        if add:
+            self.addShape(trs)
+        return trs
+
     def createLink(self, name='', mass=0.1, COM=None, density=None, inertia=None, shape=None, visual=None, collision=None, **kwargs):
         """Creating a link
 

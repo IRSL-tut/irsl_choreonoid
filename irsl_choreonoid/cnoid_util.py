@@ -24,7 +24,7 @@ import os
 ##
 ## python utility
 ##
-def load_script(filename):
+def load_script(filename, globals=None, locals=None, **kwargs):
     """Loading a script file
 
     Args:
@@ -34,7 +34,7 @@ def load_script(filename):
     ### another way
     #import runpy
     #runpy.run_path(path_name=filename)
-    exec(open(str(filename)).read())
+    exec(open(str(filename)).read(), globals, locals, **kwargs)
 
 def parseURL(url):
     """Parsing URL with IRSL original scheme

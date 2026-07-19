@@ -146,6 +146,17 @@ def make_translation_rotation(coords, unit='mm', degree=True):
         aa[3] = aa[3]*180/math.pi
     return {'translation': pp, 'rotation': aa}
 
+def makeMappingOfCoords(coords, method='quaternion', scale=1.0):
+    """
+    """
+    return dictToMapping(make_coords_map(coords, method=method, scale=scale))
+
+def addCoordsToMapping(mapping, key, coords, **kwargs):
+    """
+    """
+    mp = makeMappingOfCoords(coords, **kwargs)
+    mapping.insert(key, mp)
+
 def axisAlignedCoords(axis, target_axis=ic.coordinates.Y, rotate=None, up_axis=None):
     """Generating axis aligned coordinates.
 
@@ -870,6 +881,16 @@ def mergedMassPropertyOfList(linkList):
     for clink in linkList[1:]:
         plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_coords, plink_mass, plink_c, plink_I
+
+def inertiaMatrixOnNewCoords(Imatrix, coords, mass=0.0):
+    """
+    """
+    rot = coords.rot
+    pIc = np.transpose(rot) @ Imatrix @ rot
+    if mass == 0.0:
+        return pIc
+    h_c = hat(coords.pos)
+    return (pIc - mass * (h_c @ h_c))
 
 def _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     new_mass = plink_mass + clink.mass

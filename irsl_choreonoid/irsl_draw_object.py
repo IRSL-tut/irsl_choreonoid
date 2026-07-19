@@ -14,6 +14,8 @@ def _extractShape(sg_node):
             res += _extractShape(sg_node.getChild(idx))
     return res
 
+## TODO
+# class coordsWrapper(cascaded_coords.cascadedCoords):
 class coordsWrapper(coordinates):
     """class coordsWrapper(cnoid.IRSLCoords.coordinates)
 
