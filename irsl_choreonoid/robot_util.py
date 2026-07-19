@@ -1495,7 +1495,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         return list(self.__device_map.keys())
 
-    def link(self, arg):
+    def getLink(self, arg):
         """Instance of the link
 
         Args:
@@ -1517,7 +1517,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return arg
         return self.__robot.link(arg)
 
-    def joint(self, arg):
+    def getJoint(self, arg):
         """Instance of the joint
 
         Args:
@@ -1540,7 +1540,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 return arg
         return self.__robot.joint(arg)
 
-    def device(self, arg):
+    def getDevice(self, arg):
         """Instance of the device
 
         Args:
@@ -1572,7 +1572,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the link
 
         """
-        lk = self.link(str_idx_instance)
+        lk = self.getLink(str_idx_instance)
         if lk is None:
             return None
         return lk.getCoords()
@@ -1587,7 +1587,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the joint
 
         """
-        jt = self.joint(str_idx_instance)
+        jt = self.getJoint(str_idx_instance)
         if jt is None:
             return None
         return jt.getCoords()
@@ -1602,7 +1602,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the device
 
         """
-        dev = self.device(str_idx_instance)
+        dev = self.getDevice(str_idx_instance)
         if dev is None:
             return None
         p_cds = dev.getLink().getCoords()
@@ -2417,6 +2417,9 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 >>> drawTree(print_func=lambda lk, offset='' : ru.printLinkInfo(lk, offset=offset, printDevice=True, linkDetail=False)
         """
         _drawTree(self.rootLink, offset=offset, indent=indent, print_func=print_func)
+    @property
+    def rootLink(self):
+        return self.__robot.rootLink
     @property
     def mass(self):
         return self.__robot.mass
