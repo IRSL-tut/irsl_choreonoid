@@ -898,8 +898,61 @@ def __joint_list(self):
 #def __link_list(self):
 #    return [self.link(idx) for idx in range(self.numLinks) ]
 
+def printLinkInfo(inlink, offset='', printDevice=True, linkDetail=True):
+    """
+    print detailed information of a link
+
+    Args:
+        inlink (cnoid.Body.Link) :
+        offset (str, default='') :
+        printDevice (boolean, default=True) :
+        linkDetail (boolean, default=True) :
+    """
+    if inlink.name != inlink.jointName:
+        line = f'{offset}{inlink.jointId:2}:{inlink.name} [{inlink.jointName}]'
+    else:
+        line = f'{offset}{inlink.jointId:2}:{inlink.name}'
+    if linkDetail:
+        cds = inlink.getCoords()
+        line += f' / {cds.pos} {cds.quaternion} / ax: {lk.jointAxis} / [{lk.q_lower}, {lk.q_upper}]'
+    print(line)
+    if printDevice:
+        for dev in inlink.body.devices:
+            if dev.link() is inlink:
+                line = f'{offset} d:{dev.name} [{dev.TypeName}]'
+                if linkDetail:
+                    cds = lk.getCoords()
+                    trs = coordinates(dev.T_local)
+                    cds.transform(trs)
+                    line += f' / {cds.pos} {cds.quaternion}'
+                print(line)
+
+def _drawTree(lk, offset='', indent='  ',
+              print_func = lambda lk, offset='' : print(f'{offset}{lk.name}')):
+    print_func(lk, offset)
+    cur = lk.child
+    while cur is not None:
+        _drawTree(cur, offset+indent, print_func=print_func)
+        cur = cur.sibling
+def drawTree(inbody, offset='', indent='  ',
+             print_func = lambda lk, offset='' : print(f'{offset}{lk.name}')):
+    """
+    Printing links with tree like indent
+
+    Args:
+        offset (str, default='') :
+        indent (str, default='  ') :
+        print_func (callable, default) : function for printing information of link (arguments of this function should be link and offset)
+
+    Examples:
+        >>> drawTree(print_func=ru.printLinkInfo)
+        >>> drawTree(print_func=lambda lk, offset='' : ru.printLinkInfo(lk, offset=offset, printDevice=True, linkDetail=False)
+    """
+    _drawTree(inbody.rootLink, offset=offset, indent=indent, print_func=print_func)
+
 cnoid.Body.Body.jointList = __joint_list
 #cnoid.Body.Body.linkList = __link_list
+cnoid.Body.Body.drawTree = drawTree
 cnoid.Body.Body.angleVector = lambda self, vec = None: ic.angleVector(self) if vec is None else ic.angleVector(self, vec)
 cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
@@ -2350,6 +2403,20 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.__robot.joint(name)
     def link(self, name):
         return self.__robot.link(name)
+    def drawTree(self, offset='', indent='  ', print_func = lambda lk, offset='' : print(f'{offset}{lk.name}') ):
+        """
+            Printing links with tree like indent
+
+            Args:
+                offset (str, default='') :
+                indent (str, default='  ') :
+                print_func (callable, default) : function for printing information of link (arguments of this function should be link and offset)
+
+            Examples:
+                >>> drawTree(print_func=ru.printLinkInfo)
+                >>> drawTree(print_func=lambda lk, offset='' : ru.printLinkInfo(lk, offset=offset, printDevice=True, linkDetail=False)
+        """
+        _drawTree(self.rootLink, offset=offset, indent=indent, print_func=print_func)
     @property
     def mass(self):
         return self.__robot.mass
