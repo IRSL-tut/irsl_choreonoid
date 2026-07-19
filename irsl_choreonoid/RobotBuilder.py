@@ -68,6 +68,7 @@ class RobotBuilder(object):
     """Building robot interactively
 
     Examples:
+        >>> rb = RobotBuilder()
         >>> bx = rb.makeBox(0.3)
         >>> l_root = rb.createLinkFromShape(name='Root', root=True, density=400.0)
         >>> j = rb.createJointShape(jointType=Link.JointType.RevoluteJoint)
@@ -75,7 +76,9 @@ class RobotBuilder(object):
         >>> lg.translate(fv(0, 0, 0.3))
         >>> l0=rb.createLinkFromShape(name='LINK0', parentLink=l_root, density=400.0, JointId=0, JointName='JOINT0', InitialJointAngle=0.0, JointRange=[-PI, PI], JointVelocityRange=[-PI*10, PI*10], JointEffortRange=[-100, 100], EquivalentRotorInertia=0.1)
         >>> rb.exportBody('/tmp/test.body', modelName='test')
-
+        >>> ### view information ###
+        >>> rb = RobotBuilder('filename.body')
+        >>> rb.viewInfo()
     """
     class JointType(IntEnum):
         Fixed = Link.JointType.FixedJoint.value
@@ -180,6 +183,14 @@ class RobotBuilder(object):
 
         """
         return self.__bodyItem
+    @property
+    def robotModel(self):
+        """
+        """
+        if self.bodyItem is not None:
+            return ru.RobotModelWrapper(self.bodyItem)
+        else:
+            return ru.RobotModelWrapper(self.body)
 ### start: GUI wrapper
     @property
     def draw(self):
@@ -651,6 +662,21 @@ class RobotBuilder(object):
     def removeLink(self, link):
         ## not implemented yet
         self.notifyUpdate()
+
+    def addDeviceFromMap(self, dev_map):
+        """
+            Adds devices to a robot body from a device map.
+
+            Args:
+                dev_map (list of dict): A list of dictionaries, each specifying a device to add.
+                    Each dictionary should contain at least the 'type' and 'link' keys, and may
+                    optionally include 'name', 'id', and other configuration parameters.
+
+            Note:
+                The style of dev_map is the same as the returns from getDeviceMap
+
+        """
+        ru.addDeviceFromMap(self.body, dev_map)
 
     ### start: link visualization
     def __addShape(self, alink, shape):
