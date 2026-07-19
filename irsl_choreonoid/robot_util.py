@@ -2554,6 +2554,67 @@ def replaceCamera(oldcam, newcam):
         d.index = i
     return newcam
 
+#
+# simplifyBody
+#
+def _rotateLink(lk, coords): ## move link?
+    rot = coords.rot
+    ## rotate axis
+    ax = rot @ lk.jointAxis
+    lk.setJointAxis(ax)
+    ## rotate com
+    lk.setCenterOfMass(rot @ lk.c)
+    ## rotate inertia
+    lk.setInertia(rot @ lk.I @ np.transpose(rot))
+    ## rotate geometry
+    vshape=lk.visualShape.clone()
+    cshape=lk.collisionShape.clone()
+    lk.clearShapeNodes()
+    cnoidT = iu.cnoidPosition(rotation=rot)
+    vtrs = cutil.SgPosTransform()
+    vtrs.T = cnoidT
+    ctrs = cutil.SgPosTransform()
+    ctrs.T = cnoidT
+    ##
+    for i in range(vshape.numChildren):
+        vtrs.addChild(vshape.getChild(i))
+    for i in range(cshape.numChildren):
+        ctrs.addChild(cshape.getChild(i))
+    lk.addVisualShapeNode(vtrs)
+    lk.addCollisionShapeNode(ctrs)
+    lk.info.insert("rotated_quaternion", iu.listToListing(coords.quaternion))
+
+def simplifyBody(inbody):
+    """
+    Rotate the reference coordinate of all links so that the rotation matrix of each link becomes the identity matrix.
+
+    Args:
+        inbody (cnoid.Body.Body) : links of this body will be rotated as identity rotation
+
+    """
+    link_map = {}
+    inbody.rootLink.setOffsetPosition(iu.cnoidPosition())
+    inbody.initializePosition()
+    inbody.calcForwardKinematics()
+    for lk in inbody.links:
+        cds = lk.getCoords()
+        wax = cds.rotate_vector(lk.jointAxis)
+        link_map[lk.name] = (cds, wax)
+    ###
+    for lk in inbody.links[1:]:
+        cds, wax = link_map[lk.name]
+        p_cds, _ = link_map[lk.parent.name]
+        trs = coordinates(cds.pos - p_cds.pos)
+        #new_trs = coordinates(trs.pos)
+        #new_cds = p_cds.get_transformed(new_trs)
+        lk.setOffsetPosition(iu.cnoidPosition(translation=trs.pos))
+        #lk.setJointAxis(wax)
+        if not coordinates(cds.rot).equal(coordinates()):
+            _rotateLink(lk, cds)
+    inbody.updateLinkTree()
+    inbody.initializePosition()
+    inbody.calcForwardKinematics()
+
 ### flush in Base, etc.
 if isInChoreonoid():
     from .cnoid_base import *
