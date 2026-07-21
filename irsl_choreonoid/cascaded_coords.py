@@ -1,70 +1,30 @@
-## do not use cnoid.Base
 from cnoid.IRSLCoords import coordinates
-import cnoid.Util as cutil
-# from cnoid.Util import SgPosTransform
-# from cnoid.DrawInterface import GeneralDrawInterface as GDI
 
-### COPY from make_shapes.py
-def _extractShape(sg_node):
-    res = []
-    if type(sg_node) is cutil.SgShape:
-        res.append(sg_node)
-    elif hasattr(sg_node, 'numChildren'):
-        for idx in range(sg_node.numChildren):
-            res += _extractShape(sg_node.getChild(idx))
-    return res
-
-## TODO
-# class coordsWrapper(cascaded_coords.cascadedCoords):
-class coordsWrapper(coordinates):
-    """class coordsWrapper(cnoid.IRSLCoords.coordinates)
-
-This class aims to wrap a cnoid Object which have position (SgPosTransform, Link, etc.)
-
-You can access to this object with methods in cnoid.IRSLCoords.coordinates,
-
-Some mthods (newcoords, translate, rotate, transform) to update itself are overrided to add calling callback_function.
-
-Then, you can run some process when the position of the target is updated.
+class cascadedCoords(coordinates):
+    """class cascadedCoords(cnoid.IRSLCoords.coordinates)
     """
-    def __init__(self, target, init_coords=None, update_callback=None, kinematics_callback=None, original_object=None, scalable=False):
+    def __init__(self, *args):
         """
         Args:
-            target (object) : wrapped target which have property 'T' for setting cnoidPosition
-            init_coords (cnoid.IRSLCoords.coordinates, optional) : coordinates of this instance
-            update_callback (function(), optional) : callback function which is called when target is updated (including drawing)
-            kinematics_callback (function(), optional) : callback function which is called when target is updated (only updating kinematics)
-            scalable (boolean, default=False) : call setScalable() within constructor
+            \*args (list) : pass to coordinates.__init__(self, *args)
         """
-        super().__init__()
+        super().__init__(*args)
         ##
         self.children = []
         self._resetParent()
-        ##
-        self.__target = target
-        self._original_object=original_object
-        ##if hasattr(target, 'coords'):
-        ##    target.coords = self
-        ##else:
-        ##    setattr(target, 'coords', self)
-        self.__update_callback = update_callback
-        self.__kinematics_callback = kinematics_callback
-        ##
-        if scalable:
-            self.setScalable()
-        ##
-        if init_coords is not None:
-            self.newcoords(init_coords)
-        else:
-            self.cnoidPosition =  self.__target.T
 
-### cascaded-coordinates
     def assoc(self, child, coords=None):
         """Associate coordinates as a child
+        Fix current transformation from self to child.
+        World coords of self and child will be not changed.
 
         Args:
-            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) : child coordinates
+            child ( irsl_choreonoid.irsl_draw_object.cascadedCoords ) : child coordinates
             coords ( cnoid.Body.Link or cnoid.Util.SgPosTransform) : Coordinates on parent
+
+        Example:
+        >>> cas1,assoc(cas2)
+        >>> abody.assoc(cas1, abody.link('A_LINK'))
         """
         if child._parent is None:
             child._setParent(self, coords=coords)
@@ -74,7 +34,7 @@ Then, you can run some process when the position of the target is updated.
         """Finish association with child coordinates
 
         Args:
-            child ( irsl_choreonoid.irsl_draw_object.coordsWrapper ) :
+            child ( irsl_choreonoid.irsl_draw_object.cascadedCoords ) :
         """
         if self is child._parent:
             child._resetParent()
@@ -100,6 +60,24 @@ Then, you can run some process when the position of the target is updated.
         """
         return self.children
 
+    @property
+    def ancestor(self):
+        """
+        """
+        return self._parent
+
+    @property
+    def fromParent(self):
+        """
+        """
+        return self._from_parent
+
+    @property
+    def parentCoords(self):
+        """
+        """
+        return self._parent_coords
+
     def isChild(self, coords):
         """Query: Is it a child ?
         """
@@ -116,12 +94,12 @@ Then, you can run some process when the position of the target is updated.
         return len(self.children) > 0
 
     def setFromParent(self, coords, update=True):
+        """
+        """
         if self._parent is not None:
             self._from_parent = coords
             self._update_from_parent(update=False)
             self._updateChildren(update=False)
-            if update and callable(self.__update_callback):
-                self.__update_callback()
 
     def _resetParent(self):
         self._parent = None
@@ -157,60 +135,6 @@ Then, you can run some process when the position of the target is updated.
                 super().newcoords(self._parent_coords)
         super().transform(self._from_parent)
         self.updateTarget(update=update)
-###
-    def setScalable(self):
-        """Enabling to use methods, setScale and setTurnedOn
-
-        """
-        if self.__target.numChildren == 1:
-            scl = cutil.SgScaleTransform()
-            swt = cutil.SgSwitchableGroup()
-            self._switch_ = swt
-            self._scale_  = scl
-            chld = self.__target.getChild(0)
-            self.__target.clearChildren()
-            scl.addChild(chld)
-            swt.addChild(scl)
-            self.__target.addChild(swt)
-        else:
-            trs = cutil.SgPosTransform()
-            trs.T = self.__target.T
-            self.__target.T = coordinates().cnoidPosition
-            org = self.__target
-            trs.addChild(org)
-            self.__target = trs
-            self.setScalable()
-###
-    def setColorChangeable(self):
-        """Enabling to use methods, changeColor
-
-        """
-        self._materials_ = []
-        res = _extractShape(self.target)
-        for r in res:
-            self._materials_.append(r.getOrCreateMaterial())
-
-    def changeColor(self, color=None, ambient=None, emissive=None, specular=None, specularExponent=None, transparent=None, update=False):
-        """Changing color ( use setColorChangeable method before using this method )
-        """
-        for m in self._materials_:
-            if color is not None:
-                m.setDiffuseColor(color)
-            if ambient is not None:
-                m.setAmbientIntensity(ambient)
-            if emissive is not None:
-                m.setEmissiveColor(emissive)
-            if specular is not None:
-                m.setSpecularColor(specular)
-            if specularExponent is not None:
-                m.setSpecularExponent(specularExponent)
-            if transparent is not None:
-                m.setTransparency(transparent)
-        if update:
-            self.updateTarget()
-###
-    #def __del__(self):
-    #    print('destruct: coordsWrapper')
 
     def updateTarget(self, update=True):
         """Updating self.target and call callback_function
@@ -219,37 +143,12 @@ Then, you can run some process when the position of the target is updated.
             None
 
         """
-        self.__target.T = self.cnoidPosition
-        if callable(self.__kinematics_callback):
-            self.__kinematics_callback()
         self._updateParent()
         self._updateChildren(update=False)
-        if update and callable(self.__update_callback):
-            self.__update_callback()
 
-    def revert(self): ##
-        self.cnoidPosition =  self.__target.T
-
-    def setUpdateCallback(self, func):
-        """Setting callback function for updating drawings
-
-        Args:
-            func (function()) : callback function which is called when target is updated
-
-        """
-        if callable(func):
-            self.__update_callback = func
-
-    def setKinematicsCallback(self, func):
-        """Setting callback function for updating kinematics
-
-        Args:
-            func (function()) : callback function which is called when target is updated
-
-        """
-        if callable(func):
-            self.__kinematics_callback = func
-
+    ##
+    ## override methods : coordinates
+    ##
     def newcoords(self, cds):
         """Wrapped method of newcoords in cnoid.IRSLCoords.coordinates
 
@@ -408,53 +307,4 @@ Then, you can run some process when the position of the target is updated.
         return self
 
     def __repr__(self):
-        if self is self.target:
-            return 'Wrap {} : '.format(type(self)) + super().__repr__()
-        else:
-            return 'Wrap: ' + super().__repr__() + ' | ' + self.target.__repr__()
-
-    @property
-    def target(self):
-        """Wrapped target of this instance, which was manipulated by methods of this class
-
-        Returns:
-            object : instance which have method 'T' to set cnoidPosition (4x4 matrix)
-
-        """
-        return self.__target
-
-    @property
-    def object(self):
-        """Wrapped object of this instance, which was manipulated by methods of this class
-
-        Returns:
-            object : Utility slot set while initializing
-
-        Note:
-            target is a transformed target such as cnoid.Util.SgPosTransform
-            object is a utility slot for handling a child of the target (Shape, etc...)
-
-        """
-        return self._original_object
-
-    def setScale(self, float_or_vec, update=False):
-        """Setting scale of drawn objects
-
-        Args:
-            float_or_vec (float or [float] ) : Parameter of scale
-            update (boolean, default=False) : Update drawn object in screen
-        """
-        self._scale_.setScale(float_or_vec)
-        if update:
-            self.updateTarget()
-
-    def setTurnedOn(self, on=True, update=False):
-        """Switching On/Off of drawn objects
-
-        Args:
-            on (boolean, default=False) : Switch to draw this object
-            update (boolean, default=False) : Update drawn object in screen
-        """
-        self._switch_.setTurnedOn(on, False)
-        if update:
-            self.updateTarget()
+        return 'cas-coords {} : '.format(type(self)) + super().__repr__()

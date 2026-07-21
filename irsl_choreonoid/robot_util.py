@@ -146,6 +146,17 @@ def make_translation_rotation(coords, unit='mm', degree=True):
         aa[3] = aa[3]*180/math.pi
     return {'translation': pp, 'rotation': aa}
 
+def makeMappingOfCoords(coords, method='quaternion', scale=1.0):
+    """
+    """
+    return dictToMapping(make_coords_map(coords, method=method, scale=scale))
+
+def addCoordsToMapping(mapping, key, coords, **kwargs):
+    """
+    """
+    mp = makeMappingOfCoords(coords, **kwargs)
+    mapping.insert(key, mp)
+
 def axisAlignedCoords(axis, target_axis=ic.coordinates.Y, rotate=None, up_axis=None):
     """Generating axis aligned coordinates.
 
@@ -871,6 +882,16 @@ def mergedMassPropertyOfList(linkList):
         plink_mass, plink_c, plink_I = _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink)
     return plink_coords, plink_mass, plink_c, plink_I
 
+def inertiaMatrixOnNewCoords(Imatrix, coords, mass=0.0):
+    """
+    """
+    rot = coords.rot
+    pIc = np.transpose(rot) @ Imatrix @ rot
+    if mass == 0.0:
+        return pIc
+    h_c = hat(coords.pos)
+    return (pIc - mass * (h_c @ h_c))
+
 def _mergeMassProperty(plink_coords, plink_mass, plink_c, plink_I, clink):
     new_mass = plink_mass + clink.mass
     ##
@@ -898,8 +919,61 @@ def __joint_list(self):
 #def __link_list(self):
 #    return [self.link(idx) for idx in range(self.numLinks) ]
 
+def printLinkInfo(inlink, offset='', printDevice=True, linkDetail=True):
+    """
+    print detailed information of a link
+
+    Args:
+        inlink (cnoid.Body.Link) :
+        offset (str, default='') :
+        printDevice (boolean, default=True) :
+        linkDetail (boolean, default=True) :
+    """
+    if inlink.name != inlink.jointName:
+        line = f'{offset}{inlink.jointId:2}:{inlink.name} [{inlink.jointName}]'
+    else:
+        line = f'{offset}{inlink.jointId:2}:{inlink.name}'
+    if linkDetail:
+        cds = inlink.getCoords()
+        line += f' / {cds.pos} {cds.quaternion} / ax: {lk.jointAxis} / [{lk.q_lower}, {lk.q_upper}]'
+    print(line)
+    if printDevice:
+        for dev in inlink.body.devices:
+            if dev.link() is inlink:
+                line = f'{offset} d:{dev.name} [{dev.TypeName}]'
+                if linkDetail:
+                    cds = lk.getCoords()
+                    trs = coordinates(dev.T_local)
+                    cds.transform(trs)
+                    line += f' / {cds.pos} {cds.quaternion}'
+                print(line)
+
+def _drawTree(lk, offset='', indent='  ',
+              print_func = lambda lk, offset='' : print(f'{offset}{lk.name}')):
+    print_func(lk, offset)
+    cur = lk.child
+    while cur is not None:
+        _drawTree(cur, offset+indent, print_func=print_func)
+        cur = cur.sibling
+def drawTree(inbody, offset='', indent='  ',
+             print_func = lambda lk, offset='' : print(f'{offset}{lk.name}')):
+    """
+    Printing links with tree like indent
+
+    Args:
+        offset (str, default='') :
+        indent (str, default='  ') :
+        print_func (callable, default) : function for printing information of link (arguments of this function should be link and offset)
+
+    Examples:
+        >>> drawTree(print_func=ru.printLinkInfo)
+        >>> drawTree(print_func=lambda lk, offset='' : ru.printLinkInfo(lk, offset=offset, printDevice=True, linkDetail=False)
+    """
+    _drawTree(inbody.rootLink, offset=offset, indent=indent, print_func=print_func)
+
 cnoid.Body.Body.jointList = __joint_list
 #cnoid.Body.Body.linkList = __link_list
+cnoid.Body.Body.drawTree = drawTree
 cnoid.Body.Body.angleVector = lambda self, vec = None: ic.angleVector(self) if vec is None else ic.angleVector(self, vec)
 cnoid.Body.Link.getCoords = lambda self: ic.getCoords(self)
 cnoid.Body.Link.setCoords = lambda self, cds: ic.setCoords(self, cds)
@@ -1442,7 +1516,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """
         return list(self.__device_map.keys())
 
-    def link(self, arg):
+    def getLink(self, arg):
         """Instance of the link
 
         Args:
@@ -1464,7 +1538,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             return arg
         return self.__robot.link(arg)
 
-    def joint(self, arg):
+    def getJoint(self, arg):
         """Instance of the joint
 
         Args:
@@ -1487,7 +1561,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
                 return arg
         return self.__robot.joint(arg)
 
-    def device(self, arg):
+    def getDevice(self, arg):
         """Instance of the device
 
         Args:
@@ -1519,7 +1593,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the link
 
         """
-        lk = self.link(str_idx_instance)
+        lk = self.getLink(str_idx_instance)
         if lk is None:
             return None
         return lk.getCoords()
@@ -1534,7 +1608,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the joint
 
         """
-        jt = self.joint(str_idx_instance)
+        jt = self.getJoint(str_idx_instance)
         if jt is None:
             return None
         return jt.getCoords()
@@ -1549,7 +1623,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
             cnoid.IRSLCoords.coordinates : coordinate of the device
 
         """
-        dev = self.device(str_idx_instance)
+        dev = self.getDevice(str_idx_instance)
         if dev is None:
             return None
         p_cds = dev.getLink().getCoords()
@@ -2350,6 +2424,23 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         return self.__robot.joint(name)
     def link(self, name):
         return self.__robot.link(name)
+    def drawTree(self, offset='', indent='  ', print_func = lambda lk, offset='' : print(f'{offset}{lk.name}') ):
+        """
+            Printing links with tree like indent
+
+            Args:
+                offset (str, default='') :
+                indent (str, default='  ') :
+                print_func (callable, default) : function for printing information of link (arguments of this function should be link and offset)
+
+            Examples:
+                >>> drawTree(print_func=ru.printLinkInfo)
+                >>> drawTree(print_func=lambda lk, offset='' : ru.printLinkInfo(lk, offset=offset, printDevice=True, linkDetail=False)
+        """
+        _drawTree(self.rootLink, offset=offset, indent=indent, print_func=print_func)
+    @property
+    def rootLink(self):
+        return self.__robot.rootLink
     @property
     def mass(self):
         return self.__robot.mass
@@ -2553,6 +2644,67 @@ def replaceCamera(oldcam, newcam):
         d = bd.device(i)
         d.index = i
     return newcam
+
+#
+# simplifyBody
+#
+def _rotateLink(lk, coords): ## move link?
+    rot = coords.rot
+    ## rotate axis
+    ax = rot @ lk.jointAxis
+    lk.setJointAxis(ax)
+    ## rotate com
+    lk.setCenterOfMass(rot @ lk.c)
+    ## rotate inertia
+    lk.setInertia(rot @ lk.I @ np.transpose(rot))
+    ## rotate geometry
+    vshape=lk.visualShape.clone()
+    cshape=lk.collisionShape.clone()
+    lk.clearShapeNodes()
+    cnoidT = iu.cnoidPosition(rotation=rot)
+    vtrs = cutil.SgPosTransform()
+    vtrs.T = cnoidT
+    ctrs = cutil.SgPosTransform()
+    ctrs.T = cnoidT
+    ##
+    for i in range(vshape.numChildren):
+        vtrs.addChild(vshape.getChild(i))
+    for i in range(cshape.numChildren):
+        ctrs.addChild(cshape.getChild(i))
+    lk.addVisualShapeNode(vtrs)
+    lk.addCollisionShapeNode(ctrs)
+    lk.info.insert("rotated_quaternion", iu.listToListing(coords.quaternion))
+
+def simplifyBody(inbody):
+    """
+    Rotate the reference coordinate of all links so that the rotation matrix of each link becomes the identity matrix.
+
+    Args:
+        inbody (cnoid.Body.Body) : links of this body will be rotated as identity rotation
+
+    """
+    link_map = {}
+    inbody.rootLink.setOffsetPosition(iu.cnoidPosition())
+    inbody.initializePosition()
+    inbody.calcForwardKinematics()
+    for lk in inbody.links:
+        cds = lk.getCoords()
+        wax = cds.rotate_vector(lk.jointAxis)
+        link_map[lk.name] = (cds, wax)
+    ###
+    for lk in inbody.links[1:]:
+        cds, wax = link_map[lk.name]
+        p_cds, _ = link_map[lk.parent.name]
+        trs = coordinates(cds.pos - p_cds.pos)
+        #new_trs = coordinates(trs.pos)
+        #new_cds = p_cds.get_transformed(new_trs)
+        lk.setOffsetPosition(iu.cnoidPosition(translation=trs.pos))
+        #lk.setJointAxis(wax)
+        if not coordinates(cds.rot).equal(coordinates()):
+            _rotateLink(lk, cds)
+    inbody.updateLinkTree()
+    inbody.initializePosition()
+    inbody.calcForwardKinematics()
 
 ### flush in Base, etc.
 if isInChoreonoid():

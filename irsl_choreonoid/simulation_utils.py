@@ -189,13 +189,13 @@ class SimulationEnvironment(object):
         if fixed:
             self._robotItem.body.rootLink.setJointType(cbody.Link.FixedJoint)
 
-    def start(self, dt=None, addCountroller=True, addSequencer=True, controllerSettings=None,
+    def start(self, dt=None, addController=True, addSequencer=True, controllerSettings=None,
               P=10000, D=200, generatePDSettings=False, rotorInertia=None, **kwargs):
         """Start simulation
 
         Args:
             dt (float) : Time step of this simulation [second]
-            addCountroller (boolean, default=True) : Adding PDcontroller to servo joints
+            addController (boolean, default=True) : Adding PDcontroller to servo joints
             addSequencer (boolean, default=True) : Adding sequencer to set target-angles with interpolatin
             controllerSettings (optional) : {'joint_name0': {'P': pgain, 'D': dgain, 'rotorInertia': IM2}, ... }
             P (float, default=10000) : default P-gain
@@ -226,7 +226,7 @@ class SimulationEnvironment(object):
         self._sbody = sim_body.body()
         self.controller = None
         self.sequencer  = None
-        if addCountroller:
+        if addController:
             self.controller = PDController(self._sbody, dt=self.worldTimeStep, P=P, D=D, settings=controllerSettings, **kwargs)
         if addSequencer:
             self.sequencer = BodySequencer(self._sbody, dt=self.worldTimeStep)
