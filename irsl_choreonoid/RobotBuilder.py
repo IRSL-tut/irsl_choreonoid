@@ -71,9 +71,10 @@ class RobotBuilder(object):
         >>> rb = RobotBuilder()
         >>> bx = rb.makeBox(0.3)
         >>> l_root = rb.createLinkFromShape(name='Root', root=True, density=400.0)
-        >>> j = rb.createJointShape(jointType=Link.JointType.RevoluteJoint)
+        >>> j = rb.createJointShape(jointType=Link.JointType.RevoluteJoint, axis=fv(0, 0, 1))
+        >>> j.locate(fv(0, 0, 0.15), coordinates.wrt.world)
         >>> lg = rb.makeBox(x=0.2, y=0.2, z=0.6)
-        >>> lg.translate(fv(0, 0, 0.3))
+        >>> lg.translate(fv(0, 0, 0.3 + 0.15))
         >>> l0=rb.createLinkFromShape(name='LINK0', parentLink=l_root, density=400.0, JointId=0, JointName='JOINT0', InitialJointAngle=0.0, JointRange=[-PI, PI], JointVelocityRange=[-PI*10, PI*10], JointEffortRange=[-100, 100], EquivalentRotorInertia=0.1)
         >>> rb.exportBody('/tmp/test.body', modelName='test')
         >>> ### view information ###
@@ -468,13 +469,14 @@ class RobotBuilder(object):
                                                                   BodyPlugin.BodyItem.ModelUpdateFlag.ShapeUpdate)]))
             self.bodyItem.notifyKinematicStateUpdate()
 
-    def createJointShape(self, jointType=Link.JointType.FreeJoint, wrapped=True, coords=None, add=True, scale=0.3, **kwargs):
+    def createJointShape(self, jointType=Link.JointType.FreeJoint, wrapped=True, coords=None, axis=None, add=True, scale=0.3, **kwargs):
         """Creating and showing jointShape
 
         Args:
             jointType (cnoid.Body.Link.JointType, default=FixedJoint) :
             wrapped (boolean, default=True) :
             coords (cnoid.IRSLCoords.coordinates, optional) :
+            axis (np.ndarray, optional) : Direction of joint axis
             add (boolean, default=True) :
             scale (float, default=0.3) :
 
@@ -490,10 +492,10 @@ class RobotBuilder(object):
         elif jointType == Link.JointType.FixedJoint:
             sh=self.__fixedJointShape(**kwargs)
         elif jointType == Link.JointType.RevoluteJoint:
-            sh=self.__revoluteJointShape(**kwargs)
+            sh=self.__revoluteJointShape(axis=axis, **kwargs)
             tp='revolute'
         elif jointType == Link.JointType.PrismaticJoint:
-            sh=self.__prismaticJointShape(**kwargs)
+            sh=self.__prismaticJointShape(axis=axis, **kwargs)
             tp='prismatic'
         elif jointType == RobotBuilder.JointType.Ball:
             sh=self.__ballJointShape(**kwargs)
@@ -819,7 +821,7 @@ class RobotBuilder(object):
         sh.setName('joint_axis') ## just rotate
         self.__addShape(alink, sh)
 
-    def __revoluteJointShape(self, scale=None, color=[0,1,1], transparent=0.6):
+    def __revoluteJointShape(self, scale=None, color=[0,1,1], transparent=0.6, axis=None):
         ## +y-axis ## TODO : rotate direction
         RR = 0.5
         rr = 0.05
@@ -834,17 +836,21 @@ class RobotBuilder(object):
         bd2.translate(npa([0,l0+l1/2,0]))
         ##
         res=cutil.SgPosTransform()
+        current = res
+        if axis is not None:
+            tmp = ru.axisAlignedCoords(axis)
+            if not tmp.equal(coordinates()):
+                current.setPosition(tmp.cnoidPosition)
         if scale is not None:
-            current = cutil.SgScaleTransform(scale)
-            res.addChild(current)
-        else:
-            current = res
+            scl_ = cutil.SgScaleTransform(scale)
+            current.addChild(scl_)
+            current = scl_
         current.addChild(bd0.target)
         current.addChild(bd1.target)
         current.addChild(bd2.target)
         return res
 
-    def __prismaticJointShape(self, scale=None, color=[0,1,1], transparent=0.6):
+    def __prismaticJointShape(self, scale=None, color=[0,1,1], transparent=0.6, axis=None):
         w0= 0.4
         l0= 0.7
         w1= 0.3
@@ -856,12 +862,17 @@ class RobotBuilder(object):
         bd2 = mkshapes.makeCone(w1, w1, color=color, transparent=transparent, DivisionNumber=4)
         bd2.rotate(PI/2, coordinates.Y)
         bd2.translate(npa([0, l1+w1/2, 0]))
+        ##
         res=cutil.SgPosTransform()
+        current = res
+        if axis is not None:
+            tmp = ru.axisAlignedCoords(axis)
+            if not tmp.equal(coordinates()):
+                current.setPosition(tmp.cnoidPosition)
         if scale is not None:
-            current = cutil.SgScaleTransform(scale)
-            res.addChild(current)
-        else:
-            current = res
+            scl_ = cutil.SgScaleTransform(scale)
+            current.addChild(scl_)
+            current = scl_
         current.addChild(bd0.target)
         current.addChild(bd1.target)
         current.addChild(bd2.target)
