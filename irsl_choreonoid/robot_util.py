@@ -2706,6 +2706,67 @@ def simplifyBody(inbody):
     inbody.initializePosition()
     inbody.calcForwardKinematics()
 
+def _vec3equal(vec3_a, vec3_b, eps=1e-10):
+    for i in range(3):
+        if math.fabs(vec3_a[i] - vec3_b[i]) >= eps:
+            return False
+    return True
+def _mat3equal(mat3_a, mat3_b, eps=1e-10):
+    for i in range(3):
+        for j in range(3):
+            if math.fabs(mat3_a[i, j] - mat3_b[i, j]) >= eps:
+                return False
+    return True
+def equalLink(link_a, link_b, eps=1e-10):
+    """
+    """
+    res = True
+    if link_a.name != link_b.name:
+        res = False
+        print(f'link.name: {link_a.name} != {link_b.name}')
+    if link_a.jointName != link_b.jointName:
+        res = False
+        print(f'link.jointName: {link_a.jointName} != {link_b.jointName}')
+    if link_a.jointId != link_b.jointId:
+        res = False
+        print(f'link.jointId: {link_a.jointId} != {link_b.jointId}')
+    if link_a.jointType != link_b.jointType:
+        res = False
+        print(f'link.jointType: {link_a.jointType} != {link_b.jointType}')
+    if not _vec3equal(link_a.jointAxis, link_b.jointAxis, eps):
+        res = False
+        print(f'link.jointAxis: {link_a.jointAxis} != {link_b.jointAxis}')
+    if not _vec3equal(link_a.c, link_b.c, eps):
+        res = False
+        print(f'CoM: {link_a.c} != {link_b.c}')
+    if not _mat3equal(link_a.I, link_b.I, eps):
+        res = False
+        print(f'Inertia: {link_a.I} != {link_b.I}')
+    if math.fabs(link_a.q_lower - link_b.q_lower) >= eps:
+        res = False
+        print(f'q_lower: {link_a.q_lower} != {link_b.q_lower}')
+    if math.fabs(link_a.q_upper - link_b.q_upper) >= eps:
+        res = False
+        print(f'q_upper: {link_a.q_upper} != {link_b.q_upper}')
+    if math.fabs(link_a.dq_lower - link_b.dq_lower) >= eps:
+        res = False
+        print(f'dq_lower: {link_a.dq_lower} != {link_b.dq_lower}')
+    if math.fabs(link_a.dq_upper - link_b.dq_upper) >= eps:
+        res = False
+        print(f'dq_upper: {link_a.dq_upper} != {link_b.dq_upper}')
+    if math.fabs(link_a.u_lower - link_b.u_lower) >= eps:
+        res = False
+        print(f'u_lower: {link_a.u_lower} != {link_b.u_lower}')
+    if math.fabs(link_a.u_upper - link_b.u_upper) >= eps:
+        res = False
+        print(f'u_upper: {link_a.u_upper} != {link_b.u_upper}')
+    a_tb = coordinates(link_a.Tb)
+    b_tb = coordinates(link_b.Tb)
+    if not a_tb.equal(b_tb, eps):
+        res = False
+        print(f'offset: {a_tb} != {b_tb}')
+    return res
+
 ### flush in Base, etc.
 if isInChoreonoid():
     from .cnoid_base import *
