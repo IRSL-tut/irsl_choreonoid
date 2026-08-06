@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # ubuntu: [ 18.04, 20.04 ] ## apt for 18.04 is not working well (2023.11.21)
-        ubuntu: [ 20.04 ] ## for 22.04 / ROS2 environment
+        # apt for 18.04 is not working well (2023.11.21)
+        build_target: [ 20.04, 24.04 ] ## for 24.04 / ROS2 environment
     runs-on: self-hosted
     env:
       IMAGE_NAME: irsl_choreonoid
@@ -26,14 +26,18 @@ jobs:
     steps:
       - name: Check Version
         run: |
-          if   [ ${{ matrix.ubuntu }} == 22.04 ]; then
-            echo "ROS_DISTRO=noetic" >> $GITHUB_ENV
-          elif [ ${{ matrix.ubuntu }} == 20.04 ]; then
-            echo "ROS_DISTRO=noetic" >> $GITHUB_ENV
-          elif [ ${{ matrix.ubuntu }} == 18.04 ]; then
-            echo "ROS_DISTRO=melodic" >> $GITHUB_ENV
+          if   [ ${{ matrix.build_target }} == 26.04 ]; then
+            echo "USE_ROS=lyrical" >> $GITHUB_ENV
+          elif [ ${{ matrix.build_target }} == 24.04 ]; then
+            echo "USE_ROS=jazzy" >> $GITHUB_ENV
+          elif [ ${{ matrix.build_target }} == 22.04 ]; then
+            echo "USE_ROS=humble" >> $GITHUB_ENV
+          elif [ ${{ matrix.build_target }} == 20.04 ]; then
+            echo "USE_ROS=noetic" >> $GITHUB_ENV
+          elif [ ${{ matrix.build_target }} == 18.04 ]; then
+            echo "USE_ROS=melodic" >> $GITHUB_ENV
           else
-            echo "ROS_DISTRO=none" >> $GITHUB_ENV
+            echo "USE_ROS=none" >> $GITHUB_ENV
           fi
       - name: Check out repository code(src)
         uses: actions/checkout@v3
@@ -41,20 +45,20 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
         run: >
           docker build . -f .github/workflows/Dockerfile --pull --no-cache
-          --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
-          -t actions/irsl_choreonoid:${{ matrix.ubuntu }}
+          --build-arg BASE_IMAGE=ros:${{ env.USE_ROS }}-ros-base
+          -t actions/irsl_choreonoid:${{ matrix.build_target }}
       - name: Check Build (cached)
         if: github.event_name != 'workflow_dispatch' && github.event_name != 'pull_request'
         run: >
           docker build . -f .github/workflows/Dockerfile --pull
-          --build-arg BASE_IMAGE=ros:${{ env.ROS_DISTRO }}-ros-base
-          -t actions/irsl_choreonoid:${{ matrix.ubuntu }}
+          --build-arg BASE_IMAGE=ros:${{ env.USE_ROS }}-ros-base
+          -t actions/irsl_choreonoid:${{ matrix.build_target }}
       - name: Tests
         run: >
-          docker run --rm actions/irsl_choreonoid:${{ matrix.ubuntu }}
-          -- bash -c 'source /choreonoid_ws/install/setup.bash; roscd irsl_choreonoid/test; ./run_all_tests.sh'
+          docker run --rm actions/irsl_choreonoid:${{ matrix.build_target }}
+          -- bash -c 'source /choreonoid_ws/install/setup.bash; cd /choreonoid_ws/install/share/irsl_choreonoid/test; ./run_all_tests.sh'
       - name: Dispatch
-        if: github.event_name == 'push' && matrix.ubuntu == '20.04'
+        if: github.event_name == 'push' && matrix.build_target == '20.04'
         env:
           GITHUB_TOKEN: ${{ secrets.IRSL_PAT_CLS }}
         uses: actions/github-script@v6
