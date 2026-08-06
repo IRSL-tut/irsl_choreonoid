@@ -1782,6 +1782,15 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         if name in self.pose_coords_map:
             self.rootCoords(self.pose_coords_map[name])
 
+    @property
+    def namedPoseList(self):
+        """Getting names of registered pose
+
+        Retuns:
+            [ str ] : name of registered poses
+        """
+        list( set(self.pose_angle_map.keys()).union( set(self.pose_coords_map.keys()) ) )
+
     def getLimb(self, limb_name):
         """Getting limb as end-effector, name should be registered by irsl_choreonoid.robot_util.RobotModelWrapped.registerEndEffector
 
