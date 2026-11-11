@@ -1029,6 +1029,10 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         self.updateLists()
 
+        init_av = npa([j.q_initial for j in self.jointList])
+        rootCoords = self.copy()
+        self.registerNamedPose('model_initial', init_av, rootCoords)
+
         self.eef_map = {}
 
     def updateLists(self):
@@ -1764,6 +1768,11 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
         """Setting initial pose if registered
         """
         self.setNamedPose('initial')
+
+    def setModelInitialPose(self):
+        """Setting initial pose if registered
+        """
+        self.setNamedPose('model_initial')
 
     def setZeroPose(self):
         """Setting all joint angles to zero
