@@ -1029,7 +1029,7 @@ class RobotModelWrapped(coordsWrapper): ## with wrapper
 
         self.updateLists()
 
-        init_av = npa([j.q_initial for j in self.jointList])
+        init_av = np.array([j.q_initial for j in self.jointList], dtype='float64')
         rootCoords = self.copy()
         self.registerNamedPose('model_initial', init_av, rootCoords)
 
